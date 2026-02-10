@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-space-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1e293b">
+    <title>Oh Hell Scorekeeper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            color: #fbbf24;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .setup-screen, .game-screen {
+            padding: 1rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #fbbf24;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            background: #1e293b;
+            color: #f1f5f9;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .player-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .player-input-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .player-input-row input {
+            flex: 1;
+        }
+
+        .player-input-row button {
+            padding: 0.75rem;
+            background: #ef4444;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .round-setup {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .round-header h3 {
+            color: #fbbf24;
+            font-size: 1.1rem;
+        }
+
+        .bid-tracker {
+            background: rgba(59, 130, 246, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .bid-tracker.under { background: rgba(34, 197, 94, 0.2); }
+        .bid-tracker.over { background: rgba(239, 68, 68, 0.2); }
+        .bid-tracker.exact { background: rgba(251, 191, 36, 0.2); }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .player-card {
+            background: linear-gradient(135deg, #334155, #1e293b);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 2px solid #475569;
+        }
+
+        .player-card.dealer {
+            border-color: #fbbf24;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+
+        .player-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fbbf24;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .player-score.negative {
+            color: #ef4444;
+        }
+
+        .player-inputs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .player-inputs-grid input, .player-inputs-grid select {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .score-history {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .history-round {
+            background: rgba(51, 65, 85, 0.5);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-round-header {
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-players {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            color: #fbbf24;
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #f1f5f9;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .game-item {
+            background: rgba(51, 65, 85, 0.8);
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-info h3 {
+            color: #fbbf24;
+            margin-bottom: 0.25rem;
+        }
+
+        .game-info p {
+            color: #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        .game-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .final-scores {
+            background: linear-gradient(135deg, #064e3b, #065f46);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .final-scores h3 {
+            color: #fbbf24;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .final-ranking {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+        }
+
+        .rank-item.first {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0f172a;
+        }
+
+        .rank-position {
+            font-size: 1.5rem;
+            font-weight: 700;
+            width: 50px;
+        }
+
+        .rank-name {
+            flex: 1;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .rank-score {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+            .players-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🃏 Oh Hell Scorekeeper</h1>
+        <div class="header-actions" id="headerActions"></div>
+    </div>
+
+    <!-- Setup Screen -->
+    <div class="setup-screen" id="setupScreen">
+        <div class="card">
+            <h2>New Game Setup</h2>
+            
+            <div class="input-group">
+                <label>Number of Players (3-11)</label>
+                <input type="number" id="numPlayers" min="3" max="11" value="4">
+            </div>
+
+            <div class="input-group">
+                <label>Player Names</label>
+                <div class="player-inputs" id="playerInputs"></div>
+            </div>
+
+            <div class="input-group">
+                <label>Starting Hand Size</label>
+                <input type="number" id="startingHandSize" min="1" max="15" value="10">
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
+                    Game will start at this hand size and go down each round. You'll decide when to turn around during the game.
+                </p>
+            </div>
+
+            <button class="btn btn-success" onclick="startGame()" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                🎮 Start Game
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div class="game-screen hidden" id="gameScreen">
+        <div id="currentRoundSetup"></div>
+        <div id="scoreboard"></div>
+        <div id="historySection"></div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="saveLoadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Saved Games</h2>
+                <button class="close-modal" onclick="closeModal('saveLoadModal')">&times;</button>
+            </div>
+            <div class="game-list" id="gameList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="statsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Game Statistics</h2>
+                <button class="close-modal" onclick="closeModal('statsModal')">&times;</button>
+            </div>
+            <div id="statsContent"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="editRoundModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Edit Round <span id="editRoundNumber"></span></h2>
+                <button class="close-modal" onclick="closeModal('editRoundModal')">&times;</button>
+            </div>
+            <div id="editRoundContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            players: [],
+            rounds: [],
+            currentRound: 0,
+            handProgression: [],
+            gameId: null,
+            createdAt: null
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePlayerInputs();
+            loadHeaderActions('setup');
+            
+            document.getElementById('numPlayers').addEventListener('change', updatePlayerInputs);
+        });
+
+        function updatePlayerInputs() {
+            const num = parseInt(document.getElementById('numPlayers').value);
+            const container = document.getElementById('playerInputs');
+            container.innerHTML = '';
+
+            for (let i = 0; i < num; i++) {
+                const row = document.createElement('div');
+                row.className = 'player-input-row';
+                row.innerHTML = `
+                    <input type="text" id="player${i}" placeholder="Player ${i + 1}" value="Player ${i + 1}">
+                `;
+                container.appendChild(row);
+            }
+        }
+
+        function loadHeaderActions(mode) {
+            const actions = document.getElementById('headerActions');
+            
+            if (mode === 'setup') {
+                actions.innerHTML = `
+                    <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load Game</button>
+                `;
+            } else if (mode === 'game') {
+                actions.innerHTML = `
+                    <button class="btn btn-secondary btn-small" onclick="saveGame()">💾 Save</button>
+                    <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load</button>
+                    <button class="btn btn-secondary btn-small" onclick="showStats()">📊 Stats</button>
+                    <button class="btn btn-danger btn-small" onclick="newGame()">🆕 New</button>
+                `;
+            }
+        }
+
+        function startGame() {
+            const num = parseInt(document.getElementById('numPlayers').value);
+            const players = [];
+            
+            for (let i = 0; i < num; i++) {
+                const name = document.getElementById(`player${i}`).value.trim() || `Player ${i + 1}`;
+                players.push({
+                    name: name,
+                    score: 0,
+                    rounds: []
+                });
+            }
+
+            const startingHandSize = parseInt(document.getElementById('startingHandSize').value) || 10;
+
+            gameState = {
+                players: players.map((p, idx) => ({...p, previousPosition: idx + 1})),
+                rounds: [],
+                currentRound: 0,
+                currentHandSize: startingHandSize,
+                startingHandSize: startingHandSize,
+                goingDown: true, // true = going down, false = going up
+                gameId: Date.now().toString(),
+                createdAt: new Date().toISOString()
+            };
+
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            loadHeaderActions('game');
+            
+            startNewRound();
+        }
+
+        function startNewRound() {
+            const handSize = gameState.currentHandSize;
+            const dealerIndex = gameState.currentRound % gameState.players.length;
+
+            const round = {
+                handSize: handSize,
+                dealerIndex: dealerIndex,
+                playerData: gameState.players.map(p => ({
+                    bid: 0,
+                    tax: 0,
+                    deferred: false,
+                    confidence: 'MAX',
+                    gotSet: false,
+                    score: 0
+                })),
+                scored: false
+            };
+
+            gameState.rounds.push(round);
+            renderRoundSetup();
+            renderScoreboard();
+        }
+
+        function renderRoundSetup() {
+            const round = gameState.rounds[gameState.currentRound];
+            const container = document.getElementById('currentRoundSetup');
+            
+            const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
+            let bidStatus = '';
+            let bidClass = '';
+            
+            if (totalBids < round.handSize) {
+                bidStatus = '🦆 Under';
+                bidClass = 'under';
+            } else if (totalBids > round.handSize) {
+                bidStatus = '🦢 Over';
+                bidClass = 'over';
+            } else {
+                bidStatus = '❌ Exact';
+                bidClass = 'exact';
+            }
+
+            const directionIndicator = gameState.goingDown ? '📉 Going Down' : '📈 Going Up';
+
+            container.innerHTML = `
+                <div class="round-setup">
+                    <div class="round-header">
+                        <div>
+                            <h3>Round ${gameState.currentRound + 1}</h3>
+                            <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.25rem;">${directionIndicator}</div>
+                        </div>
+                        <div class="bid-tracker ${bidClass}">
+                            ${totalBids}/${round.handSize} ${bidStatus}
+                        </div>
+                    </div>
+                    
+                    <div class="players-grid">
+                        ${gameState.players.map((player, idx) => {
+                            // Calculate current position
+                            const sorted = [...gameState.players]
+                                .map((p, i) => ({...p, originalIndex: i}))
+                                .sort((a, b) => b.score - a.score);
+                            const currentPosition = sorted.findIndex(p => p.originalIndex === idx) + 1;
+                            const previousPosition = player.previousPosition || currentPosition;
+                            
+                            let positionIndicator = '';
+                            if (round.scored && currentPosition < previousPosition) {
+                                positionIndicator = '<span style="color: #10b981;">↗️</span>';
+                            } else if (round.scored && currentPosition > previousPosition) {
+                                positionIndicator = '<span style="color: #ef4444;">↘️</span>';
+                            }
+                            
+                            const isLeader = currentPosition === 1;
+                            const leaderCrown = isLeader ? '👑 ' : '';
+                            
+                            return `
+                            <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''}">
+                                <div class="player-name">
+                                    ${leaderCrown}${player.name} ${positionIndicator}
+                                    ${idx === round.dealerIndex ? '<span>🎴 Dealer</span>' : ''}
+                                </div>
+                                <div class="player-score ${player.score < 0 ? 'negative' : ''}">
+                                    ${player.score}
+                                </div>
+                                
+                                <div class="player-inputs-grid">
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: #cbd5e1;">Bid</label>
+                                        <input type="number" min="0" max="${round.handSize}" value="${round.playerData[idx].bid}" 
+                                               onchange="updateBid(${idx}, this.value)">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: #cbd5e1;">Tax</label>
+                                        <input type="number" min="0" max="20" value="${round.playerData[idx].tax}" 
+                                               onchange="updateTax(${idx}, this.value)">
+                                    </div>
+                                    <div style="grid-column: span 2;">
+                                        <label style="font-size: 0.8rem; color: #cbd5e1;">Confidence</label>
+                                        <select onchange="updateConfidence(${idx}, this.value)">
+                                            <option value="MAX" ${round.playerData[idx].confidence === 'MAX' ? 'selected' : ''}>MAX</option>
+                                            ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n => 
+                                                `<option value="${n}" ${round.playerData[idx].confidence == n ? 'selected' : ''}>${n}</option>`
+                                            ).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" ${round.playerData[idx].deferred ? 'checked' : ''} 
+                                               onchange="updateDeferred(${idx}, this.checked)">
+                                        Deferred
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" ${round.playerData[idx].gotSet ? 'checked' : ''} 
+                                               onchange="updateGotSet(${idx}, this.checked)">
+                                        Got Set
+                                    </label>
+                                </div>
+                            </div>
+                        `}).join('')}
+                    </div>
+                    
+                    ${!round.scored ? `
+                        <button class="btn btn-success" onclick="scoreRound()" 
+                                style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem;">
+                            ✅ Score Round
+                        </button>
+                    ` : `
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-direction: column;">
+                            ${gameState.goingDown ? `
+                                <button class="btn btn-primary" onclick="turnAround()" style="padding: 1rem;">
+                                    🔄 Turn Around (Start Going Back Up)
+                                </button>
+                            ` : ''}
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-danger" onclick="undoLastRound()" style="flex: 1;">
+                                    ↩️ Undo Round
+                                </button>
+                                <button class="btn btn-success" onclick="nextRound()" style="flex: 2;">
+                                    ➡️ Next Round
+                                </button>
+                            </div>
+                            <button class="btn btn-secondary" onclick="endGame()" style="padding: 0.75rem;">
+                                🏁 End Game
+                            </button>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function updateBid(playerIdx, value) {
+            gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = parseInt(value) || 0;
+            renderRoundSetup();
+        }
+
+        function updateTax(playerIdx, value) {
+            gameState.rounds[gameState.currentRound].playerData[playerIdx].tax = parseInt(value) || 0;
+        }
+
+        function updateConfidence(playerIdx, value) {
+            gameState.rounds[gameState.currentRound].playerData[playerIdx].confidence = value;
+        }
+
+        function updateDeferred(playerIdx, checked) {
+            gameState.rounds[gameState.currentRound].playerData[playerIdx].deferred = checked;
+        }
+
+        function updateGotSet(playerIdx, checked) {
+            gameState.rounds[gameState.currentRound].playerData[playerIdx].gotSet = checked;
+        }
+
+        function scoreRound() {
+            const round = gameState.rounds[gameState.currentRound];
+            
+            // Check if at least one player got set
+            const anyoneSet = round.playerData.some(p => p.gotSet);
+            if (!anyoneSet) {
+                alert('Please mark at least one player as "Got Set" to score the round!');
+                return;
+            }
+
+            round.scored = true;
+
+            // Calculate scores
+            round.playerData.forEach((pdata, idx) => {
+                const bid = pdata.bid;
+                const tax = pdata.tax;
+                const deferred = pdata.deferred;
+                const confidence = pdata.confidence === 'MAX' ? (bid > 0 ? 10 : 5) : parseInt(pdata.confidence);
+                const gotSet = pdata.gotSet;
+                const handSize = round.handSize;
+
+                let roundScore = 0;
+
+                if (gotSet) {
+                    // Player got set
+                    roundScore = -confidence - (deferred ? 2 : 0) - tax;
+                } else {
+                    // Player made their bid
+                    if (bid > 0) {
+                        // Made a positive bid
+                        roundScore = 10 + (bid * bid) + confidence - (deferred ? 2 : 0) - tax;
+                    } else {
+                        // Made a zero bid
+                        const zeroBonus = gameState.players.length <= 9 ? 10 : 5;
+                        roundScore = zeroBonus + handSize + confidence - (deferred ? 2 : 0) - tax;
+                    }
+                }
+
+                pdata.score = roundScore;
+                gameState.players[idx].score += roundScore;
+                gameState.players[idx].rounds.push({
+                    round: gameState.currentRound + 1,
+                    bid: bid,
+                    gotSet: gotSet,
+                    score: roundScore
+                });
+            });
+
+            renderRoundSetup();
+            renderScoreboard();
+            renderHistory();
+            updatePlayerPositions();
+        }
+
+        function updatePlayerPositions() {
+            // Create sorted array by score to determine current positions
+            const sorted = [...gameState.players]
+                .map((p, idx) => ({...p, originalIndex: idx}))
+                .sort((a, b) => b.score - a.score);
+            
+            // Update each player's previous position for next comparison
+            sorted.forEach((player, position) => {
+                gameState.players[player.originalIndex].previousPosition = position + 1;
+            });
+        }
+
+        function nextRound() {
+            // Update hand size for next round
+            if (gameState.goingDown) {
+                gameState.currentHandSize--;
+            } else {
+                gameState.currentHandSize++;
+            }
+
+            // Check if we've reached the starting hand size going back up
+            if (!gameState.goingDown && gameState.currentHandSize > gameState.startingHandSize) {
+                endGame();
+                return;
+            }
+
+            // Prevent going below 1
+            if (gameState.currentHandSize < 1) {
+                alert('Cannot go below 1 card! Use "Turn Around" button to start going back up.');
+                gameState.currentHandSize = 1;
+                return;
+            }
+
+            gameState.currentRound++;
+            startNewRound();
+        }
+
+        function turnAround() {
+            if (!confirm('Turn around and start going back up in hand size?')) return;
+            
+            gameState.goingDown = false;
+            nextRound();
+        }
+
+        function undoLastRound() {
+            if (!confirm('Are you sure you want to undo this round?')) return;
+
+            const round = gameState.rounds[gameState.currentRound];
+            
+            // Reverse the scores
+            round.playerData.forEach((pdata, idx) => {
+                gameState.players[idx].score -= pdata.score;
+                gameState.players[idx].rounds.pop();
+            });
+
+            round.scored = false;
+            renderRoundSetup();
+            renderScoreboard();
+            renderHistory();
+            updatePlayerPositions();
+        }
+
+        function renderScoreboard() {
+            const container = document.getElementById('scoreboard');
+            const sortedPlayers = [...gameState.players]
+                .map((p, idx) => ({...p, originalIndex: idx}))
+                .sort((a, b) => b.score - a.score);
+
+            container.innerHTML = `
+                <div class="card">
+                    <h2>Current Standings</h2>
+                    <div class="final-ranking">
+                        ${sortedPlayers.map((player, idx) => `
+                            <div class="rank-item ${idx === 0 ? 'first' : ''}">
+                                <div class="rank-position">#${idx + 1}</div>
+                                <div class="rank-name">${player.name}</div>
+                                <div class="rank-score ${player.score < 0 ? 'negative' : ''}">${player.score}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historySection');
+            const completedRounds = gameState.rounds.filter((r, idx) => r.scored);
+
+            if (completedRounds.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Create array with round indices for proper mapping
+            const roundsWithIndices = gameState.rounds
+                .map((round, idx) => ({round, idx}))
+                .filter(r => r.round.scored)
+                .reverse();
+
+            container.innerHTML = `
+                <div class="card">
+                    <h2>Score History</h2>
+                    <div class="score-history">
+                        ${roundsWithIndices.map(({round, idx}) => {
+                            const roundNum = idx + 1;
+                            return `
+                                <div class="history-round">
+                                    <div class="history-round-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>Round ${roundNum} - Hand Size: ${round.handSize}</span>
+                                        <button class="btn btn-secondary btn-small" onclick="editRound(${idx})" style="padding: 0.4rem 0.8rem;">
+                                            ✏️ Edit
+                                        </button>
+                                    </div>
+                                    <div class="history-players">
+                                        ${gameState.players.map((player, pIdx) => `
+                                            <div>
+                                                <strong>${player.name}:</strong> 
+                                                ${round.playerData[pIdx].gotSet ? '❌' : '✅'} 
+                                                Bid: ${round.playerData[pIdx].bid} | 
+                                                ${round.playerData[pIdx].score > 0 ? '+' : ''}${round.playerData[pIdx].score}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function endGame() {
+            const container = document.getElementById('currentRoundSetup');
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+
+            container.innerHTML = `
+                <div class="final-scores">
+                    <h3>🏆 GAME OVER 🏆</h3>
+                    <div class="final-ranking">
+                        ${sortedPlayers.map((player, idx) => `
+                            <div class="rank-item ${idx === 0 ? 'first' : ''}">
+                                <div class="rank-position">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1)}</div>
+                                <div class="rank-name">${player.name}</div>
+                                <div class="rank-score">${player.score}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn btn-primary" onclick="newGame()" style="width: 100%; margin-top: 1.5rem; padding: 1rem;">
+                        🎮 New Game
+                    </button>
+                </div>
+            `;
+        }
+
+        function saveGame() {
+            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
+            
+            const existingIndex = games.findIndex(g => g.gameId === gameState.gameId);
+            const gameToSave = {
+                ...gameState,
+                savedAt: new Date().toISOString()
+            };
+
+            if (existingIndex >= 0) {
+                games[existingIndex] = gameToSave;
+            } else {
+                games.push(gameToSave);
+            }
+
+            localStorage.setItem('ohHellGames', JSON.stringify(games));
+            alert('Game saved successfully!');
+        }
+
+        function showSaveLoadModal() {
+            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
+            const gameList = document.getElementById('gameList');
+
+            if (games.length === 0) {
+                gameList.innerHTML = '<p style="text-align: center; color: #94a3b8;">No saved games found.</p>';
+            } else {
+                gameList.innerHTML = games.map(game => {
+                    const date = new Date(game.savedAt || game.createdAt).toLocaleString();
+                    const playerNames = game.players.map(p => p.name).join(', ');
+                    const handSize = game.currentHandSize || game.handProgression?.[game.currentRound] || 'N/A';
+                    const direction = game.goingDown !== undefined ? (game.goingDown ? '📉' : '📈') : '';
+                    const roundInfo = `Round ${game.currentRound + 1} • Hand: ${handSize} ${direction}`;
+                    
+                    return `
+                        <div class="game-item">
+                            <div class="game-info">
+                                <h3>${playerNames}</h3>
+                                <p>${date} • ${roundInfo}</p>
+                            </div>
+                            <div class="game-actions">
+                                <button class="btn btn-primary btn-small" onclick="loadGame('${game.gameId}')">Load</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteGame('${game.gameId}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('saveLoadModal').classList.add('active');
+        }
+
+        function loadGame(gameId) {
+            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
+            const game = games.find(g => g.gameId === gameId);
+
+            if (game) {
+                // Handle backward compatibility with old game format
+                if (game.handProgression && !game.currentHandSize) {
+                    game.currentHandSize = game.handProgression[game.currentRound];
+                    game.startingHandSize = game.handProgression[0];
+                    game.goingDown = true;
+                }
+                
+                // Initialize previousPosition if not present
+                game.players.forEach((player, idx) => {
+                    if (player.previousPosition === undefined) {
+                        player.previousPosition = idx + 1;
+                    }
+                });
+                
+                gameState = game;
+                document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                loadHeaderActions('game');
+                renderRoundSetup();
+                renderScoreboard();
+                renderHistory();
+                closeModal('saveLoadModal');
+            }
+        }
+
+        function deleteGame(gameId) {
+            if (!confirm('Delete this saved game?')) return;
+
+            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
+            const filtered = games.filter(g => g.gameId !== gameId);
+            localStorage.setItem('ohHellGames', JSON.stringify(filtered));
+            showSaveLoadModal();
+        }
+
+        function showStats() {
+            const statsContent = document.getElementById('statsContent');
+            
+            const totalRounds = gameState.rounds.filter(r => r.scored).length;
+            const stats = gameState.players.map(player => {
+                const roundsWon = player.rounds.filter(r => !r.gotSet).length;
+                const roundsSet = player.rounds.filter(r => r.gotSet).length;
+                const avgScore = player.rounds.length > 0 ? (player.score / player.rounds.length).toFixed(1) : 0;
+                const totalBids = player.rounds.reduce((sum, r) => sum + r.bid, 0);
+                
+                return {
+                    name: player.name,
+                    score: player.score,
+                    roundsWon,
+                    roundsSet,
+                    avgScore,
+                    totalBids
+                };
+            }).sort((a, b) => b.score - a.score);
+
+            statsContent.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <p style="color: #cbd5e1;"><strong>Total Rounds Played:</strong> ${totalRounds}</p>
+                </div>
+                ${stats.map(s => `
+                    <div style="background: rgba(51, 65, 85, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h3 style="color: #fbbf24; margin-bottom: 0.5rem;">${s.name}</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;">
+                            <div>Total Score: <strong>${s.score}</strong></div>
+                            <div>Avg/Round: <strong>${s.avgScore}</strong></div>
+                            <div>Rounds Won: <strong>${s.roundsWon}</strong></div>
+                            <div>Got Set: <strong>${s.roundsSet}</strong></div>
+                            <div>Total Bids: <strong>${s.totalBids}</strong></div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+
+            document.getElementById('statsModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        let editingRoundIndex = null;
+
+        function editRound(roundIndex) {
+            editingRoundIndex = roundIndex;
+            const round = gameState.rounds[roundIndex];
+            
+            document.getElementById('editRoundNumber').textContent = roundIndex + 1;
+            
+            const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
+            let bidStatus = '';
+            let bidClass = '';
+            
+            if (totalBids < round.handSize) {
+                bidStatus = '🦆 Under';
+                bidClass = 'under';
+            } else if (totalBids > round.handSize) {
+                bidStatus = '🦢 Over';
+                bidClass = 'over';
+            } else {
+                bidStatus = '❌ Exact';
+                bidClass = 'exact';
+            }
+
+            const content = document.getElementById('editRoundContent');
+            content.innerHTML = `
+                <div style="background: rgba(15, 23, 42, 0.9); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                    <div class="round-header">
+                        <h3>Hand Size: ${round.handSize}</h3>
+                        <div class="bid-tracker ${bidClass}">
+                            ${totalBids}/${round.handSize} ${bidStatus}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="players-grid" id="editPlayersGrid">
+                    ${gameState.players.map((player, idx) => `
+                        <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''}">
+                            <div class="player-name">
+                                ${player.name}
+                                ${idx === round.dealerIndex ? '<span>🎴 Dealer</span>' : ''}
+                            </div>
+                            
+                            <div class="player-inputs-grid">
+                                <div>
+                                    <label style="font-size: 0.8rem; color: #cbd5e1;">Bid</label>
+                                    <input type="number" min="0" max="${round.handSize}" value="${round.playerData[idx].bid}" 
+                                           onchange="updateEditBid(${idx}, this.value)">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: #cbd5e1;">Tax</label>
+                                    <input type="number" min="0" max="20" value="${round.playerData[idx].tax}" 
+                                           onchange="updateEditTax(${idx}, this.value)">
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <label style="font-size: 0.8rem; color: #cbd5e1;">Confidence</label>
+                                    <select onchange="updateEditConfidence(${idx}, this.value)">
+                                        <option value="MAX" ${round.playerData[idx].confidence === 'MAX' ? 'selected' : ''}>MAX</option>
+                                        ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n => 
+                                            `<option value="${n}" ${round.playerData[idx].confidence == n ? 'selected' : ''}>${n}</option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" ${round.playerData[idx].deferred ? 'checked' : ''} 
+                                           onchange="updateEditDeferred(${idx}, this.checked)">
+                                    Deferred
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" ${round.playerData[idx].gotSet ? 'checked' : ''} 
+                                           onchange="updateEditGotSet(${idx}, this.checked)">
+                                    Got Set
+                                </label>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <button class="btn btn-success" onclick="saveEditedRound()" 
+                        style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem;">
+                    💾 Save Changes
+                </button>
+            `;
+
+            document.getElementById('editRoundModal').classList.add('active');
+        }
+
+        function updateEditBid(playerIdx, value) {
+            gameState.rounds[editingRoundIndex].playerData[playerIdx].bid = parseInt(value) || 0;
+            // Re-render the bid tracker
+            editRound(editingRoundIndex);
+        }
+
+        function updateEditTax(playerIdx, value) {
+            gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = parseInt(value) || 0;
+        }
+
+        function updateEditConfidence(playerIdx, value) {
+            gameState.rounds[editingRoundIndex].playerData[playerIdx].confidence = value;
+        }
+
+        function updateEditDeferred(playerIdx, checked) {
+            gameState.rounds[editingRoundIndex].playerData[playerIdx].deferred = checked;
+        }
+
+        function updateEditGotSet(playerIdx, checked) {
+            gameState.rounds[editingRoundIndex].playerData[playerIdx].gotSet = checked;
+        }
+
+        function saveEditedRound() {
+            const round = gameState.rounds[editingRoundIndex];
+            
+            // Check if at least one player got set
+            const anyoneSet = round.playerData.some(p => p.gotSet);
+            if (!anyoneSet) {
+                alert('Please mark at least one player as "Got Set"!');
+                return;
+            }
+
+            // First, reverse the old scores for this round
+            round.playerData.forEach((pdata, idx) => {
+                gameState.players[idx].score -= pdata.score;
+                
+                // Find and remove the old round data from player history
+                const roundHistoryIdx = gameState.players[idx].rounds.findIndex(
+                    r => r.round === editingRoundIndex + 1
+                );
+                if (roundHistoryIdx >= 0) {
+                    gameState.players[idx].rounds.splice(roundHistoryIdx, 1);
+                }
+            });
+
+            // Now recalculate scores with new data
+            round.playerData.forEach((pdata, idx) => {
+                const bid = pdata.bid;
+                const tax = pdata.tax;
+                const deferred = pdata.deferred;
+                const confidence = pdata.confidence === 'MAX' ? (bid > 0 ? 10 : 5) : parseInt(pdata.confidence);
+                const gotSet = pdata.gotSet;
+                const handSize = round.handSize;
+
+                let roundScore = 0;
+
+                if (gotSet) {
+                    roundScore = -confidence - (deferred ? 2 : 0) - tax;
+                } else {
+                    if (bid > 0) {
+                        roundScore = 10 + (bid * bid) + confidence - (deferred ? 2 : 0) - tax;
+                    } else {
+                        const zeroBonus = gameState.players.length <= 9 ? 10 : 5;
+                        roundScore = zeroBonus + handSize + confidence - (deferred ? 2 : 0) - tax;
+                    }
+                }
+
+                pdata.score = roundScore;
+                gameState.players[idx].score += roundScore;
+                
+                // Re-add to player history
+                gameState.players[idx].rounds.push({
+                    round: editingRoundIndex + 1,
+                    bid: bid,
+                    gotSet: gotSet,
+                    score: roundScore
+                });
+                
+                // Sort rounds by round number
+                gameState.players[idx].rounds.sort((a, b) => a.round - b.round);
+            });
+
+            closeModal('editRoundModal');
+            
+            // Re-render everything
+            if (editingRoundIndex === gameState.currentRound) {
+                renderRoundSetup();
+            }
+            renderScoreboard();
+            renderHistory();
+            updatePlayerPositions();
+            
+            alert('Round updated successfully!');
+        }
+
+        function newGame() {
+            if (gameState.rounds.length > 0 && !confirm('Start a new game? Current game will be lost if not saved.')) {
+                return;
+            }
+
+            document.getElementById('setupScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            loadHeaderActions('setup');
+            
+            gameState = {
+                players: [],
+                rounds: [],
+                currentRound: 0,
+                currentHandSize: 10,
+                startingHandSize: 10,
+                goingDown: true,
+                gameId: null,
+                createdAt: null
+            };
+            
+            // Reset player inputs
+            updatePlayerInputs();
+        }
+
+        // Close modals on background click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
