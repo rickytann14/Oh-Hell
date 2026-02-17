@@ -901,6 +901,7 @@
                         <button class="btn btn-secondary btn-small" onclick="saveGame()">💾 Save</button>
                         <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load</button>
                         <button class="btn btn-secondary btn-small" onclick="showStats()">📊 Stats</button>
+                        <button class="btn btn-primary btn-small" onclick="exportToExcel()">📤 Export</button>
                         <button class="btn btn-danger btn-small" onclick="newGame()">🆕 New</button>
                     </div>
                     <div class="sticky-round-info" id="stickyRoundInfo"></div>
@@ -1054,7 +1055,7 @@
                     <div class="round-meta">
                         <div>Round ${gameState.currentRound + 1} • ${directionIndicator}</div>
                         <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem;">
-                            🎴 Dealer: ${dealer.name}${hasUniqueLow ? ` • 📉 Low: ${lowPlayer.name} (${lowPlayer.score})` : ' • Low: none'}
+                            🎴 Dealer: ${dealer.name}${hasUniqueLow ? ` • 📉 Low: ${lowPlayer.name} (${lowPlayer.score})` : ''}
                         </div>
                     </div>
                     <div class="bid-tracker ${bidClass}">${totalBids}/${round.handSize} ${bidStatus}</div>
@@ -1764,6 +1765,100 @@
                 }
             });
         });
+
+        function exportToExcel() {
+            // Generate TSV data formatted for the Excel sheet
+            let data = [];
+            
+            // Row 1: Player names (starting from column D)
+            let row1 = ['', '', ''];  // A1, B1, C1 empty
+            gameState.players.forEach(player => {
+                row1.push(player.name);
+            });
+            data.push(row1);
+            
+            // Row 2: Score totals (with formulas reference - we'll put actual scores)
+            let row2 = ['Rounds', '', 'Score'];
+            gameState.players.forEach(player => {
+                row2.push(player.score);
+            });
+            data.push(row2);
+            
+            // Now add each round (6 rows per round)
+            gameState.rounds.forEach((round, roundIdx) => {
+                if (!round.scored) return; // Skip unscored rounds
+                
+                // Row 1 of round: Hand Size
+                let r1 = ['Hand Size', round.handSize, 'Tax'];
+                round.playerData.forEach(pdata => {
+                    r1.push(pdata.tax);
+                });
+                data.push(r1);
+                
+                // Row 2 of round: Bid Count (we'll show total/handSize)
+                const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
+                let bidStatus = totalBids < round.handSize ? '🦆' : (totalBids > round.handSize ? '🦢' : '❌');
+                let r2 = ['Bid Count', `${totalBids}/${round.handSize} ${bidStatus}`, 'Bid'];
+                round.playerData.forEach(pdata => {
+                    r2.push(pdata.bid);
+                });
+                data.push(r2);
+                
+                // Row 3 of round: Dealer
+                const dealerName = gameState.players[round.dealerIndex].name;
+                let r3 = ['Dealer', dealerName, 'Deferred'];
+                round.playerData.forEach(pdata => {
+                    r3.push(pdata.deferred ? 'TRUE' : 'FALSE');
+                });
+                data.push(r3);
+                
+                // Row 4 of round: Low indicator
+                let r4 = ['Low', '', 'Confidence'];
+                round.playerData.forEach(pdata => {
+                    r4.push(pdata.confidence);
+                });
+                data.push(r4);
+                
+                // Row 5 of round: Scored / Got set
+                let r5 = ['Scored', 'TRUE', 'Got set'];
+                round.playerData.forEach(pdata => {
+                    r5.push(pdata.gotSet ? 'TRUE' : 'FALSE');
+                });
+                data.push(r5);
+                
+                // Row 6 of round: High indicator / Score
+                let r6 = ['High', '', 'Score'];
+                round.playerData.forEach(pdata => {
+                    r6.push(pdata.score);
+                });
+                data.push(r6);
+            });
+            
+            // Convert to TSV
+            const tsv = data.map(row => row.join('\t')).join('\n');
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(tsv).then(() => {
+                alert('✅ Game data copied to clipboard!\n\nTo paste into your Excel sheet:\n1. Open your Oh Hell Excel file\n2. Go to the Scorev2 sheet\n3. Click on cell A1\n4. Press Ctrl+V (or Cmd+V on Mac)\n5. Your game data will populate the sheet!');
+            }).catch(err => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = tsv;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    alert('✅ Game data copied to clipboard!\n\nTo paste into your Excel sheet:\n1. Open your Oh Hell Excel file\n2. Go to the Scorev2 sheet\n3. Click on cell A1\n4. Press Ctrl+V (or Cmd+V on Mac)\n5. Your game data will populate the sheet!');
+                } catch (e) {
+                    alert('❌ Failed to copy. Please try again.');
+                }
+                
+                document.body.removeChild(textarea);
+            });
+        }
     </script>
 </body>
 </html>
