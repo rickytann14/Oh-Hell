@@ -1366,14 +1366,23 @@
                                         </button>
                                     </div>
                                     <div class="history-players">
-                                        ${gameState.players.map((player, pIdx) => `
-                                            <div>
-                                                <strong>${player.name}:</strong> 
-                                                ${round.playerData[pIdx].gotSet ? '❌' : '✅'} 
-                                                Bid: ${round.playerData[pIdx].bid} | 
-                                                ${round.playerData[pIdx].score > 0 ? '+' : ''}${round.playerData[pIdx].score}
-                                            </div>
-                                        `).join('')}
+                                        ${gameState.players.map((player, pIdx) => {
+                                            const pdata = round.playerData[pIdx];
+                                            return `
+                                                <div style="line-height: 1.4;">
+                                                    <strong>${player.name}:</strong> 
+                                                    ${pdata.gotSet ? '❌' : '✅'} 
+                                                    Bid: ${pdata.bid}
+                                                    ${pdata.tax > 0 ? ` | Tax: ${pdata.tax}` : ''}
+                                                    ${pdata.deferred ? ' | Def: ✓' : ''}
+                                                    | Conf: ${pdata.confidence}
+                                                    <br>
+                                                    <span style="color: ${pdata.score > 0 ? '#10b981' : '#ef4444'}; font-weight: 600;">
+                                                        ${pdata.score > 0 ? '+' : ''}${pdata.score}
+                                                    </span>
+                                                </div>
+                                            `;
+                                        }).join('')}
                                     </div>
                                 </div>
                             `;
