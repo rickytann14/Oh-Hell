@@ -48,6 +48,18 @@
             flex-wrap: wrap;
         }
 
+        .header-actions.game {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .header-action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         .btn {
             padding: 0.6rem 1rem;
             border: none;
@@ -206,6 +218,42 @@
         .round-header h3 {
             color: #fbbf24;
             font-size: 1.1rem;
+        }
+
+        .sticky-round-info {
+            margin: 0.75rem auto 0;
+            max-width: 900px;
+            padding: 0 1rem;
+        }
+
+        .round-summary {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .round-summary .leader-pill {
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fbbf24;
+            padding: 0.4rem 0.75rem;
+            border-radius: 999px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .round-summary .round-meta {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            font-weight: 600;
         }
 
         .bid-tracker {
@@ -457,6 +505,11 @@
         @media (max-width: 640px) {
             .players-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .round-summary {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -834,6 +887,8 @@
         function loadHeaderActions(mode) {
             const actions = document.getElementById('headerActions');
             
+            actions.classList.toggle('game', mode === 'game');
+
             if (mode === 'setup') {
                 actions.innerHTML = `
                     <button class="btn btn-secondary btn-small" onclick="openManagePlayersModal()">👥 Manage Players</button>
@@ -842,10 +897,13 @@
                 `;
             } else if (mode === 'game') {
                 actions.innerHTML = `
-                    <button class="btn btn-secondary btn-small" onclick="saveGame()">💾 Save</button>
-                    <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load</button>
-                    <button class="btn btn-secondary btn-small" onclick="showStats()">📊 Stats</button>
-                    <button class="btn btn-danger btn-small" onclick="newGame()">🆕 New</button>
+                    <div class="header-action-buttons">
+                        <button class="btn btn-secondary btn-small" onclick="saveGame()">💾 Save</button>
+                        <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load</button>
+                        <button class="btn btn-secondary btn-small" onclick="showStats()">📊 Stats</button>
+                        <button class="btn btn-danger btn-small" onclick="newGame()">🆕 New</button>
+                    </div>
+                    <div class="sticky-round-info" id="stickyRoundInfo"></div>
                 `;
             }
         }
@@ -959,6 +1017,7 @@
         function renderRoundSetup() {
             const round = gameState.rounds[gameState.currentRound];
             const container = document.getElementById('currentRoundSetup');
+            const stickyInfo = document.getElementById('stickyRoundInfo');
             
             const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
             let bidStatus = '';
@@ -976,6 +1035,19 @@
             }
 
             const directionIndicator = gameState.goingDown ? '📉 Going Down' : '📈 Going Up';
+
+            const sortedPlayers = [...gameState.players]
+                .map((p, idx) => ({...p, originalIndex: idx}))
+                .sort((a, b) => b.score - a.score);
+            const leader = sortedPlayers[0];
+
+            stickyInfo.innerHTML = `
+                <div class="round-summary">
+                    <div class="leader-pill">👑 Leader: ${leader.name} (${leader.score})</div>
+                    <div class="round-meta">Round ${gameState.currentRound + 1} • ${directionIndicator}</div>
+                    <div class="bid-tracker ${bidClass}">${totalBids}/${round.handSize} ${bidStatus}</div>
+                </div>
+            `;
 
             container.innerHTML = `
                 <div class="round-setup">
@@ -1293,7 +1365,10 @@
 
         function endGame() {
             const container = document.getElementById('currentRoundSetup');
+            const stickyInfo = document.getElementById('stickyRoundInfo');
             const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+
+            stickyInfo.innerHTML = '';
 
             container.innerHTML = `
                 <div class="final-scores">
@@ -1641,6 +1716,11 @@
             document.getElementById('setupScreen').classList.remove('hidden');
             document.getElementById('gameScreen').classList.add('hidden');
             loadHeaderActions('setup');
+
+            const stickyInfo = document.getElementById('stickyRoundInfo');
+            if (stickyInfo) {
+                stickyInfo.innerHTML = '';
+            }
             
             gameState = {
                 players: [],
