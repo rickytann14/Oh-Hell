@@ -1419,93 +1419,98 @@
         }
 
         function saveGame() {
-            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
-            
-            const existingIndex = games.findIndex(g => g.gameId === gameState.gameId);
             const gameToSave = {
                 ...gameState,
                 savedAt: new Date().toISOString()
             };
-
-            if (existingIndex >= 0) {
-                games[existingIndex] = gameToSave;
-            } else {
-                games.push(gameToSave);
-            }
-
-            localStorage.setItem('ohHellGames', JSON.stringify(games));
-            alert('Game saved successfully!');
+            
+            const jsonString = JSON.stringify(gameToSave, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            
+            // Generate filename with date and player names
+            const date = new Date().toISOString().split('T')[0];
+            const playerNames = gameState.players.map(p => p.name).join('-').substring(0, 30);
+            const fileName = `oh-hell-${date}-${playerNames}.json`;
+            
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Game saved successfully!\n\nFile: ' + fileName);
         }
 
         function showSaveLoadModal() {
-            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
             const gameList = document.getElementById('gameList');
 
-            if (games.length === 0) {
-                gameList.innerHTML = '<p style="text-align: center; color: #94a3b8;">No saved games found.</p>';
-            } else {
-                gameList.innerHTML = games.map(game => {
-                    const date = new Date(game.savedAt || game.createdAt).toLocaleString();
-                    const playerNames = game.players.map(p => p.name).join(', ');
-                    const handSize = game.currentHandSize || game.handProgression?.[game.currentRound] || 'N/A';
-                    const direction = game.goingDown !== undefined ? (game.goingDown ? '📉' : '📈') : '';
-                    const roundInfo = `Round ${game.currentRound + 1} • Hand: ${handSize} ${direction}`;
-                    
-                    return `
-                        <div class="game-item">
-                            <div class="game-info">
-                                <h3>${playerNames}</h3>
-                                <p>${date} • ${roundInfo}</p>
-                            </div>
-                            <div class="game-actions">
-                                <button class="btn btn-primary btn-small" onclick="loadGame('${game.gameId}')">Load</button>
-                                <button class="btn btn-danger btn-small" onclick="deleteGame('${game.gameId}')">Delete</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
+            gameList.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <p style="color: #cbd5e1; margin-bottom: 1.5rem;">Select a saved game file (.json) to load</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('loadGameFile').click()" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                        📁 Choose Game File
+                    </button>
+                    <input type="file" id="loadGameFile" accept=".json" onchange="loadGameFromFile(event)" style="display: none;">
+                </div>
+            `;
 
             document.getElementById('saveLoadModal').classList.add('active');
         }
 
-        function loadGame(gameId) {
-            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
-            const game = games.find(g => g.gameId === gameId);
+        function loadGameFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-            if (game) {
-                // Handle backward compatibility with old game format
-                if (game.handProgression && !game.currentHandSize) {
-                    game.currentHandSize = game.handProgression[game.currentRound];
-                    game.startingHandSize = game.handProgression[0];
-                    game.goingDown = true;
-                }
-                
-                // Initialize previousPosition if not present
-                game.players.forEach((player, idx) => {
-                    if (player.previousPosition === undefined) {
-                        player.previousPosition = idx + 1;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const game = JSON.parse(e.target.result);
+                    
+                    // Validate it's a valid game file
+                    if (!game.players || !game.rounds || !Array.isArray(game.players)) {
+                        throw new Error('Invalid game file format');
                     }
-                });
-                
-                gameState = game;
-                document.getElementById('setupScreen').classList.add('hidden');
-                document.getElementById('gameScreen').classList.remove('hidden');
-                loadHeaderActions('game');
-                renderRoundSetup();
-                renderScoreboard();
-                renderHistory();
-                closeModal('saveLoadModal');
-            }
+
+                    // Handle backward compatibility
+                    if (game.handProgression && !game.currentHandSize) {
+                        game.currentHandSize = game.handProgression[game.currentRound];
+                        game.startingHandSize = game.handProgression[0];
+                        game.goingDown = true;
+                    }
+                    
+                    // Initialize previousPosition if not present
+                    game.players.forEach((player, idx) => {
+                        if (player.previousPosition === undefined) {
+                            player.previousPosition = idx + 1;
+                        }
+                    });
+                    
+                    gameState = game;
+                    document.getElementById('setupScreen').classList.add('hidden');
+                    document.getElementById('gameScreen').classList.remove('hidden');
+                    loadHeaderActions('game');
+                    renderRoundSetup();
+                    renderScoreboard();
+                    renderHistory();
+                    closeModal('saveLoadModal');
+                    
+                    alert('✅ Game loaded successfully!');
+                } catch (error) {
+                    alert('❌ Error loading game file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
         }
 
         function deleteGame(gameId) {
-            if (!confirm('Delete this saved game?')) return;
-
-            const games = JSON.parse(localStorage.getItem('ohHellGames') || '[]');
-            const filtered = games.filter(g => g.gameId !== gameId);
-            localStorage.setItem('ohHellGames', JSON.stringify(filtered));
-            showSaveLoadModal();
+            // This function is no longer needed but kept for backward compatibility
+            alert('Delete function is no longer available. Simply delete the JSON file from your computer.');
         }
 
         function showStats() {
