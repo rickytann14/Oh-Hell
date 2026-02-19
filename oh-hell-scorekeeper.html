@@ -624,6 +624,16 @@
         </div>
     </div>
 
+    <div class="modal" id="rulesModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>📖 Oh Hell Rules & Scoring</h2>
+                <button class="close-modal" onclick="closeModal('rulesModal')">&times;</button>
+            </div>
+            <div id="rulesContent"></div>
+        </div>
+    </div>
+
     <script>
         let gameState = {
             players: [],
@@ -893,6 +903,7 @@
                 actions.innerHTML = `
                     <button class="btn btn-secondary btn-small" onclick="openManagePlayersModal()">👥 Manage Players</button>
                     <button class="btn btn-secondary btn-small" onclick="openSettingsModal()">⚙️ Settings</button>
+                    <button class="btn btn-secondary btn-small" onclick="openRulesModal()">📖 Rules & Math</button>
                     <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load Game</button>
                 `;
             } else if (mode === 'game') {
@@ -912,6 +923,132 @@
         function openManagePlayersModal() {
             loadSavedPlayers();
             document.getElementById('managePlayersModal').classList.add('active');
+        }
+
+        function openRulesModal() {
+            const content = document.getElementById('rulesContent');
+            
+            content.innerHTML = `
+                <div style="color: #cbd5e1; line-height: 1.6;">
+                    <h3 style="color: #fbbf24; margin-top: 1rem; margin-bottom: 0.75rem;">🎯 Game Overview</h3>
+                    <p>Oh Hell is a trick-taking card game where players must bid exactly how many tricks they'll win. The total bids cannot equal the hand size (marked as ❌ EXACT).</p>
+                    
+                    <h3 style="color: #fbbf24; margin-top: 1.5rem; margin-bottom: 0.75rem;">📊 Scoring Formula</h3>
+                    <p style="margin-bottom: 1rem;">Your score for a round depends on whether you made your bid:</p>
+                    
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                        <h4 style="color: #10b981; margin-bottom: 0.5rem;">✅ Made Your Bid (Positive Bid > 0)</h4>
+                        <code style="display: block; background: #0f172a; padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; color: #10b981; font-size: 0.9rem;">
+                            Score = 10 + (Bid²) + Confidence - Deferred - Tax
+                        </code>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;"><strong>Example:</strong> Bid 3, Confidence MAX (10), No deferred, No tax</p>
+                        <p style="font-size: 0.9rem; color: #94a3b8;">= 10 + (3²) + 10 - 0 - 0 = <strong style="color: #10b981;">29 points</strong></p>
+                    </div>
+                    
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                        <h4 style="color: #10b981; margin-bottom: 0.5rem;">✅ Made Zero Bid</h4>
+                        <code style="display: block; background: #0f172a; padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; color: #10b981; font-size: 0.9rem;">
+                            Score = ZeroBonus + HandSize + Confidence - Deferred - Tax
+                        </code>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;"><strong>Zero Bonus:</strong> 10 points (≤9 players) or 5 points (>9 players)</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;"><strong>Example:</strong> 4 players, Hand size 8, Confidence MAX (5)</p>
+                        <p style="font-size: 0.9rem; color: #94a3b8;">= 10 + 8 + 5 - 0 - 0 = <strong style="color: #10b981;">23 points</strong></p>
+                    </div>
+                    
+                    <div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                        <h4 style="color: #ef4444; margin-bottom: 0.5rem;">❌ Got Set (Failed Bid)</h4>
+                        <code style="display: block; background: #0f172a; padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; color: #ef4444; font-size: 0.9rem;">
+                            Score = -Confidence - Deferred - Tax
+                        </code>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;"><strong>Example:</strong> Confidence MAX (10), Deferred, Tax 2</p>
+                        <p style="font-size: 0.9rem; color: #94a3b8;">= -10 - 2 - 2 = <strong style="color: #ef4444;">-14 points</strong></p>
+                    </div>
+                    
+                    <h3 style="color: #fbbf24; margin-top: 1.5rem; margin-bottom: 0.75rem;">⚙️ Modifiers</h3>
+                    
+                    <div style="background: rgba(51, 65, 85, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <h4 style="color: #fbbf24; margin-bottom: 0.5rem;">Confidence</h4>
+                        <p style="font-size: 0.9rem;">How confident are you in making your bid?</p>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; font-size: 0.9rem;">
+                            <li><strong>MAX:</strong> 10 points (for bid > 0) or 5 points (for bid = 0)</li>
+                            <li><strong>0, 5, 10:</strong> Manual confidence values</li>
+                            <li>Higher confidence = bigger reward if you make it, bigger penalty if you don't</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: rgba(51, 65, 85, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <h4 style="color: #fbbf24; margin-bottom: 0.5rem;">Tax</h4>
+                        <p style="font-size: 0.9rem;">Points paid by the auction winner to buy trump suit choice</p>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; font-size: 0.9rem;">
+                            <li>Subtracted from your score (win or lose)</li>
+                            <li>Typical range: 0-5 points</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: rgba(51, 65, 85, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <h4 style="color: #fbbf24; margin-bottom: 0.5rem;">Deferred</h4>
+                        <p style="font-size: 0.9rem;">If you bid last and deferred your decision:</p>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; font-size: 0.9rem;">
+                            <li><strong>-2 points</strong> penalty (win or lose)</li>
+                            <li>Encourages decisive bidding</li>
+                        </ul>
+                    </div>
+                    
+                    <h3 style="color: #fbbf24; margin-top: 1.5rem; margin-bottom: 0.75rem;">📐 Complete Examples</h3>
+                    
+                    <div style="background: rgba(15, 23, 42, 0.9); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <p style="font-weight: 600; color: #fbbf24; margin-bottom: 0.5rem;">Example 1: Successful High Bid</p>
+                        <p style="font-size: 0.9rem; color: #cbd5e1;">
+                            • Bid: 5<br>
+                            • Confidence: MAX (10)<br>
+                            • Tax: 3<br>
+                            • Deferred: No<br>
+                            • Result: Made bid ✅
+                        </p>
+                        <code style="display: block; background: #0a0f1a; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; color: #10b981; font-size: 0.85rem;">
+                            10 + (5²) + 10 - 0 - 3 = 10 + 25 + 10 - 3 = 42 points
+                        </code>
+                    </div>
+                    
+                    <div style="background: rgba(15, 23, 42, 0.9); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <p style="font-weight: 600; color: #fbbf24; margin-bottom: 0.5rem;">Example 2: Failed Bid with Penalties</p>
+                        <p style="font-size: 0.9rem; color: #cbd5e1;">
+                            • Bid: 4<br>
+                            • Confidence: 5<br>
+                            • Tax: 2<br>
+                            • Deferred: Yes<br>
+                            • Result: Got set ❌
+                        </p>
+                        <code style="display: block; background: #0a0f1a; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; color: #ef4444; font-size: 0.85rem;">
+                            -5 - 2 - 2 = -9 points
+                        </code>
+                    </div>
+                    
+                    <div style="background: rgba(15, 23, 42, 0.9); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                        <p style="font-weight: 600; color: #fbbf24; margin-bottom: 0.5rem;">Example 3: Successful Zero Bid</p>
+                        <p style="font-size: 0.9rem; color: #cbd5e1;">
+                            • Bid: 0<br>
+                            • Hand Size: 10<br>
+                            • Players: 6<br>
+                            • Confidence: MAX (5 for zero bids)<br>
+                            • Tax: 0<br>
+                            • Result: Made bid ✅
+                        </p>
+                        <code style="display: block; background: #0a0f1a; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; color: #10b981; font-size: 0.85rem;">
+                            10 + 10 + 5 - 0 - 0 = 25 points
+                        </code>
+                    </div>
+                    
+                    <h3 style="color: #fbbf24; margin-top: 1.5rem; margin-bottom: 0.75rem;">🎲 Bid Rules</h3>
+                    <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Under (🦆):</strong> Total bids < hand size - Valid</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Over (🦢):</strong> Total bids > hand size - Valid</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Exact (❌):</strong> Total bids = hand size - INVALID (cannot score)</li>
+                    </ul>
+                </div>
+            `;
+            
+            document.getElementById('rulesModal').classList.add('active');
         }
 
         function openSettingsModal() {
