@@ -641,7 +641,8 @@
             currentRound: 0,
             handProgression: [],
             gameId: null,
-            createdAt: null
+            createdAt: null,
+            saveCode: null
         };
 
         // Initialize
@@ -664,6 +665,38 @@
 
         function savePlayers(players) {
             localStorage.setItem('ohHellPlayers', JSON.stringify(players));
+        }
+
+        function getDailySaveCounters() {
+            return JSON.parse(localStorage.getItem('ohHellDailySaveCounters') || '{}');
+        }
+
+        function saveDailySaveCounters(counters) {
+            localStorage.setItem('ohHellDailySaveCounters', JSON.stringify(counters));
+        }
+
+        function indexToLetters(index) {
+            let value = index;
+            let letters = '';
+
+            do {
+                letters = String.fromCharCode(65 + (value % 26)) + letters;
+                value = Math.floor(value / 26) - 1;
+            } while (value >= 0);
+
+            return letters;
+        }
+
+        function getNextGameSaveCode() {
+            const date = new Date().toISOString().split('T')[0];
+            const counters = getDailySaveCounters();
+            const nextIndex = Number.isInteger(counters[date]) ? counters[date] : 0;
+            const letter = indexToLetters(nextIndex);
+
+            counters[date] = nextIndex + 1;
+            saveDailySaveCounters(counters);
+
+            return `${date}-${letter}`;
         }
 
         function addPlayer() {
@@ -1119,7 +1152,8 @@
                 startingHandSize: startingHandSize,
                 goingDown: true, // true = going down, false = going up
                 gameId: Date.now().toString(),
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                saveCode: null
             };
 
             document.getElementById('setupScreen').classList.add('hidden');
@@ -1556,6 +1590,10 @@
         }
 
         function saveGame() {
+            if (!gameState.saveCode) {
+                gameState.saveCode = getNextGameSaveCode();
+            }
+
             const gameToSave = {
                 ...gameState,
                 savedAt: new Date().toISOString()
@@ -1566,10 +1604,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             
-            // Generate filename with date and player names
-            const date = new Date().toISOString().split('T')[0];
-            const playerNames = gameState.players.map(p => p.name).join('-').substring(0, 30);
-            const fileName = `oh-hell-${date}-${playerNames}.json`;
+            const fileName = `oh-hell-${gameState.saveCode}.json`;
             
             link.href = url;
             link.download = fileName;
@@ -1901,7 +1936,8 @@
                 startingHandSize: 10,
                 goingDown: true,
                 gameId: null,
-                createdAt: null
+                createdAt: null,
+                saveCode: null
             };
             
             // Reset player inputs
