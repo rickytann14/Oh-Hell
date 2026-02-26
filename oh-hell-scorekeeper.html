@@ -1138,6 +1138,7 @@
 
             const round = {
                 handSize: handSize,
+                direction: gameState.goingDown ? 'down' : 'up',
                 dealerIndex: dealerIndex,
                 trump: '',  // Add trump card tracking
                 trumpRank: '',
@@ -1164,6 +1165,9 @@
             const stickyInfo = document.getElementById('stickyRoundInfo');
 
             syncTrumpParts(round);
+            if (!round.direction) {
+                round.direction = gameState.goingDown ? 'down' : 'up';
+            }
             
             const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
             let bidStatus = '';
@@ -1180,7 +1184,7 @@
                 bidClass = 'exact';
             }
 
-            const directionIndicator = gameState.goingDown ? '📉 Going Down' : '📈 Going Up';
+            const directionIndicator = round.direction === 'up' ? '📈 Going Up' : '📉 Going Down';
 
             const sortedPlayers = [...gameState.players]
                 .map((p, idx) => ({...p, originalIndex: idx}))
@@ -1570,10 +1574,16 @@
                     <div class="score-history">
                         ${roundsWithIndices.map(({round, idx}) => {
                             const roundNum = idx + 1;
+                            if (!round.direction) {
+                                round.direction = idx > 0
+                                    ? (gameState.rounds[idx - 1].handSize <= round.handSize ? 'up' : 'down')
+                                    : 'down';
+                            }
+                            const directionLabel = round.direction === 'up' ? '📈 Up' : '📉 Down';
                             return `
                                 <div class="history-round">
                                     <div class="history-round-header" style="display: flex; justify-content: space-between; align-items: center;">
-                                        <span>Round ${roundNum} - Hand Size: ${round.handSize}${round.trump ? ` • 🃏 ${round.trump}` : ''}</span>
+                                        <span>Round ${roundNum} - Hand Size: ${round.handSize} • ${directionLabel}${round.trump ? ` • 🃏 ${round.trump}` : ''}</span>
                                         <button class="btn btn-secondary btn-small" onclick="editRound(${idx})" style="padding: 0.4rem 0.8rem;">
                                             ✏️ Edit
                                         </button>
@@ -1776,6 +1786,11 @@
         function editRound(roundIndex) {
             editingRoundIndex = roundIndex;
             const round = gameState.rounds[roundIndex];
+            if (!round.direction) {
+                round.direction = roundIndex > 0
+                    ? (gameState.rounds[roundIndex - 1].handSize <= round.handSize ? 'up' : 'down')
+                    : 'down';
+            }
             
             document.getElementById('editRoundNumber').textContent = roundIndex + 1;
             
@@ -1798,9 +1813,23 @@
             content.innerHTML = `
                 <div style="background: rgba(15, 23, 42, 0.9); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
                     <div class="round-header">
-                        <h3>Hand Size: ${round.handSize}</h3>
+                        <h3>Edit Round Settings</h3>
                         <div class="bid-tracker ${bidClass}">
                             ${totalBids}/${round.handSize} ${bidStatus}
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+                        <div>
+                            <label style="font-size: 0.85rem; color: #cbd5e1;">Hand Size</label>
+                            <input type="number" min="1" max="20" value="${round.handSize}"
+                                   onchange="updateEditHandSize(this.value)">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: #cbd5e1;">Counting Direction</label>
+                            <select onchange="updateEditDirection(this.value)">
+                                <option value="down" ${round.direction === 'down' ? 'selected' : ''}>📉 Going Down</option>
+                                <option value="up" ${round.direction === 'up' ? 'selected' : ''}>📈 Going Up</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1866,6 +1895,23 @@
             editRound(editingRoundIndex);
         }
 
+        function updateEditHandSize(value) {
+            const round = gameState.rounds[editingRoundIndex];
+            round.handSize = Math.max(1, parseInt(value) || 1);
+
+            round.playerData.forEach(pdata => {
+                if (pdata.bid > round.handSize) {
+                    pdata.bid = round.handSize;
+                }
+            });
+
+            editRound(editingRoundIndex);
+        }
+
+        function updateEditDirection(value) {
+            gameState.rounds[editingRoundIndex].direction = value === 'up' ? 'up' : 'down';
+        }
+
         function updateEditTax(playerIdx, value) {
             gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = parseInt(value) || 0;
         }
@@ -1884,6 +1930,9 @@
 
         function saveEditedRound() {
             const round = gameState.rounds[editingRoundIndex];
+            if (!round.direction) {
+                round.direction = 'down';
+            }
             
             // Check if at least one player got set
             const anyoneSet = round.playerData.some(p => p.gotSet);
@@ -1943,6 +1992,11 @@
             });
 
             closeModal('editRoundModal');
+
+            if (editingRoundIndex === gameState.currentRound) {
+                gameState.currentHandSize = round.handSize;
+                gameState.goingDown = round.direction === 'down';
+            }
             
             // Re-render everything
             if (editingRoundIndex === gameState.currentRound) {
