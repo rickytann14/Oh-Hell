@@ -540,7 +540,7 @@
                 <label>Starting Hand Size</label>
                 <input type="number" id="startingHandSize" min="1" max="15" value="10">
                 <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
-                    Game will start at this hand size and go down each round. You'll decide when to turn around during the game.
+                    Game starts at this hand size. You can set hand size manually for each round.
                 </p>
             </div>
 
@@ -639,7 +639,7 @@
             players: [],
             rounds: [],
             currentRound: 0,
-            handProgression: [],
+            startingHandSize: 10,
             gameId: null,
             createdAt: null
         };
@@ -1118,9 +1118,7 @@
                 players: players.map((p, idx) => ({...p, previousPosition: idx + 1})),
                 rounds: [],
                 currentRound: 0,
-                currentHandSize: startingHandSize,
                 startingHandSize: startingHandSize,
-                goingDown: true, // true = going down, false = going up
                 gameId: Date.now().toString(),
                 createdAt: new Date().toISOString()
             };
@@ -1133,12 +1131,14 @@
         }
 
         function startNewRound() {
-            const handSize = gameState.currentHandSize;
+            const previousRound = gameState.rounds[gameState.currentRound - 1];
+            const handSize = gameState.currentRound === 0
+                ? gameState.startingHandSize
+                : (previousRound?.handSize || gameState.startingHandSize);
             const dealerIndex = gameState.currentRound % gameState.players.length;
 
             const round = {
                 handSize: handSize,
-                direction: gameState.goingDown ? 'down' : 'up',
                 dealerIndex: dealerIndex,
                 trump: '',  // Add trump card tracking
                 trumpRank: '',
@@ -1165,9 +1165,6 @@
             const stickyInfo = document.getElementById('stickyRoundInfo');
 
             syncTrumpParts(round);
-            if (!round.direction) {
-                round.direction = gameState.goingDown ? 'down' : 'up';
-            }
             
             const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
             let bidStatus = '';
@@ -1183,8 +1180,6 @@
                 bidStatus = '❌ Exact';
                 bidClass = 'exact';
             }
-
-            const directionIndicator = round.direction === 'up' ? '📈 Going Up' : '📉 Going Down';
 
             const sortedPlayers = [...gameState.players]
                 .map((p, idx) => ({...p, originalIndex: idx}))
@@ -1202,7 +1197,7 @@
                 <div class="round-summary">
                     <div class="leader-pill">👑 ${leader.name} (${leader.score})</div>
                     <div class="round-meta">
-                        <div>Round ${gameState.currentRound + 1} • ${directionIndicator}</div>
+                        <div>Round ${gameState.currentRound + 1}</div>
                         <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem;">
                             🎴 Dealer: ${dealer.name}${hasUniqueLow ? ` • 📉 Low: ${lowPlayer.name} (${lowPlayer.score})` : ''}
                             ${round.trump ? ` • 🃏 Trump: <span style="color: #fbbf24; font-weight: 600;">${round.trump}</span>` : ''}
@@ -1217,7 +1212,13 @@
                     <div class="round-header">
                         <div>
                             <h3>Round ${gameState.currentRound + 1}</h3>
-                            <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.25rem;">${directionIndicator}</div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                                <label style="font-size: 0.85rem; color: #cbd5e1;">Hand Size</label>
+                                <input type="number" min="1" max="20" value="${round.handSize}"
+                                       ${round.scored ? 'disabled' : ''}
+                                       onchange="updateCurrentRoundHandSize(this.value)"
+                                       style="width: 90px; padding: 0.35rem 0.5rem; font-size: 0.9rem;">
+                            </div>
                         </div>
                         <div class="bid-tracker ${bidClass}">
                             ${totalBids}/${round.handSize} ${bidStatus}
@@ -1317,11 +1318,6 @@
                         </button>
                     ` : `
                         <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-direction: column;">
-                            ${gameState.goingDown ? `
-                                <button class="btn btn-primary" onclick="turnAround()" style="padding: 1rem;">
-                                    🔄 Turn Around (Start Going Back Up)
-                                </button>
-                            ` : ''}
                             <div style="display: flex; gap: 0.5rem;">
                                 <button class="btn btn-danger" onclick="undoLastRound()" style="flex: 1;">
                                     ↩️ Undo Round
@@ -1341,6 +1337,19 @@
 
         function updateBid(playerIdx, value) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = parseInt(value) || 0;
+            renderRoundSetup();
+        }
+
+        function updateCurrentRoundHandSize(value) {
+            const round = gameState.rounds[gameState.currentRound];
+            round.handSize = Math.max(1, parseInt(value) || 1);
+
+            round.playerData.forEach(pdata => {
+                if (pdata.bid > round.handSize) {
+                    pdata.bid = round.handSize;
+                }
+            });
+
             renderRoundSetup();
         }
 
@@ -1482,35 +1491,8 @@
         }
 
         function nextRound() {
-            // Update hand size for next round
-            if (gameState.goingDown) {
-                gameState.currentHandSize--;
-            } else {
-                gameState.currentHandSize++;
-            }
-
-            // Check if we've reached the starting hand size going back up
-            if (!gameState.goingDown && gameState.currentHandSize > gameState.startingHandSize) {
-                endGame();
-                return;
-            }
-
-            // Prevent going below 1
-            if (gameState.currentHandSize < 1) {
-                alert('Cannot go below 1 card! Use "Turn Around" button to start going back up.');
-                gameState.currentHandSize = 1;
-                return;
-            }
-
             gameState.currentRound++;
             startNewRound();
-        }
-
-        function turnAround() {
-            if (!confirm('Turn around and start going back up in hand size?')) return;
-            
-            gameState.goingDown = false;
-            nextRound();
         }
 
         function undoLastRound() {
@@ -1574,16 +1556,10 @@
                     <div class="score-history">
                         ${roundsWithIndices.map(({round, idx}) => {
                             const roundNum = idx + 1;
-                            if (!round.direction) {
-                                round.direction = idx > 0
-                                    ? (gameState.rounds[idx - 1].handSize <= round.handSize ? 'up' : 'down')
-                                    : 'down';
-                            }
-                            const directionLabel = round.direction === 'up' ? '📈 Up' : '📉 Down';
                             return `
                                 <div class="history-round">
                                     <div class="history-round-header" style="display: flex; justify-content: space-between; align-items: center;">
-                                        <span>Round ${roundNum} - Hand Size: ${round.handSize} • ${directionLabel}${round.trump ? ` • 🃏 ${round.trump}` : ''}</span>
+                                        <span>Round ${roundNum} - Hand Size: ${round.handSize}${round.trump ? ` • 🃏 ${round.trump}` : ''}</span>
                                         <button class="btn btn-secondary btn-small" onclick="editRound(${idx})" style="padding: 0.4rem 0.8rem;">
                                             ✏️ Edit
                                         </button>
@@ -1698,10 +1674,11 @@
                     }
 
                     // Handle backward compatibility
-                    if (game.handProgression && !game.currentHandSize) {
-                        game.currentHandSize = game.handProgression[game.currentRound];
-                        game.startingHandSize = game.handProgression[0];
-                        game.goingDown = true;
+                    if (!game.startingHandSize) {
+                        game.startingHandSize = game.handProgression?.[0]
+                            || game.rounds?.[0]?.handSize
+                            || game.currentHandSize
+                            || 10;
                     }
                     
                     // Initialize previousPosition if not present
@@ -1786,11 +1763,6 @@
         function editRound(roundIndex) {
             editingRoundIndex = roundIndex;
             const round = gameState.rounds[roundIndex];
-            if (!round.direction) {
-                round.direction = roundIndex > 0
-                    ? (gameState.rounds[roundIndex - 1].handSize <= round.handSize ? 'up' : 'down')
-                    : 'down';
-            }
             
             document.getElementById('editRoundNumber').textContent = roundIndex + 1;
             
@@ -1825,11 +1797,8 @@
                                    onchange="updateEditHandSize(this.value)">
                         </div>
                         <div>
-                            <label style="font-size: 0.85rem; color: #cbd5e1;">Counting Direction</label>
-                            <select onchange="updateEditDirection(this.value)">
-                                <option value="down" ${round.direction === 'down' ? 'selected' : ''}>📉 Going Down</option>
-                                <option value="up" ${round.direction === 'up' ? 'selected' : ''}>📈 Going Up</option>
-                            </select>
+                            <label style="font-size: 0.85rem; color: #cbd5e1;">Round Number</label>
+                            <input type="text" value="${roundIndex + 1}" disabled>
                         </div>
                     </div>
                 </div>
@@ -1908,10 +1877,6 @@
             editRound(editingRoundIndex);
         }
 
-        function updateEditDirection(value) {
-            gameState.rounds[editingRoundIndex].direction = value === 'up' ? 'up' : 'down';
-        }
-
         function updateEditTax(playerIdx, value) {
             gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = parseInt(value) || 0;
         }
@@ -1930,9 +1895,6 @@
 
         function saveEditedRound() {
             const round = gameState.rounds[editingRoundIndex];
-            if (!round.direction) {
-                round.direction = 'down';
-            }
             
             // Check if at least one player got set
             const anyoneSet = round.playerData.some(p => p.gotSet);
@@ -1992,11 +1954,6 @@
             });
 
             closeModal('editRoundModal');
-
-            if (editingRoundIndex === gameState.currentRound) {
-                gameState.currentHandSize = round.handSize;
-                gameState.goingDown = round.direction === 'down';
-            }
             
             // Re-render everything
             if (editingRoundIndex === gameState.currentRound) {
@@ -2027,9 +1984,7 @@
                 players: [],
                 rounds: [],
                 currentRound: 0,
-                currentHandSize: 10,
                 startingHandSize: 10,
-                goingDown: true,
                 gameId: null,
                 createdAt: null
             };
