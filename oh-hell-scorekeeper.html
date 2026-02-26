@@ -641,9 +641,11 @@
             currentRound: 0,
             handProgression: [],
             gameId: null,
-            createdAt: null,
-            saveCode: null
+            createdAt: null
         };
+
+        const TRUMP_RANKS = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
+        const TRUMP_SUITS = ['♠', '♥', '♦', '♣'];
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -665,38 +667,6 @@
 
         function savePlayers(players) {
             localStorage.setItem('ohHellPlayers', JSON.stringify(players));
-        }
-
-        function getDailySaveCounters() {
-            return JSON.parse(localStorage.getItem('ohHellDailySaveCounters') || '{}');
-        }
-
-        function saveDailySaveCounters(counters) {
-            localStorage.setItem('ohHellDailySaveCounters', JSON.stringify(counters));
-        }
-
-        function indexToLetters(index) {
-            let value = index;
-            let letters = '';
-
-            do {
-                letters = String.fromCharCode(65 + (value % 26)) + letters;
-                value = Math.floor(value / 26) - 1;
-            } while (value >= 0);
-
-            return letters;
-        }
-
-        function getNextGameSaveCode() {
-            const date = new Date().toISOString().split('T')[0];
-            const counters = getDailySaveCounters();
-            const nextIndex = Number.isInteger(counters[date]) ? counters[date] : 0;
-            const letter = indexToLetters(nextIndex);
-
-            counters[date] = nextIndex + 1;
-            saveDailySaveCounters(counters);
-
-            return `${date}-${letter}`;
         }
 
         function addPlayer() {
@@ -1152,8 +1122,7 @@
                 startingHandSize: startingHandSize,
                 goingDown: true, // true = going down, false = going up
                 gameId: Date.now().toString(),
-                createdAt: new Date().toISOString(),
-                saveCode: null
+                createdAt: new Date().toISOString()
             };
 
             document.getElementById('setupScreen').classList.add('hidden');
@@ -1170,6 +1139,9 @@
             const round = {
                 handSize: handSize,
                 dealerIndex: dealerIndex,
+                trump: '',  // Add trump card tracking
+                trumpRank: '',
+                trumpSuit: '',
                 playerData: gameState.players.map(p => ({
                     bid: 0,
                     tax: 0,
@@ -1190,6 +1162,8 @@
             const round = gameState.rounds[gameState.currentRound];
             const container = document.getElementById('currentRoundSetup');
             const stickyInfo = document.getElementById('stickyRoundInfo');
+
+            syncTrumpParts(round);
             
             const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
             let bidStatus = '';
@@ -1227,6 +1201,7 @@
                         <div>Round ${gameState.currentRound + 1} • ${directionIndicator}</div>
                         <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem;">
                             🎴 Dealer: ${dealer.name}${hasUniqueLow ? ` • 📉 Low: ${lowPlayer.name} (${lowPlayer.score})` : ''}
+                            ${round.trump ? ` • 🃏 Trump: <span style="color: #fbbf24; font-weight: 600;">${round.trump}</span>` : ''}
                         </div>
                     </div>
                     <div class="bid-tracker ${bidClass}">${totalBids}/${round.handSize} ${bidStatus}</div>
@@ -1242,6 +1217,25 @@
                         </div>
                         <div class="bid-tracker ${bidClass}">
                             ${totalBids}/${round.handSize} ${bidStatus}
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(251, 191, 36, 0.15); border: 2px solid rgba(251, 191, 36, 0.35); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <label style="color: #fbbf24; font-weight: 600; font-size: 1rem;">🃏 Big Boss (Trump):</label>
+                            <div style="display: flex; gap: 0.5rem; flex: 1; min-width: 220px;">
+                                <select onchange="updateTrumpRank(this.value)"
+                                        style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
+                                    <option value="">-- Rank --</option>
+                                    ${TRUMP_RANKS.map(rank => `<option value="${rank}" ${round.trumpRank === rank ? 'selected' : ''}>${rank}</option>`).join('')}
+                                </select>
+                                <select onchange="updateTrumpSuit(this.value)"
+                                        style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
+                                    <option value="">-- Suit --</option>
+                                    ${TRUMP_SUITS.map(suit => `<option value="${suit}" ${round.trumpSuit === suit ? 'selected' : ''}>${suit}</option>`).join('')}
+                                </select>
+                            </div>
+                            ${round.trump ? `<div style="font-size: 1.5rem; padding: 0.25rem 0.75rem; background: rgba(251, 191, 36, 0.2); border-radius: 8px;">${round.trump}</div>` : ''}
                         </div>
                     </div>
                     
@@ -1360,6 +1354,54 @@
 
         function updateGotSet(playerIdx, checked) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].gotSet = checked;
+        }
+
+        function parseTrumpCard(trumpValue) {
+            if (!trumpValue || typeof trumpValue !== 'string') {
+                return { rank: '', suit: '' };
+            }
+
+            const suit = TRUMP_SUITS.find(s => trumpValue.includes(s)) || '';
+            if (!suit) {
+                return { rank: '', suit: '' };
+            }
+
+            const rank = trumpValue.replace(suit, '').trim();
+            if (!TRUMP_RANKS.includes(rank)) {
+                return { rank: '', suit: '' };
+            }
+
+            return { rank, suit };
+        }
+
+        function syncTrumpParts(round) {
+            if (!round) return;
+
+            if (round.trumpRank === undefined || round.trumpSuit === undefined) {
+                const parsed = parseTrumpCard(round.trump || '');
+                round.trumpRank = parsed.rank;
+                round.trumpSuit = parsed.suit;
+            }
+
+            if (round.trumpRank && round.trumpSuit) {
+                round.trump = `${round.trumpRank}${round.trumpSuit}`;
+            } else {
+                round.trump = '';
+            }
+        }
+
+        function updateTrumpRank(value) {
+            const round = gameState.rounds[gameState.currentRound];
+            round.trumpRank = value;
+            syncTrumpParts(round);
+            renderRoundSetup();
+        }
+
+        function updateTrumpSuit(value) {
+            const round = gameState.rounds[gameState.currentRound];
+            round.trumpSuit = value;
+            syncTrumpParts(round);
+            renderRoundSetup();
         }
 
         function scoreRound() {
@@ -1531,7 +1573,7 @@
                             return `
                                 <div class="history-round">
                                     <div class="history-round-header" style="display: flex; justify-content: space-between; align-items: center;">
-                                        <span>Round ${roundNum} - Hand Size: ${round.handSize}</span>
+                                        <span>Round ${roundNum} - Hand Size: ${round.handSize}${round.trump ? ` • 🃏 ${round.trump}` : ''}</span>
                                         <button class="btn btn-secondary btn-small" onclick="editRound(${idx})" style="padding: 0.4rem 0.8rem;">
                                             ✏️ Edit
                                         </button>
@@ -1590,10 +1632,6 @@
         }
 
         function saveGame() {
-            if (!gameState.saveCode) {
-                gameState.saveCode = getNextGameSaveCode();
-            }
-
             const gameToSave = {
                 ...gameState,
                 savedAt: new Date().toISOString()
@@ -1604,7 +1642,10 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             
-            const fileName = `oh-hell-${gameState.saveCode}.json`;
+            // Generate shorter filename with just date and round
+            const date = new Date().toISOString().split('T')[0];
+            const round = gameState.currentRound + 1;
+            const fileName = `oh-hell-${date}-r${round}.json`;
             
             link.href = url;
             link.download = fileName;
@@ -1936,8 +1977,7 @@
                 startingHandSize: 10,
                 goingDown: true,
                 gameId: null,
-                createdAt: null,
-                saveCode: null
+                createdAt: null
             };
             
             // Reset player inputs
