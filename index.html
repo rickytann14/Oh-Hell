@@ -744,8 +744,32 @@
             createdAt: null
         };
 
+        const DEFAULT_SYNC_URL = 'https://raw.githubusercontent.com/rickytann14/Oh-Hell/main/oh-hell-players.json';
         const TRUMP_RANKS = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
         const TRUMP_SUITS = ['♠', '♥', '♦', '♣'];
+
+        function normalizeSyncUrl(url) {
+            if (!url) return '';
+
+            try {
+                const parsed = new URL(url);
+
+                if (parsed.hostname === 'github.com') {
+                    const parts = parsed.pathname.split('/').filter(Boolean);
+                    if (parts.length >= 5 && parts[2] === 'blob') {
+                        const owner = parts[0];
+                        const repo = parts[1];
+                        const branch = parts[3];
+                        const filePath = parts.slice(4).join('/');
+                        return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+                    }
+                }
+            } catch (error) {
+                return url;
+            }
+
+            return url;
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -878,7 +902,7 @@
 
         // Settings and Sync Functions
         function saveSettings() {
-            const syncUrl = document.getElementById('syncUrl').value.trim();
+            const syncUrl = normalizeSyncUrl(document.getElementById('syncUrl').value.trim());
             const autoSync = document.getElementById('autoSyncCheck').checked;
             
             if (syncUrl && !syncUrl.startsWith('http')) {
@@ -896,24 +920,27 @@
             if (confirm('Clear the sync URL?')) {
                 localStorage.removeItem('ohHellPlayerSyncUrl');
                 localStorage.removeItem('ohHellAutoSync');
-                document.getElementById('syncUrl').value = '';
-                alert('Sync URL cleared!');
+                document.getElementById('syncUrl').value = DEFAULT_SYNC_URL;
+                alert('Sync URL reset to default!');
             }
         }
 
         function testSyncUrl() {
-            const syncUrl = document.getElementById('syncUrl').value.trim();
+            const syncUrl = normalizeSyncUrl(document.getElementById('syncUrl').value.trim());
             
             if (!syncUrl) {
                 alert('Please enter a URL first');
                 return;
             }
 
+            document.getElementById('syncUrl').value = syncUrl;
             syncPlayersFromUrl(syncUrl, true);
         }
 
         function syncPlayersFromUrl(url, showAlert = false) {
-            fetch(url)
+            const normalizedUrl = normalizeSyncUrl(url);
+
+            fetch(normalizedUrl)
                 .then(response => response.json())
                 .then(data => {
                     const importedPlayers = data.players || data;
@@ -947,7 +974,7 @@
 
         function autoSyncPlayers() {
             const autoSync = localStorage.getItem('ohHellAutoSync') !== 'false';
-            const syncUrl = localStorage.getItem('ohHellPlayerSyncUrl');
+            const syncUrl = normalizeSyncUrl(localStorage.getItem('ohHellPlayerSyncUrl') || DEFAULT_SYNC_URL);
             
             if (autoSync && syncUrl) {
                 syncPlayersFromUrl(syncUrl, false);
@@ -955,7 +982,7 @@
         }
 
         function manualSync() {
-            const syncUrl = localStorage.getItem('ohHellPlayerSyncUrl');
+            const syncUrl = normalizeSyncUrl(localStorage.getItem('ohHellPlayerSyncUrl') || DEFAULT_SYNC_URL);
             if (!syncUrl) {
                 alert('No sync URL configured. Go to Settings to add one.');
                 return;
@@ -1155,7 +1182,7 @@
         }
 
         function openSettingsModal() {
-            const syncUrl = localStorage.getItem('ohHellPlayerSyncUrl') || '';
+            const syncUrl = normalizeSyncUrl(localStorage.getItem('ohHellPlayerSyncUrl') || DEFAULT_SYNC_URL);
             const autoSync = localStorage.getItem('ohHellAutoSync') !== 'false';
             
             const modal = document.getElementById('settingsModal');
