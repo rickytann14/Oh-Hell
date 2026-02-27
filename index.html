@@ -366,6 +366,32 @@
             font-size: 0.9rem;
         }
 
+        .quick-value-row {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.35rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-value-btn {
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            background: rgba(15, 23, 42, 0.7);
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            line-height: 1.2;
+            touch-action: manipulation;
+            min-width: 44px;
+        }
+
+        .quick-value-btn:active {
+            transform: scale(0.96);
+        }
+
         .checkbox-group {
             display: flex;
             gap: 1rem;
@@ -1432,6 +1458,11 @@
                                                 +
                                             </button>
                                         </div>
+                                        <div class="quick-value-row">
+                                            ${[5, 10].map(value => `
+                                                <button class="quick-value-btn" onclick="setBid(${idx}, ${value})">${value}</button>
+                                            `).join('')}
+                                        </div>
                                     </div>
                                     <div>
                                         <label style="font-size: 0.8rem; color: #cbd5e1;">Tax</label>
@@ -1449,6 +1480,11 @@
                                                     style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
                                                 +
                                             </button>
+                                        </div>
+                                        <div class="quick-value-row">
+                                            ${[5, 10, 15, 25].map(value => `
+                                                <button class="quick-value-btn" onclick="setTax(${idx}, ${value})">${value}</button>
+                                            `).join('')}
                                         </div>
                                     </div>
                                     <div style="grid-column: span 2;">
@@ -1515,10 +1551,24 @@
             renderRoundSetup();
         }
 
+        function setBid(playerIdx, value) {
+            const round = gameState.rounds[gameState.currentRound];
+            const newBid = Math.max(0, Math.min(round.handSize, parseInt(value) || 0));
+            round.playerData[playerIdx].bid = newBid;
+            renderRoundSetup();
+        }
+
         function adjustTax(playerIdx, delta) {
             const round = gameState.rounds[gameState.currentRound];
             const currentTax = round.playerData[playerIdx].tax;
-            const newTax = Math.max(0, Math.min(20, currentTax + delta));
+            const newTax = Math.max(0, Math.min(25, currentTax + delta));
+            round.playerData[playerIdx].tax = newTax;
+            renderRoundSetup();
+        }
+
+        function setTax(playerIdx, value) {
+            const round = gameState.rounds[gameState.currentRound];
+            const newTax = Math.max(0, Math.min(25, parseInt(value) || 0));
             round.playerData[playerIdx].tax = newTax;
             renderRoundSetup();
         }
@@ -2020,6 +2070,11 @@
                                     <label style="font-size: 0.8rem; color: #cbd5e1;">Bid</label>
                                     <input type="number" min="0" max="${round.handSize}" value="${round.playerData[idx].bid}" 
                                            onchange="updateEditBid(${idx}, this.value)">
+                                    <div class="quick-value-row">
+                                        ${[5, 10].map(value => `
+                                            <button class="quick-value-btn" onclick="setEditBid(${idx}, ${value})">${value}</button>
+                                        `).join('')}
+                                    </div>
                                 </div>
                                 <div>
                                     <label style="font-size: 0.8rem; color: #cbd5e1;">Tax</label>
@@ -2037,6 +2092,11 @@
                                                 style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
                                             +
                                         </button>
+                                    </div>
+                                    <div class="quick-value-row">
+                                        ${[5, 10, 15, 25].map(value => `
+                                            <button class="quick-value-btn" onclick="setEditTax(${idx}, ${value})">${value}</button>
+                                        `).join('')}
                                     </div>
                                 </div>
                                 <div style="grid-column: span 2;">
@@ -2081,6 +2141,12 @@
             editRound(editingRoundIndex);
         }
 
+        function setEditBid(playerIdx, value) {
+            const round = gameState.rounds[editingRoundIndex];
+            round.playerData[playerIdx].bid = Math.max(0, Math.min(round.handSize, parseInt(value) || 0));
+            editRound(editingRoundIndex);
+        }
+
         function updateEditHandSize(value) {
             const round = gameState.rounds[editingRoundIndex];
             round.handSize = Math.max(1, parseInt(value) || 1);
@@ -2107,8 +2173,14 @@
         function adjustEditTax(playerIdx, delta) {
             const round = gameState.rounds[editingRoundIndex];
             const currentTax = round.playerData[playerIdx].tax;
-            const newTax = Math.max(0, Math.min(20, currentTax + delta));
+            const newTax = Math.max(0, Math.min(25, currentTax + delta));
             round.playerData[playerIdx].tax = newTax;
+            editRound(editingRoundIndex);
+        }
+
+        function setEditTax(playerIdx, value) {
+            const round = gameState.rounds[editingRoundIndex];
+            round.playerData[playerIdx].tax = Math.max(0, Math.min(25, parseInt(value) || 0));
             editRound(editingRoundIndex);
         }
 
