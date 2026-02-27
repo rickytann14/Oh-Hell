@@ -230,37 +230,78 @@
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.8rem;
             box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .round-summary-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+
+        .round-summary-bottom {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
         }
 
         .round-summary .leader-pill {
             background: rgba(251, 191, 36, 0.15);
             border: 1px solid rgba(251, 191, 36, 0.35);
             color: #fbbf24;
-            padding: 0.4rem 0.75rem;
+            padding: 0.3rem 0.55rem;
             border-radius: 999px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+            line-height: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .round-summary .round-meta {
+        .round-summary .meta-chip {
             color: #cbd5e1;
-            font-size: 0.9rem;
+            font-size: 0.78rem;
             font-weight: 600;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(100, 116, 139, 0.35);
+            border-radius: 999px;
+            padding: 0.18rem 0.45rem;
+            line-height: 1.1;
+            white-space: nowrap;
+        }
+
+        .round-summary .meta-chip.trump {
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.35);
+            background: rgba(251, 191, 36, 0.12);
+        }
+
+        .round-summary .meta-chip.low {
+            color: #fda4af;
+            border-color: rgba(244, 63, 94, 0.35);
+            background: rgba(244, 63, 94, 0.12);
         }
 
         .bid-tracker {
             background: rgba(59, 130, 246, 0.2);
-            padding: 0.5rem 1rem;
+            padding: 0.3rem 0.55rem;
             border-radius: 8px;
             font-weight: 600;
+            line-height: 1;
+            font-size: 0.82rem;
+            white-space: nowrap;
         }
 
         .bid-tracker.under { background: rgba(34, 197, 94, 0.2); }
@@ -507,9 +548,60 @@
                 grid-template-columns: 1fr;
             }
 
+            .sticky-round-info {
+                margin-top: 0.45rem;
+                padding: 0 0.5rem;
+            }
+
             .round-summary {
-                flex-direction: column;
-                align-items: flex-start;
+                padding: 0.45rem 0.55rem;
+                gap: 0.35rem;
+            }
+
+            .round-summary-top {
+                gap: 0.35rem;
+            }
+
+            .round-summary .leader-pill {
+                font-size: 0.76rem;
+                padding: 0.24rem 0.42rem;
+            }
+
+            .round-summary .meta-chip {
+                font-size: 0.7rem;
+                padding: 0.14rem 0.35rem;
+            }
+
+            .round-summary .bid-tracker {
+                font-size: 0.72rem;
+                padding: 0.22rem 0.42rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sticky-round-info {
+                padding: 0 0.35rem;
+            }
+
+            .round-summary {
+                padding: 0.38rem 0.45rem;
+                gap: 0.28rem;
+            }
+
+            .round-summary .leader-pill {
+                font-size: 0.68rem;
+                padding: 0.18rem 0.32rem;
+                max-width: 60%;
+            }
+
+            .round-summary .meta-chip {
+                font-size: 0.63rem;
+                padding: 0.12rem 0.28rem;
+            }
+
+            .round-summary .bid-tracker {
+                font-size: 0.66rem;
+                padding: 0.16rem 0.32rem;
             }
         }
     </style>
@@ -1195,15 +1287,16 @@
 
             stickyInfo.innerHTML = `
                 <div class="round-summary">
-                    <div class="leader-pill">👑 ${leader.name} (${leader.score})</div>
-                    <div class="round-meta">
-                        <div>Round ${gameState.currentRound + 1}</div>
-                        <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem;">
-                            🎴 Dealer: ${dealer.name}${hasUniqueLow ? ` • 📉 Low: ${lowPlayer.name} (${lowPlayer.score})` : ''}
-                            ${round.trump ? ` • 🃏 Trump: <span style="color: #fbbf24; font-weight: 600;">${round.trump}</span>` : ''}
-                        </div>
+                    <div class="round-summary-top">
+                        <div class="leader-pill">👑 ${leader.name} ${leader.score}</div>
+                        <div class="bid-tracker ${bidClass}">${totalBids}/${round.handSize} ${bidStatus}</div>
                     </div>
-                    <div class="bid-tracker ${bidClass}">${totalBids}/${round.handSize} ${bidStatus}</div>
+                    <div class="round-summary-bottom">
+                        <span class="meta-chip">R${gameState.currentRound + 1}</span>
+                        <span class="meta-chip">🎴 ${dealer.name}</span>
+                        ${hasUniqueLow ? `<span class="meta-chip low">↓ ${lowPlayer.name}</span>` : ''}
+                        ${round.trump ? `<span class="meta-chip trump">🃏 ${round.trump}</span>` : ''}
+                    </div>
                 </div>
             `;
 
