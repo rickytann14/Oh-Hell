@@ -730,16 +730,6 @@
         </div>
     </div>
 
-    <div class="modal" id="statsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Game Statistics</h2>
-                <button class="close-modal" onclick="closeModal('statsModal')">&times;</button>
-            </div>
-            <div id="statsContent"></div>
-        </div>
-    </div>
-
     <div class="modal" id="editRoundModal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
@@ -1067,7 +1057,6 @@
                     <div class="header-action-buttons">
                         <button class="btn btn-secondary btn-small" onclick="saveGame()">💾 Save</button>
                         <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load</button>
-                        <button class="btn btn-secondary btn-small" onclick="showStats()">📊 Stats</button>
                         <button class="btn btn-primary btn-small" onclick="exportToExcel()">📤 Export</button>
                         <button class="btn btn-danger btn-small" onclick="newGame()">🆕 New</button>
                     </div>
@@ -1952,47 +1941,6 @@
         function deleteGame(gameId) {
             // This function is no longer needed but kept for backward compatibility
             alert('Delete function is no longer available. Simply delete the JSON file from your computer.');
-        }
-
-        function showStats() {
-            const statsContent = document.getElementById('statsContent');
-            
-            const totalRounds = gameState.rounds.filter(r => r.scored).length;
-            const stats = gameState.players.map(player => {
-                const roundsWon = player.rounds.filter(r => !r.gotSet).length;
-                const roundsSet = player.rounds.filter(r => r.gotSet).length;
-                const avgScore = player.rounds.length > 0 ? (player.score / player.rounds.length).toFixed(1) : 0;
-                const totalBids = player.rounds.reduce((sum, r) => sum + r.bid, 0);
-                
-                return {
-                    name: player.name,
-                    score: player.score,
-                    roundsWon,
-                    roundsSet,
-                    avgScore,
-                    totalBids
-                };
-            }).sort((a, b) => b.score - a.score);
-
-            statsContent.innerHTML = `
-                <div style="margin-bottom: 1rem;">
-                    <p style="color: #cbd5e1;"><strong>Total Rounds Played:</strong> ${totalRounds}</p>
-                </div>
-                ${stats.map(s => `
-                    <div style="background: rgba(51, 65, 85, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <h3 style="color: #fbbf24; margin-bottom: 0.5rem;">${s.name}</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;">
-                            <div>Total Score: <strong>${s.score}</strong></div>
-                            <div>Avg/Round: <strong>${s.avgScore}</strong></div>
-                            <div>Rounds Won: <strong>${s.roundsWon}</strong></div>
-                            <div>Got Set: <strong>${s.roundsSet}</strong></div>
-                            <div>Total Bids: <strong>${s.totalBids}</strong></div>
-                        </div>
-                    </div>
-                `).join('')}
-            `;
-
-            document.getElementById('statsModal').classList.add('active');
         }
 
         function closeModal(modalId) {
