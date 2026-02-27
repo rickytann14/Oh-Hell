@@ -96,6 +96,14 @@
             transform: scale(0.95);
         }
 
+        .bid-adjust-btn:hover {
+            opacity: 0.8;
+        }
+
+        .bid-adjust-btn:active {
+            transform: scale(0.9);
+        }
+
         .setup-screen, .game-screen {
             padding: 1rem;
             max-width: 900px;
@@ -1307,10 +1315,23 @@
                             <h3>Round ${gameState.currentRound + 1}</h3>
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
                                 <label style="font-size: 0.85rem; color: #cbd5e1;">Hand Size</label>
-                                <input type="number" min="1" max="20" value="${round.handSize}"
-                                       ${round.scored ? 'disabled' : ''}
-                                       onchange="updateCurrentRoundHandSize(this.value)"
-                                       style="width: 90px; padding: 0.35rem 0.5rem; font-size: 0.9rem;">
+                                <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                    <button onclick="adjustCurrentRoundHandSize(-1)"
+                                            ${round.scored ? 'disabled' : ''}
+                                            class="bid-adjust-btn"
+                                            style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; font-weight: 700; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; ${round.scored ? 'opacity: 0.45; cursor: not-allowed;' : ''}">
+                                        −
+                                    </button>
+                                    <div style="min-width: 34px; text-align: center; font-weight: 700; font-size: 1rem; color: #fbbf24;">
+                                        ${round.handSize}
+                                    </div>
+                                    <button onclick="adjustCurrentRoundHandSize(1)"
+                                            ${round.scored ? 'disabled' : ''}
+                                            class="bid-adjust-btn"
+                                            style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; ${round.scored ? 'opacity: 0.45; cursor: not-allowed;' : ''}">
+                                        +
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="bid-tracker ${bidClass}">
@@ -1369,13 +1390,39 @@
                                 <div class="player-inputs-grid">
                                     <div>
                                         <label style="font-size: 0.8rem; color: #cbd5e1;">Bid</label>
-                                        <input type="number" min="0" max="${round.handSize}" value="${round.playerData[idx].bid}" 
-                                               onchange="updateBid(${idx}, this.value)">
+                                        <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                            <button onclick="adjustBid(${idx}, -1)" 
+                                                    class="bid-adjust-btn"
+                                                    style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                                −
+                                            </button>
+                                            <div style="flex: 1; text-align: center; font-weight: 700; font-size: 1.3rem; color: #3b82f6; min-width: 40px;">
+                                                ${round.playerData[idx].bid}
+                                            </div>
+                                            <button onclick="adjustBid(${idx}, 1)" 
+                                                    class="bid-adjust-btn"
+                                                    style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                                +
+                                            </button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label style="font-size: 0.8rem; color: #cbd5e1;">Tax</label>
-                                        <input type="number" min="0" max="20" value="${round.playerData[idx].tax}" 
-                                               onchange="updateTax(${idx}, this.value)">
+                                        <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                            <button onclick="adjustTax(${idx}, -1)"
+                                                    class="bid-adjust-btn"
+                                                    style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                                −
+                                            </button>
+                                            <div style="flex: 1; text-align: center; font-weight: 700; font-size: 1.3rem; color: #f59e0b; min-width: 40px;">
+                                                ${round.playerData[idx].tax}
+                                            </div>
+                                            <button onclick="adjustTax(${idx}, 1)"
+                                                    class="bid-adjust-btn"
+                                                    style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                                +
+                                            </button>
+                                        </div>
                                     </div>
                                     <div style="grid-column: span 2;">
                                         <label style="font-size: 0.8rem; color: #cbd5e1;">Confidence</label>
@@ -1433,6 +1480,22 @@
             renderRoundSetup();
         }
 
+        function adjustBid(playerIdx, delta) {
+            const round = gameState.rounds[gameState.currentRound];
+            const currentBid = round.playerData[playerIdx].bid;
+            const newBid = Math.max(0, Math.min(round.handSize, currentBid + delta));
+            round.playerData[playerIdx].bid = newBid;
+            renderRoundSetup();
+        }
+
+        function adjustTax(playerIdx, delta) {
+            const round = gameState.rounds[gameState.currentRound];
+            const currentTax = round.playerData[playerIdx].tax;
+            const newTax = Math.max(0, Math.min(20, currentTax + delta));
+            round.playerData[playerIdx].tax = newTax;
+            renderRoundSetup();
+        }
+
         function updateCurrentRoundHandSize(value) {
             const round = gameState.rounds[gameState.currentRound];
             round.handSize = Math.max(1, parseInt(value) || 1);
@@ -1444,6 +1507,14 @@
             });
 
             renderRoundSetup();
+        }
+
+        function adjustCurrentRoundHandSize(delta) {
+            const round = gameState.rounds[gameState.currentRound];
+            if (round.scored) return;
+
+            const newSize = Math.max(1, Math.min(20, round.handSize + delta));
+            updateCurrentRoundHandSize(newSize);
         }
 
         function updateTax(playerIdx, value) {
@@ -1886,8 +1957,21 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
                         <div>
                             <label style="font-size: 0.85rem; color: #cbd5e1;">Hand Size</label>
-                            <input type="number" min="1" max="20" value="${round.handSize}"
-                                   onchange="updateEditHandSize(this.value)">
+                            <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                <button onclick="adjustEditHandSize(-1)"
+                                        class="bid-adjust-btn"
+                                        style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                    −
+                                </button>
+                                <div style="flex: 1; text-align: center; font-weight: 700; font-size: 1.3rem; color: #fbbf24; min-width: 40px;">
+                                    ${round.handSize}
+                                </div>
+                                <button onclick="adjustEditHandSize(1)"
+                                        class="bid-adjust-btn"
+                                        style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                    +
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label style="font-size: 0.85rem; color: #cbd5e1;">Round Number</label>
@@ -1912,8 +1996,21 @@
                                 </div>
                                 <div>
                                     <label style="font-size: 0.8rem; color: #cbd5e1;">Tax</label>
-                                    <input type="number" min="0" max="20" value="${round.playerData[idx].tax}" 
-                                           onchange="updateEditTax(${idx}, this.value)">
+                                    <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                        <button onclick="adjustEditTax(${idx}, -1)"
+                                                class="bid-adjust-btn"
+                                                style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                            −
+                                        </button>
+                                        <div style="flex: 1; text-align: center; font-weight: 700; font-size: 1.3rem; color: #f59e0b; min-width: 40px;">
+                                            ${round.playerData[idx].tax}
+                                        </div>
+                                        <button onclick="adjustEditTax(${idx}, 1)"
+                                                class="bid-adjust-btn"
+                                                style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
                                 <div style="grid-column: span 2;">
                                     <label style="font-size: 0.8rem; color: #cbd5e1;">Confidence</label>
@@ -1970,8 +2067,22 @@
             editRound(editingRoundIndex);
         }
 
+        function adjustEditHandSize(delta) {
+            const round = gameState.rounds[editingRoundIndex];
+            const newSize = Math.max(1, Math.min(20, round.handSize + delta));
+            updateEditHandSize(newSize);
+        }
+
         function updateEditTax(playerIdx, value) {
             gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = parseInt(value) || 0;
+        }
+
+        function adjustEditTax(playerIdx, delta) {
+            const round = gameState.rounds[editingRoundIndex];
+            const currentTax = round.playerData[playerIdx].tax;
+            const newTax = Math.max(0, Math.min(20, currentTax + delta));
+            round.playerData[playerIdx].tax = newTax;
+            editRound(editingRoundIndex);
         }
 
         function updateEditConfidence(playerIdx, value) {
