@@ -1,6 +1,6 @@
 # Oh Hell Scorekeeper
 
-A mobile-friendly web app for tracking scores in the Oh Hell card game.
+A mobile-friendly, single-file web app for tracking Oh Hell games with custom scoring, editable history, and easy file-based save/load.
 
 ## Download
 
@@ -8,57 +8,44 @@ A mobile-friendly web app for tracking scores in the Oh Hell card game.
 
 Save the file and open it directly in your browser — no installation required.
 
-## Features
+## Highlights
 
 - 📱 Mobile-optimized interface
-- 👥 Player list management
-- 💾 Save and load games (JSON file-based)
-- 📊 Statistics and analytics
-- 📤 Export game data to clipboard for Excel
-- ✏️ Edit previously scored rounds
-- 🔄 Player list sync from URL
+- 👥 Saved player management (add/remove/import/export)
+- 🔄 Optional player-list sync from URL
+- 🃏 Trump tracking per round (rank + suit)
+- 🎯 Manual hand size entry each round
+- ✏️ Edit any scored round from history
+- 💾 Save and load games as JSON files
+- 📊 Per-game player stats
+- 📤 Clipboard export formatted for Excel
 
 ## Getting Started
 
-1. Download `oh-hell-scorekeeper.html` and open it in your browser
-2. Add players to your list (Manage Players button)
-3. Select number of players and start a game!
+1. Download `oh-hell-scorekeeper.html` and open it in your browser.
+2. Open **Manage Players** and add your player list.
+3. Set **Number of Players** and choose players.
+4. Set **Starting Hand Size**.
+5. Click **Start Game**.
 
 ## Player List Management
 
-### Option 1: Local Storage (Default)
-- Add players via the "Manage Players" button
-- Players are saved to your browser's local storage
-- Export/import JSON files to share between devices
+### Local Storage (default)
+- Add players from **Manage Players**.
+- Player names are stored in browser local storage.
+- Export/import JSON to back up or move between devices.
 
-### Option 2: Sync from URL (Recommended for Groups)
-Keep your player list in sync across multiple devices using any publicly accessible JSON file.
+### Sync from URL (optional)
+Use **Settings** to configure a URL that returns either:
+- an array of names, or
+- an object with a `players` array.
 
-#### Using GitHub (Free)
-1. Export your player list from the app
-2. Upload the JSON file to this repo
-3. Get the raw file URL: `https://raw.githubusercontent.com/rickytann14/Oh-Hell/refs/heads/main/oh-hell-players.json`
-4. In Settings, paste the URL and enable auto-sync
+When auto-sync is enabled, player updates are fetched on app load.
 
-#### Using Google Drive (Simple)
-1. Export your player list from the app
-2. Upload to Google Drive
-3. Share → "Anyone with the link"
-4. Get the file ID from the sharing link:
-   ```
-   https://drive.google.com/file/d/FILE_ID_HERE/view?usp=sharing
-   ```
-5. Convert to direct download URL:
-   ```
-   https://drive.google.com/uc?export=download&id=FILE_ID_HERE
-   ```
-6. In Settings, paste the URL and enable auto-sync
+#### Example GitHub raw URL
+`https://raw.githubusercontent.com/rickytann14/Oh-Hell/refs/heads/main/oh-hell-players.json`
 
-**To update the player list:**
-- Edit the JSON file directly (GitHub or Google Drive)
-- Everyone's app syncs automatically on next load!
-
-### JSON Format
+### Player JSON format
 ```json
 {
   "exportDate": "2026-02-12T00:00:00.000Z",
@@ -71,95 +58,88 @@ Keep your player list in sync across multiple devices using any publicly accessi
 }
 ```
 
-## How to Play
+## Game Flow
 
-### Starting a New Game
-1. Select number of players (3-11)
-2. Choose players from your saved list
-3. Set starting hand size (default: 10)
-4. Click Start Game
+### Round setup
+For each round, enter:
+- **Hand Size** (manual each round)
+- **Trump (Big Boss)** rank + suit
+- Player **Bid**, **Tax**, **Confidence**, **Deferred**, and **Got Set**
 
-The game starts at the chosen hand size and counts down each round. You decide when to "turn around" and start going back up.
+### Validation before scoring
+- **Exact bids are invalid**: total bids cannot equal hand size.
+- At least one player must be marked **Got Set**.
 
-### During a Game
-- Enter each player's **bid** for the round
-- Enter **tax** (points paid to choose trump suit)
-- Set **confidence level** (MAX, 10, 5, or 0)
-- Mark **deferred** if bid was delayed (-2 points)
-- After the round, mark who **got set** (didn't make their bid)
-- Scores calculate automatically
-- Use **Turn Around** when you want to start going back up in hand size
-- Use **Undo Round** if you need to correct a scored round
-- Save games to continue later
+### After scoring a round
+- **↩️ Undo Round** reverses that round’s score impact.
+- **➡️ Next Round** starts the next round.
+- **🏁 End Game** shows final rankings.
 
-### Bid Rules
+## Scoring Rules
 
-Before scoring, the total bids are tracked:
+### If player got set
+`score = -confidence - deferredPenalty - tax`
 
-- **🦆 Under** — Total bids < hand size (valid)
-- **🦢 Over** — Total bids > hand size (valid)
-- **❌ Exact** — Total bids = hand size (invalid, cannot score)
+### If player made bid and bid > 0
+`score = 10 + (bid × bid) + confidence - deferredPenalty - tax`
 
-### Scoring Rules
+### If player made zero bid
+`score = zeroBonus + handSize + confidence - deferredPenalty - tax`
 
-#### Made Your Bid (Not Set)
+### Modifiers
+- **Confidence**: `MAX`, `10`, `5`, `0`
+  - `MAX` = 10 for positive bids, 5 for zero bids
+- **Deferred penalty**: 2 points when deferred is checked
+- **Tax**: custom penalty subtracted from score
+- **Zero bonus**:
+  - 10 points when player count is 9 or fewer
+  - 5 points when player count is 10 or more
 
-**Positive Bid (1+):**
-- Base score: **10 + (bid × bid) + confidence - deferred - tax**
-- Example: Bid 3, confidence MAX (10): `10 + 9 + 10 = 29 points`
+## Editing History
 
-**Zero Bid:**
-- Base score: **zero bonus + hand size + confidence - deferred - tax**
-- Zero bonus: 10 points (≤9 players) or 5 points (10+ players)
-- Example: 4 players, Hand size 7, confidence MAX (5): `10 + 7 + 5 = 22 points`
+Use **✏️ Edit** in **Score History** to modify any scored round:
+- hand size
+- bids/tax/confidence
+- deferred / got set flags
 
-#### Got Set (Missed Your Bid)
-- Score: **-confidence - deferred - tax**
-- Example: Confidence MAX (10), deferred: `-10 - 2 = -12 points`
+Saving edits recalculates that round and updates overall standings.
 
-#### Modifiers
-- **Confidence**: MAX (10 for positive bids, 5 for zero bids), 10, 5, or 0
-- **Deferred**: -2 points if bid was delayed (win or lose)
-- **Tax**: Custom penalty subtracted from score (win or lose)
+## Save, Load, and Export
 
-## Game Management
+### Save / Load
+- **💾 Save** downloads the current game as JSON.
+- **📁 Load** restores a game from JSON.
+- Older save shapes are handled for backward compatibility.
 
-### Header Buttons (Setup Screen)
-- **👥 Manage Players** - Add/remove players, export/import, sync
-- **⚙️ Settings** - Configure player list sync URL
-- **📖 Rules & Math** - In-app scoring reference
-- **📁 Load Game** - Resume a previously saved game
+### Stats
+- **📊 Stats** shows per-player totals, rounds won/set, average score, and total bids.
 
-### Header Buttons (During Game)
-- **💾 Save** - Download current game as a JSON file
-- **📁 Load** - Load a previously saved game JSON file
-- **📊 Stats** - View player statistics for the current game
-- **📤 Export** - Copy game data to clipboard for pasting into Excel
-- **🆕 New** - Start a fresh game
+### Excel export
+- **📤 Export** copies TSV data to clipboard for the `Scorev2` sheet.
+- In Excel: select cell `A1` and paste.
 
-### Round Controls (After Scoring)
-- **🔄 Turn Around** - Switch from counting down to counting back up
-- **↩️ Undo Round** - Reverse the last scored round
-- **➡️ Next Round** - Advance to the next round
-- **🏁 End Game** - Show final standings
+## Header Actions
 
-### Edit Round
-Previous rounds can be edited from the Score History section using the **✏️ Edit** button. Changes recalculate scores automatically.
+### Setup screen
+- **👥 Manage Players**
+- **⚙️ Settings**
+- **📖 Rules & Math**
+- **📁 Load Game**
 
-## Tips
+### In-game screen
+- **💾 Save**
+- **📁 Load**
+- **📊 Stats**
+- **📤 Export**
+- **🆕 New**
 
-- Enable URL sync to keep player lists updated across devices
-- Export your JSON file periodically as backup
-- Use saved games to track multiple ongoing matches
-- The Export button formats data for pasting directly into the Oh Hell Excel sheet (cell A1 on the Scorev2 sheet)
+## Browser Support
 
-## Browser Compatibility
-
-Works on all modern browsers:
-- Chrome/Edge (desktop & mobile)
-- Safari (desktop & mobile)
+Works on modern browsers:
+- Chrome / Edge (desktop and mobile)
+- Safari (desktop and mobile)
 - Firefox
 
 ## Privacy
 
-All data is stored locally in your browser. No data is sent to any server except when using the optional URL sync feature (which only fetches from your specified URL).
+All game/player data is stored locally in your browser unless you use URL sync. URL sync only fetches from the endpoint you configure.
