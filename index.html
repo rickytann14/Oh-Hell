@@ -1095,7 +1095,7 @@
                         <code style="display: block; background: #0f172a; padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; color: #10b981; font-size: 0.9rem;">
                             Score = ZeroBonus + HandSize + Confidence - Deferred - Tax
                         </code>
-                        <p style="font-size: 0.9rem; margin-top: 0.5rem;"><strong>Zero Bonus:</strong> 10 points (≤9 players) or 5 points (>9 players)</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;"><strong>Zero Bonus:</strong> 10 points (≤6 players) or 5 points (>6 players)</p>
                         <p style="font-size: 0.9rem; margin-top: 0.5rem;"><strong>Example:</strong> 4 players, Hand size 8, Confidence MAX (5)</p>
                         <p style="font-size: 0.9rem; color: #94a3b8;">= 10 + 8 + 5 - 0 - 0 = <strong style="color: #10b981;">23 points</strong></p>
                     </div>
@@ -1687,7 +1687,7 @@
                         roundScore = 10 + (bid * bid) + confidence - (deferred ? 2 : 0) - tax;
                     } else {
                         // Made a zero bid
-                        const zeroBonus = gameState.players.length <= 9 ? 10 : 5;
+                        const zeroBonus = gameState.players.length <= 6 ? 10 : 5;
                         roundScore = zeroBonus + handSize + confidence - (deferred ? 2 : 0) - tax;
                     }
                 }
@@ -2184,7 +2184,7 @@
                     if (bid > 0) {
                         roundScore = 10 + (bid * bid) + confidence - (deferred ? 2 : 0) - tax;
                     } else {
-                        const zeroBonus = gameState.players.length <= 9 ? 10 : 5;
+                        const zeroBonus = gameState.players.length <= 6 ? 10 : 5;
                         roundScore = zeroBonus + handSize + confidence - (deferred ? 2 : 0) - tax;
                     }
                 }
@@ -2326,7 +2326,7 @@
             
             // Copy to clipboard
             navigator.clipboard.writeText(tsv).then(() => {
-                alert('✅ Game data copied to clipboard!\n\nTo paste into your Excel sheet:\n1. Open your Oh Hell Excel file\n2. Go to the Scorev2 sheet\n3. Click on cell A1\n4. Press Ctrl+V (or Cmd+V on Mac)\n5. Your game data will populate the sheet!');
+                alert('✅ Game data copied to clipboard!\n\nTo paste into your Excel sheet:\n1. Open your Oh Hell Excel file\n2. Go to the ScoreV2 sheet\n3. Click on cell A1\n4. Press Ctrl+V (or Cmd+V on Mac)\n5. Your game data will populate the sheet!');
             }).catch(err => {
                 // Fallback
                 const textarea = document.createElement('textarea');
@@ -2338,7 +2338,7 @@
                 
                 try {
                     document.execCommand('copy');
-                    alert('✅ Game data copied to clipboard!\n\nTo paste into your Excel sheet:\n1. Open your Oh Hell Excel file\n2. Go to the Scorev2 sheet\n3. Click on cell A1\n4. Press Ctrl+V (or Cmd+V on Mac)\n5. Your game data will populate the sheet!');
+                    alert('✅ Game data copied to clipboard!\n\nTo paste into your Excel sheet:\n1. Open your Oh Hell Excel file\n2. Go to the ScoreV2 sheet\n3. Click on cell A1\n4. Press Ctrl+V (or Cmd+V on Mac)\n5. Your game data will populate the sheet!');
                 } catch (e) {
                     alert('❌ Failed to copy. Please try again.');
                 }

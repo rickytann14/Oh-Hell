@@ -4,7 +4,7 @@ A mobile-friendly, single-file web app for tracking Oh Hell games with custom sc
 
 ## Download
 
-**[⬇️ Download oh-hell-scorekeeper.html](https://raw.githubusercontent.com/rickytann14/Oh-Hell/refs/heads/main/oh-hell-scorekeeper.html)**
+**[⬇️ Download index.html](https://raw.githubusercontent.com/rickytann14/Oh-Hell/main/index.html)**
 
 Save the file and open it directly in your browser — no installation required.
 
@@ -14,15 +14,14 @@ Save the file and open it directly in your browser — no installation required.
 - 👥 Saved player management (add/remove/import/export)
 - 🔄 Optional player-list sync from URL
 - 🃏 Trump tracking per round (rank + suit)
-- 🎯 Manual hand size entry each round
+- 🎯 Starting hand size with per-round hand-size adjustment
 - ✏️ Edit any scored round from history
 - 💾 Save and load games as JSON files
-- 📊 Per-game player stats
 - 📤 Clipboard export formatted for Excel
 
 ## Getting Started
 
-1. Download `oh-hell-scorekeeper.html` and open it in your browser.
+1. Download `index.html` and open it in your browser.
 2. Open **Manage Players** and add your player list.
 3. Set **Number of Players** and choose players.
 4. Set **Starting Hand Size**.
@@ -43,7 +42,7 @@ Use **Settings** to configure a URL that returns either:
 When auto-sync is enabled, player updates are fetched on app load.
 
 #### Example GitHub raw URL
-`https://raw.githubusercontent.com/rickytann14/Oh-Hell/refs/heads/main/oh-hell-players.json`
+`https://raw.githubusercontent.com/rickytann14/Oh-Hell/main/oh-hell-players.json`
 
 ### Player JSON format
 ```json
@@ -62,7 +61,7 @@ When auto-sync is enabled, player updates are fetched on app load.
 
 ### Round setup
 For each round, enter:
-- **Hand Size** (manual each round)
+- **Hand Size** (starts from your game setup value, then adjustable each round)
 - **Trump (Big Boss)** rank + suit
 - Player **Bid**, **Tax**, **Confidence**, **Deferred**, and **Got Set**
 
@@ -92,8 +91,8 @@ For each round, enter:
 - **Deferred penalty**: 2 points when deferred is checked
 - **Tax**: custom penalty subtracted from score
 - **Zero bonus**:
-  - 10 points when player count is 9 or fewer
-  - 5 points when player count is 10 or more
+  - 10 points when player count is 6 or fewer
+  - 5 points when player count is 7 or more
 
 ## Editing History
 
@@ -111,9 +110,6 @@ Saving edits recalculates that round and updates overall standings.
 - **📁 Load** restores a game from JSON.
 - Older save shapes are handled for backward compatibility.
 
-### Stats
-- **📊 Stats** shows per-player totals, rounds won/set, average score, and total bids.
-
 ### Excel export
 - **📤 Export** copies TSV data to clipboard for the `Scorev2` sheet.
 - In Excel: select cell `A1` and paste.
@@ -129,7 +125,6 @@ Saving edits recalculates that round and updates overall standings.
 ### In-game screen
 - **💾 Save**
 - **📁 Load**
-- **📊 Stats**
 - **📤 Export**
 - **🆕 New**
 
