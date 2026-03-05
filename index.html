@@ -1022,7 +1022,7 @@
                 row.className = 'input-group';
                 row.innerHTML = `
                     <label>Player ${i + 1}</label>
-                    <select id="player${i}" required>
+                    <select id="player${i}" required onchange="this.blur()">
                         <option value="">-- Select a player --</option>
                         ${savedPlayers.map(p => `<option value="${p}">${p}</option>`).join('')}
                     </select>
