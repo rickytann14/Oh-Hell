@@ -392,6 +392,31 @@
             transform: scale(0.96);
         }
 
+        .score-prediction {
+            margin-top: 0.65rem;
+            padding: 0.45rem 0.55rem;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(100, 116, 139, 0.35);
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .score-prediction .made {
+            color: #86efac;
+            font-weight: 700;
+        }
+
+        .score-prediction .set {
+            color: #fca5a5;
+            font-weight: 700;
+        }
+
         .checkbox-group {
             display: flex;
             gap: 1rem;
@@ -1402,6 +1427,12 @@
                     
                     <div class="players-grid">
                         ${gameState.players.map((player, idx) => {
+                            const madePrediction = calculatePlayerRoundScore(round, round.playerData[idx], false);
+                            const setPrediction = calculatePlayerRoundScore(round, round.playerData[idx], true);
+                            const existingRoundScore = round.scored ? (round.playerData[idx].score || 0) : 0;
+                            const madeTotal = calculateProjectedTotal(player.score, madePrediction, existingRoundScore);
+                            const setTotal = calculateProjectedTotal(player.score, setPrediction, existingRoundScore);
+
                             // Calculate current position
                             const sorted = [...gameState.players]
                                 .map((p, i) => ({...p, originalIndex: i}))
@@ -1498,6 +1529,11 @@
                                                onchange="updateGotSet(${idx}, this.checked)">
                                         Got Set
                                     </label>
+                                </div>
+
+                                <div class="score-prediction">
+                                    <span class="made">If made: ${madeTotal} (${formatSignedValue(madePrediction)})</span>
+                                    <span class="set">If set: ${setTotal} (${formatSignedValue(setPrediction)})</span>
                                 </div>
                             </div>
                         `}).join('')}
@@ -1599,6 +1635,40 @@
             gameState.rounds[gameState.currentRound].playerData[playerIdx].gotSet = checked;
         }
 
+        function getConfidenceValue(bid, confidence) {
+            if (confidence === 'MAX') {
+                return bid > 0 ? 10 : 5;
+            }
+
+            return parseInt(confidence) || 0;
+        }
+
+        function calculatePlayerRoundScore(round, pdata, gotSetOverride = pdata.gotSet) {
+            const bid = pdata.bid;
+            const tax = pdata.tax;
+            const deferredPenalty = pdata.deferred ? 2 : 0;
+            const confidenceValue = getConfidenceValue(bid, pdata.confidence);
+
+            if (gotSetOverride) {
+                return -confidenceValue - deferredPenalty - tax;
+            }
+
+            if (bid > 0) {
+                return 10 + (bid * bid) + confidenceValue - deferredPenalty - tax;
+            }
+
+            const zeroBonus = gameState.players.length <= 6 ? 10 : 5;
+            return zeroBonus + round.handSize + confidenceValue - deferredPenalty - tax;
+        }
+
+        function formatSignedValue(value) {
+            return value >= 0 ? `+${value}` : `${value}`;
+        }
+
+        function calculateProjectedTotal(playerScore, predictedRoundScore, existingRoundScore = 0) {
+            return playerScore - existingRoundScore + predictedRoundScore;
+        }
+
         function parseTrumpCard(trumpValue) {
             if (!trumpValue || typeof trumpValue !== 'string') {
                 return { rank: '', suit: '' };
@@ -1669,35 +1739,14 @@
             // Calculate scores
             round.playerData.forEach((pdata, idx) => {
                 const bid = pdata.bid;
-                const tax = pdata.tax;
-                const deferred = pdata.deferred;
-                const confidence = pdata.confidence === 'MAX' ? (bid > 0 ? 10 : 5) : parseInt(pdata.confidence);
-                const gotSet = pdata.gotSet;
-                const handSize = round.handSize;
-
-                let roundScore = 0;
-
-                if (gotSet) {
-                    // Player got set
-                    roundScore = -confidence - (deferred ? 2 : 0) - tax;
-                } else {
-                    // Player made their bid
-                    if (bid > 0) {
-                        // Made a positive bid
-                        roundScore = 10 + (bid * bid) + confidence - (deferred ? 2 : 0) - tax;
-                    } else {
-                        // Made a zero bid
-                        const zeroBonus = gameState.players.length <= 6 ? 10 : 5;
-                        roundScore = zeroBonus + handSize + confidence - (deferred ? 2 : 0) - tax;
-                    }
-                }
+                const roundScore = calculatePlayerRoundScore(round, pdata, pdata.gotSet);
 
                 pdata.score = roundScore;
                 gameState.players[idx].score += roundScore;
                 gameState.players[idx].rounds.push({
                     round: gameState.currentRound + 1,
                     bid: bid,
-                    gotSet: gotSet,
+                    gotSet: pdata.gotSet,
                     score: roundScore
                 });
             });
@@ -2006,7 +2055,14 @@
                 </div>
 
                 <div class="players-grid" id="editPlayersGrid">
-                    ${gameState.players.map((player, idx) => `
+                    ${gameState.players.map((player, idx) => {
+                        const madePrediction = calculatePlayerRoundScore(round, round.playerData[idx], false);
+                        const setPrediction = calculatePlayerRoundScore(round, round.playerData[idx], true);
+                        const existingRoundScore = round.playerData[idx].score || 0;
+                        const madeTotal = calculateProjectedTotal(player.score, madePrediction, existingRoundScore);
+                        const setTotal = calculateProjectedTotal(player.score, setPrediction, existingRoundScore);
+
+                        return `
                         <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''}">
                             <div class="player-name">
                                 ${player.name}
@@ -2070,8 +2126,14 @@
                                     Got Set
                                 </label>
                             </div>
+
+                            <div class="score-prediction">
+                                <span class="made">If made: ${madeTotal} (${formatSignedValue(madePrediction)})</span>
+                                <span class="set">If set: ${setTotal} (${formatSignedValue(setPrediction)})</span>
+                            </div>
                         </div>
-                    `).join('')}
+                    `;
+                    }).join('')}
                 </div>
 
                 <button class="btn btn-success" onclick="saveEditedRound()" 
@@ -2170,24 +2232,7 @@
             // Now recalculate scores with new data
             round.playerData.forEach((pdata, idx) => {
                 const bid = pdata.bid;
-                const tax = pdata.tax;
-                const deferred = pdata.deferred;
-                const confidence = pdata.confidence === 'MAX' ? (bid > 0 ? 10 : 5) : parseInt(pdata.confidence);
-                const gotSet = pdata.gotSet;
-                const handSize = round.handSize;
-
-                let roundScore = 0;
-
-                if (gotSet) {
-                    roundScore = -confidence - (deferred ? 2 : 0) - tax;
-                } else {
-                    if (bid > 0) {
-                        roundScore = 10 + (bid * bid) + confidence - (deferred ? 2 : 0) - tax;
-                    } else {
-                        const zeroBonus = gameState.players.length <= 6 ? 10 : 5;
-                        roundScore = zeroBonus + handSize + confidence - (deferred ? 2 : 0) - tax;
-                    }
-                }
+                const roundScore = calculatePlayerRoundScore(round, pdata, pdata.gotSet);
 
                 pdata.score = roundScore;
                 gameState.players[idx].score += roundScore;
@@ -2196,7 +2241,7 @@
                 gameState.players[idx].rounds.push({
                     round: editingRoundIndex + 1,
                     bid: bid,
-                    gotSet: gotSet,
+                    gotSet: pdata.gotSet,
                     score: roundScore
                 });
                 
