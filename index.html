@@ -788,6 +788,7 @@
         const DEFAULT_SYNC_URL = 'https://raw.githubusercontent.com/rickytann14/Oh-Hell/main/oh-hell-players.json';
         const TRUMP_RANKS = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
         const TRUMP_SUITS = ['♠', '♥', '♦', '♣'];
+        const REVERSE_VALUE = ['R', 'N']; // R for Reverse, N for Normal
 
         function normalizeSyncUrl(url) {
             if (!url) return '';
@@ -1310,6 +1311,7 @@
                 trump: '',  // Add trump card tracking
                 trumpRank: '',
                 trumpSuit: '',
+                reverseValue: 'N',
                 playerData: gameState.players.map(p => ({
                     bid: 0,
                     tax: 0,
@@ -1369,6 +1371,7 @@
                     <div class="round-summary-bottom">
                         <span class="meta-chip">R${gameState.currentRound + 1}</span>
                         <span class="meta-chip">🎴 ${dealer.name}</span>
+                        <span class="meta-chip">${round.reverseValue}</span>
                         ${hasUniqueLow ? `<span class="meta-chip low">↓ ${lowPlayer.name}</span>` : ''}
                         ${round.trump ? `<span class="meta-chip trump">🃏 ${round.trump}</span>` : ''}
                     </div>
@@ -1409,7 +1412,7 @@
                     <div style="background: rgba(251, 191, 36, 0.15); border: 2px solid rgba(251, 191, 36, 0.35); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
                         <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                             <label style="color: #fbbf24; font-weight: 600; font-size: 1rem;">🃏 Big Boss (Trump):</label>
-                            <div style="display: flex; gap: 0.5rem; flex: 1; min-width: 220px;">
+                            <div style="display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap;">
                                 <select onchange="updateTrumpRank(this.value)"
                                         style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
                                     <option value="">-- Rank --</option>
@@ -1419,6 +1422,10 @@
                                         style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
                                     <option value="">-- Suit --</option>
                                     ${TRUMP_SUITS.map(suit => `<option value="${suit}" ${round.trumpSuit === suit ? 'selected' : ''}>${suit}</option>`).join('')}
+                                </select>
+                                <select onchange="updateReverseValue(this.value)"
+                                        style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
+                                    ${REVERSE_VALUE.map(value => `<option value="${value}" ${round.reverseValue === value ? 'selected' : ''}>${value === 'R' ? 'R - Reverse' : 'N - Normal'}</option>`).join('')}
                                 </select>
                             </div>
                             ${round.trump ? `<div style="font-size: 1.5rem; padding: 0.25rem 0.75rem; background: rgba(251, 191, 36, 0.2); border-radius: 8px;">${round.trump}</div>` : ''}
@@ -1690,6 +1697,10 @@
         function syncTrumpParts(round) {
             if (!round) return;
 
+            if (round.reverseValue === undefined || !REVERSE_VALUE.includes(round.reverseValue)) {
+                round.reverseValue = 'N';
+            }
+
             if (round.trumpRank === undefined || round.trumpSuit === undefined) {
                 const parsed = parseTrumpCard(round.trump || '');
                 round.trumpRank = parsed.rank;
@@ -1714,6 +1725,12 @@
             const round = gameState.rounds[gameState.currentRound];
             round.trumpSuit = value;
             syncTrumpParts(round);
+            renderRoundSetup();
+        }
+
+        function updateReverseValue(value) {
+            const round = gameState.rounds[gameState.currentRound];
+            round.reverseValue = REVERSE_VALUE.includes(value) ? value : 'N';
             renderRoundSetup();
         }
 
