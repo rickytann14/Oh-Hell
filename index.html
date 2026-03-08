@@ -819,12 +819,68 @@
             updatePlayerInputs();
             loadHeaderActions('setup');
             autoSyncPlayers(); // Auto-sync on load
+            loadAutoSave(); // Try to load auto-saved game on startup
             
             document.getElementById('numPlayers').addEventListener('change', updatePlayerInputs);
             document.getElementById('newPlayerName').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') addPlayer();
             });
         });
+
+        // Auto-save functionality
+        function autoSave() {
+            if (gameState.players.length === 0) return; // Don't save empty state
+            
+            try {
+                localStorage.setItem('ohHellAutoSave', JSON.stringify({
+                    ...gameState,
+                    autoSavedAt: new Date().toISOString()
+                }));
+            } catch (error) {
+                console.error('Auto-save failed:', error);
+            }
+        }
+
+        function loadAutoSave() {
+            try {
+                const autoSaved = localStorage.getItem('ohHellAutoSave');
+                if (!autoSaved) return;
+
+                const game = JSON.parse(autoSaved);
+                
+                // Validate it's a valid game
+                if (!game.players || !game.rounds || game.players.length === 0) return;
+
+                // Handle backward compatibility
+                if (game.handProgression && !game.currentHandSize) {
+                    game.currentHandSize = game.handProgression[game.currentRound];
+                    game.startingHandSize = game.handProgression[0];
+                    game.goingDown = true;
+                }
+                
+                // Initialize previousPosition if not present
+                game.players.forEach((player, idx) => {
+                    if (player.previousPosition === undefined) {
+                        player.previousPosition = idx + 1;
+                    }
+                });
+                
+                // Auto-load the game
+                gameState = game;
+                document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                loadHeaderActions('game');
+                renderRoundSetup();
+                renderScoreboard();
+                renderHistory();
+            } catch (error) {
+                console.error('Error loading auto-save:', error);
+            }
+        }
+
+        function clearAutoSave() {
+            localStorage.removeItem('ohHellAutoSave');
+        }
 
         // Player Management Functions
         function getSavedPlayers() {
@@ -1296,6 +1352,7 @@
             loadHeaderActions('game');
             
             startNewRound();
+            autoSave(); // Auto-save after starting game
         }
 
         function startNewRound() {
@@ -1326,6 +1383,7 @@
             gameState.rounds.push(round);
             renderRoundSetup();
             renderScoreboard();
+            autoSave(); // Auto-save after starting new round
         }
 
         function renderRoundSetup() {
@@ -1573,6 +1631,7 @@
         function updateBid(playerIdx, value) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = parseInt(value) || 0;
             renderRoundSetup();
+            autoSave();
         }
 
         function adjustBid(playerIdx, delta) {
@@ -1581,6 +1640,7 @@
             const newBid = Math.max(0, Math.min(round.handSize, currentBid + delta));
             round.playerData[playerIdx].bid = newBid;
             renderRoundSetup();
+            autoSave();
         }
 
         function setBid(playerIdx, value) {
@@ -1628,18 +1688,22 @@
 
         function updateTax(playerIdx, value) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].tax = parseInt(value) || 0;
+            autoSave();
         }
 
         function updateConfidence(playerIdx, value) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].confidence = value;
+            autoSave();
         }
 
         function updateDeferred(playerIdx, checked) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].deferred = checked;
+            autoSave();
         }
 
         function updateGotSet(playerIdx, checked) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].gotSet = checked;
+            autoSave();
         }
 
         function getConfidenceValue(bid, confidence) {
@@ -1772,6 +1836,7 @@
             renderScoreboard();
             renderHistory();
             updatePlayerPositions();
+            autoSave();
         }
 
         function updatePlayerPositions() {
@@ -2304,6 +2369,7 @@
             
             // Reset player inputs
             updatePlayerInputs();
+            clearAutoSave(); // Clear auto-save when starting new game
         }
 
         // Close modals on background click
