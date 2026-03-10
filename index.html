@@ -1800,21 +1800,20 @@
                         <thead>
                             <tr>
                                 <th>Player</th>
-                                <th>Games</th>
+                                <th>Games Played</th>
                                 <th>Wins</th>
-                                <th>Win %</th>
-                                <th>Avg Game</th>
-                                <th>Best</th>
-                                <th>Worst</th>
-                                <th>Rounds</th>
-                                <th>Made %</th>
-                                <th>Set %</th>
-                                <th>Avg Tax</th>
-                                <th>Deferred %</th>
-                                <th>Zero Bid Make %</th>
-                                <th>Avg Round</th>
-                                <th>Best Round</th>
-                                <th>Worst Round</th>
+                                <th>Win Rate</th>
+                                <th>Avg Final Score</th>
+                                <th>Best Game Score</th>
+                                <th>Worst Game Score</th>
+                                <th>Bid Accuracy</th>
+                                <th>Set Rate</th>
+                                <th>Avg Tax Paid/Round</th>
+                                <th>Deferred Rate</th>
+                                <th>Zero Bid Success Rate</th>
+                                <th>Avg Points/Round</th>
+                                <th>Best Round Score</th>
+                                <th>Worst Round Score</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1827,7 +1826,6 @@
                                     <td>${formatStatNumber(player.avgGame)}</td>
                                     <td>${player.bestGame}</td>
                                     <td>${player.worstGame}</td>
-                                    <td>${player.rounds}</td>
                                     <td>${formatStatNumber(player.madeRate)}%</td>
                                     <td>${formatStatNumber(player.setRate)}%</td>
                                     <td>${formatStatNumber(player.avgTax)}</td>
