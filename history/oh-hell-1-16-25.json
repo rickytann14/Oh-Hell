@@ -1,14 +1,14 @@
 {
   "players": [
     {
-      "name": "Beth",
-      "score": 83,
+      "name": "Simon",
+      "score": 102,
       "rounds": [
         {
           "round": 1,
-          "bid": 1,
+          "bid": 0,
           "gotSet": false,
-          "score": 21
+          "score": 22
         },
         {
           "round": 2,
@@ -18,186 +18,149 @@
         },
         {
           "round": 3,
-          "bid": 1,
-          "gotSet": true,
-          "score": -10
-        },
-        {
-          "round": 4,
-          "bid": 2,
-          "gotSet": false,
-          "score": 24
-        },
-        {
-          "round": 5,
           "bid": 0,
           "gotSet": false,
-          "score": 27
-        }
-      ],
-      "previousPosition": 0
-    },
-    {
-      "name": "Eric",
-      "score": 74,
-      "rounds": [
-        {
-          "round": 1,
-          "bid": 1,
-          "gotSet": false,
-          "score": 21
-        },
-        {
-          "round": 2,
-          "bid": 0,
-          "gotSet": true,
-          "score": -5
-        },
-        {
-          "round": 3,
-          "bid": 0,
-          "gotSet": true,
-          "score": -5
-        },
-        {
-          "round": 4,
-          "bid": 1,
-          "gotSet": false,
-          "score": 21
-        },
-        {
-          "round": 5,
-          "bid": 7,
-          "gotSet": false,
-          "score": 42
-        }
-      ],
-      "previousPosition": 0
-    },
-    {
-      "name": "Josh",
-      "score": 87,
-      "rounds": [
-        {
-          "round": 1,
-          "bid": 2,
-          "gotSet": false,
-          "score": 24
-        },
-        {
-          "round": 2,
-          "bid": 2,
-          "gotSet": false,
-          "score": 24
-        },
-        {
-          "round": 3,
-          "bid": 0,
-          "gotSet": false,
-          "score": 25
+          "score": 20
         },
         {
           "round": 4,
           "bid": 0,
-          "gotSet": false,
-          "score": 26
-        },
-        {
-          "round": 5,
-          "bid": 1,
-          "gotSet": true,
-          "score": -12
-        }
-      ],
-      "previousPosition": 0
-    },
-    {
-      "name": "Ricardo",
-      "score": 89,
-      "rounds": [
-        {
-          "round": 1,
-          "bid": 5,
-          "gotSet": true,
-          "score": -22
-        },
-        {
-          "round": 2,
-          "bid": 2,
-          "gotSet": false,
-          "score": 24
-        },
-        {
-          "round": 3,
-          "bid": 6,
-          "gotSet": false,
-          "score": 45
-        },
-        {
-          "round": 4,
-          "bid": 1,
-          "gotSet": false,
-          "score": 21
-        },
-        {
-          "round": 5,
-          "bid": 1,
-          "gotSet": false,
-          "score": 21
-        }
-      ],
-      "previousPosition": 0
-    },
-    {
-      "name": "Mark",
-      "score": 70,
-      "rounds": [
-        {
-          "round": 1,
-          "bid": 0,
-          "gotSet": false,
-          "score": 12
-        },
-        {
-          "round": 2,
-          "bid": 5,
-          "gotSet": false,
-          "score": 18
-        },
-        {
-          "round": 3,
-          "bid": 1,
           "gotSet": false,
           "score": 19
         },
         {
-          "round": 4,
-          "bid": 6,
+          "round": 5,
+          "bid": 3,
           "gotSet": false,
-          "score": 31
+          "score": 20
+        }
+      ],
+      "previousPosition": 3
+    },
+    {
+      "name": "Peter",
+      "score": 75,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 0,
+          "gotSet": false,
+          "score": 22
+        },
+        {
+          "round": 2,
+          "bid": 4,
+          "gotSet": false,
+          "score": 24
+        },
+        {
+          "round": 3,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 4,
+          "bid": 2,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 5,
+          "bid": 0,
+          "gotSet": false,
+          "score": 18
+        }
+      ],
+      "previousPosition": 1
+    },
+    {
+      "name": "Ricardo",
+      "score": 42,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 2,
+          "bid": 3,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 3,
+          "bid": 0,
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "round": 4,
+          "bid": 1,
+          "gotSet": true,
+          "score": -10
         },
         {
           "round": 5,
           "bid": 1,
-          "gotSet": true,
-          "score": -10
+          "gotSet": false,
+          "score": 21
         }
       ],
       "previousPosition": 0
     },
     {
-      "name": "Peter",
-      "score": -9,
+      "name": "Lauren",
+      "score": 1,
       "rounds": [
         {
           "round": 1,
-          "bid": 0,
-          "gotSet": true,
-          "score": -5
+          "bid": 2,
+          "gotSet": false,
+          "score": 24
         },
         {
           "round": 2,
           "bid": 1,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 3,
+          "bid": 5,
+          "gotSet": true,
+          "score": -24
+        },
+        {
+          "round": 4,
+          "bid": 2,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 5,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        }
+      ],
+      "previousPosition": 0
+    },
+    {
+      "name": "Beth",
+      "score": 82,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 6,
+          "gotSet": false,
+          "score": 29
+        },
+        {
+          "round": 2,
+          "bid": 0,
           "gotSet": false,
           "score": 21
         },
@@ -209,18 +172,92 @@
         },
         {
           "round": 4,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 5,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        }
+      ],
+      "previousPosition": 6
+    },
+    {
+      "name": "Josh",
+      "score": 78,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 0,
+          "gotSet": false,
+          "score": 22
+        },
+        {
+          "round": 2,
+          "bid": 0,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 3,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 4,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 5,
+          "bid": 2,
+          "gotSet": true,
+          "score": -7
+        }
+      ],
+      "previousPosition": 5
+    },
+    {
+      "name": "Mark",
+      "score": 10,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 1,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 2,
           "bid": 2,
           "gotSet": true,
           "score": -10
         },
         {
-          "round": 5,
+          "round": 3,
           "bid": 0,
           "gotSet": true,
           "score": -5
+        },
+        {
+          "round": 4,
+          "bid": 3,
+          "gotSet": false,
+          "score": 17
+        },
+        {
+          "round": 5,
+          "bid": 0,
+          "gotSet": false,
+          "score": 18
         }
       ],
-      "previousPosition": 0
+      "previousPosition": 4
     }
   ],
   "rounds": [
@@ -232,12 +269,20 @@
       "trumpSuit": "",
       "playerData": [
         {
-          "bid": 1,
+          "bid": 0,
           "tax": 0,
           "deferred": false,
           "confidence": "MAX",
           "gotSet": false,
-          "score": 21
+          "score": 22
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 22
         },
         {
           "bid": 1,
@@ -256,28 +301,28 @@
           "score": 24
         },
         {
-          "bid": 5,
-          "tax": 12,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": true,
-          "score": -22
-        },
-        {
-          "bid": 0,
-          "tax": 15,
-          "deferred": false,
+          "bid": 6,
+          "tax": 25,
+          "deferred": true,
           "confidence": "MAX",
           "gotSet": false,
-          "score": 12
+          "score": 29
         },
         {
           "bid": 0,
           "tax": 0,
           "deferred": false,
           "confidence": "MAX",
+          "gotSet": false,
+          "score": 22
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
           "gotSet": true,
-          "score": -5
+          "score": -10
         }
       ],
       "scored": true
@@ -293,7 +338,113 @@
           "bid": 0,
           "tax": 0,
           "deferred": false,
-          "confidence": "0",
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "bid": 4,
+          "tax": 12,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 24
+        },
+        {
+          "bid": 3,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "bid": 2,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 10,
+      "dealerIndex": 2,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "playerData": [
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "bid": 5,
+          "tax": 14,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -24
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
           "gotSet": false,
           "score": 21
         },
@@ -304,27 +455,95 @@
           "confidence": "MAX",
           "gotSet": true,
           "score": -5
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 9,
+      "dealerIndex": 3,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "playerData": [
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 19
         },
         {
           "bid": 2,
           "tax": 0,
           "deferred": false,
           "confidence": "MAX",
-          "gotSet": false,
-          "score": 24
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10
         },
         {
           "bid": 2,
           "tax": 0,
           "deferred": false,
           "confidence": "MAX",
-          "gotSet": false,
-          "score": 24
+          "gotSet": true,
+          "score": -10
         },
         {
-          "bid": 5,
-          "tax": 25,
-          "deferred": true,
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "bid": 3,
+          "tax": 12,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 17
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 8,
+      "dealerIndex": 4,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "playerData": [
+        {
+          "bid": 3,
+          "tax": 9,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
           "confidence": "MAX",
           "gotSet": false,
           "score": 18
@@ -336,82 +555,6 @@
           "confidence": "MAX",
           "gotSet": false,
           "score": 21
-        }
-      ],
-      "scored": true
-    },
-    {
-      "handSize": 10,
-      "dealerIndex": 2,
-      "trump": "",
-      "trumpRank": "",
-      "trumpSuit": "",
-      "playerData": [
-        {
-          "bid": 1,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": true,
-          "score": -10
-        },
-        {
-          "bid": 0,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": true,
-          "score": -5
-        },
-        {
-          "bid": 0,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 25
-        },
-        {
-          "bid": 6,
-          "tax": 11,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 45
-        },
-        {
-          "bid": 1,
-          "tax": 0,
-          "deferred": true,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 19
-        },
-        {
-          "bid": 1,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": true,
-          "score": -10
-        }
-      ],
-      "scored": true
-    },
-    {
-      "handSize": 11,
-      "dealerIndex": 3,
-      "trump": "",
-      "trumpRank": "",
-      "trumpSuit": "",
-      "playerData": [
-        {
-          "bid": 2,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 24
         },
         {
           "bid": 1,
@@ -422,94 +565,28 @@
           "score": 21
         },
         {
-          "bid": 0,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 26
-        },
-        {
           "bid": 1,
           "tax": 0,
           "deferred": false,
           "confidence": "MAX",
           "gotSet": false,
           "score": 21
-        },
-        {
-          "bid": 6,
-          "tax": 25,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 31
         },
         {
           "bid": 2,
           "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
+          "deferred": true,
+          "confidence": "5",
           "gotSet": true,
-          "score": -10
-        }
-      ],
-      "scored": true
-    },
-    {
-      "handSize": 12,
-      "dealerIndex": 4,
-      "trump": "",
-      "trumpRank": "",
-      "trumpSuit": "",
-      "playerData": [
+          "score": -7
+        },
         {
           "bid": 0,
           "tax": 0,
           "deferred": false,
           "confidence": "MAX",
           "gotSet": false,
-          "score": 27
-        },
-        {
-          "bid": 7,
-          "tax": 25,
-          "deferred": true,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 42
-        },
-        {
-          "bid": 1,
-          "tax": 0,
-          "deferred": true,
-          "confidence": "MAX",
-          "gotSet": true,
-          "score": -12
-        },
-        {
-          "bid": 1,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": false,
-          "score": 21
-        },
-        {
-          "bid": 1,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": true,
-          "score": -10
-        },
-        {
-          "bid": 0,
-          "tax": 0,
-          "deferred": false,
-          "confidence": "MAX",
-          "gotSet": true,
-          "score": -5
+          "score": 18
         }
       ],
       "scored": true
@@ -517,7 +594,7 @@
   ],
   "currentRound": 4,
   "startingHandSize": 12,
-  "gameId": "1763665200000",
-  "createdAt": "2025-11-20T19:00:00.000Z",
-  "savedAt": "2025-11-20T20:00:00.000Z"
+  "gameId": "1737054000000",
+  "createdAt": "2025-01-16T19:00:00.000Z",
+  "savedAt": "2025-01-16T20:00:00.000Z"
 }
