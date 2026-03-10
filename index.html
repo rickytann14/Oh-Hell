@@ -528,6 +528,71 @@
             align-items: center;
         }
 
+        .stats-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-tile {
+            background: rgba(51, 65, 85, 0.55);
+            border: 1px solid rgba(100, 116, 139, 0.45);
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .stats-tile-label {
+            color: #94a3b8;
+            font-size: 0.78rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-tile-value {
+            color: #f8fafc;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .stats-table-wrap {
+            overflow-x: auto;
+            border: 1px solid rgba(100, 116, 139, 0.35);
+            border-radius: 10px;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+            font-size: 0.9rem;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 0.6rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(71, 85, 105, 0.6);
+            white-space: nowrap;
+        }
+
+        .stats-table th {
+            color: #fbbf24;
+            background: rgba(15, 23, 42, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .stats-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .stats-source-note {
+            color: #94a3b8;
+            font-size: 0.82rem;
+            margin-top: 0.75rem;
+        }
+
         .game-info h3 {
             color: #fbbf24;
             margin-bottom: 0.25rem;
@@ -775,6 +840,18 @@
         </div>
     </div>
 
+    <div class="modal" id="statsModal">
+        <div class="modal-content" style="max-width: 980px;">
+            <div class="modal-header">
+                <h2>📊 History Stats</h2>
+                <button class="close-modal" onclick="closeModal('statsModal')">&times;</button>
+            </div>
+            <div id="statsContent"></div>
+        </div>
+    </div>
+
+    <input type="file" id="historyFolderInput" accept=".json,application/json" multiple webkitdirectory directory onchange="handleHistoryFolderSelect(event)" style="display: none;">
+
     <script>
         let gameState = {
             players: [],
@@ -789,6 +866,12 @@
         const TRUMP_RANKS = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
         const TRUMP_SUITS = ['♠', '♥', '♦', '♣'];
         const REVERSE_VALUE = ['R', 'N']; // R for Reverse, N for Normal
+        const MANUAL_HISTORY_STORAGE_KEY = 'ohHellManualHistoryGames';
+        const HISTORY_MANIFEST_PATH = 'history/manifest.json';
+        const LOCAL_HISTORY_FOLDER_PATH = '/home/ragarza/Github/Oh-Hell/history';
+
+        let manualHistoryGames = [];
+        let selectedHistoryFolderLabel = 'Not selected';
 
         function normalizeSyncUrl(url) {
             if (!url) return '';
@@ -820,6 +903,7 @@
             loadHeaderActions('setup');
             autoSyncPlayers(); // Auto-sync on load
             loadAutoSave(); // Try to load auto-saved game on startup
+            loadManualHistoryGames();
             
             document.getElementById('numPlayers').addEventListener('change', updatePlayerInputs);
             document.getElementById('newPlayerName').addEventListener('keypress', (e) => {
@@ -1132,6 +1216,7 @@
                     <button class="btn btn-secondary btn-small" onclick="openManagePlayersModal()">👥 Manage Players</button>
                     <button class="btn btn-secondary btn-small" onclick="openSettingsModal()">⚙️ Settings</button>
                     <button class="btn btn-secondary btn-small" onclick="openRulesModal()">📖 Rules & Math</button>
+                    <button class="btn btn-secondary btn-small" onclick="openStatsModal()">📊 Stats</button>
                     <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load Game</button>
                 `;
             } else if (mode === 'game') {
@@ -1276,6 +1361,493 @@
             `;
             
             document.getElementById('rulesModal').classList.add('active');
+        }
+
+        function loadManualHistoryGames() {
+            try {
+                const raw = localStorage.getItem(MANUAL_HISTORY_STORAGE_KEY);
+                if (!raw) {
+                    manualHistoryGames = [];
+                    return;
+                }
+
+                const parsed = JSON.parse(raw);
+                manualHistoryGames = Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.error('Failed to load cached history games:', error);
+                manualHistoryGames = [];
+            }
+        }
+
+        function saveManualHistoryGames() {
+            try {
+                localStorage.setItem(MANUAL_HISTORY_STORAGE_KEY, JSON.stringify(manualHistoryGames));
+            } catch (error) {
+                console.error('Failed to cache history games:', error);
+            }
+        }
+
+        function getGameTimestamp(game) {
+            const source = game.savedAt || game.createdAt;
+            if (!source) return 0;
+            const ts = Date.parse(source);
+            return Number.isNaN(ts) ? 0 : ts;
+        }
+
+        function isValidHistoryGame(game) {
+            return !!(game && Array.isArray(game.players) && Array.isArray(game.rounds));
+        }
+
+        async function discoverHistoryJsonPaths() {
+            const fallbackPaths = ['history/metric.json'];
+
+            // Preferred: explicit manifest listing all game files in history/.
+            try {
+                const manifestResponse = await fetch(HISTORY_MANIFEST_PATH);
+                if (manifestResponse.ok) {
+                    const manifestData = await manifestResponse.json();
+                    const files = Array.isArray(manifestData)
+                        ? manifestData
+                        : (Array.isArray(manifestData?.files) ? manifestData.files : []);
+
+                    const normalizedManifestFiles = files
+                        .filter(name => typeof name === 'string' && name.toLowerCase().endsWith('.json'))
+                        .map(name => name.startsWith('history/') ? name : `history/${name}`);
+
+                    if (normalizedManifestFiles.length > 0) {
+                        return [...new Set(normalizedManifestFiles)];
+                    }
+                }
+            } catch (error) {
+                // Ignore manifest errors and continue to other discovery approaches.
+            }
+
+            try {
+                const response = await fetch('history/');
+                if (!response.ok) {
+                    return fallbackPaths;
+                }
+
+                const html = await response.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a'));
+                const discovered = links
+                    .map(link => link.getAttribute('href') || '')
+                    .filter(href => href && href.toLowerCase().endsWith('.json'))
+                    .map(href => href.startsWith('http') || href.startsWith('history/') ? href : `history/${href}`);
+
+                return discovered.length > 0 ? [...new Set(discovered)] : fallbackPaths;
+            } catch (error) {
+                return fallbackPaths;
+            }
+        }
+
+        async function loadHistoryGamesFromFolder() {
+            const paths = await discoverHistoryJsonPaths();
+            const fetches = paths.map(async (path) => {
+                try {
+                    const response = await fetch(path);
+                    if (!response.ok) return null;
+                    const game = await response.json();
+                    if (!isValidHistoryGame(game)) return null;
+                    return game;
+                } catch (error) {
+                    return null;
+                }
+            });
+
+            const games = (await Promise.all(fetches)).filter(Boolean);
+            return games;
+        }
+
+        async function openStatsModal() {
+            const content = document.getElementById('statsContent');
+            content.innerHTML = '<p style="color: #cbd5e1;">Loading history stats...</p>';
+            document.getElementById('statsModal').classList.add('active');
+
+            const folderGames = await loadHistoryGamesFromFolder();
+            const mergedGames = [...folderGames, ...manualHistoryGames].filter(isValidHistoryGame);
+
+            renderStatsContent(mergedGames);
+        }
+
+        async function refreshStats() {
+            const content = document.getElementById('statsContent');
+            content.innerHTML = '<p style="color: #cbd5e1;">Refreshing stats...</p>';
+
+            const folderGames = await loadHistoryGamesFromFolder();
+            const mergedGames = [...folderGames, ...manualHistoryGames].filter(isValidHistoryGame);
+            renderStatsContent(mergedGames);
+        }
+
+        function promptHistoryFolderImport() {
+            document.getElementById('historyFolderInput').click();
+        }
+
+        function dedupeHistoryGames(games) {
+            const map = new Map();
+
+            games.forEach((game) => {
+                const gameId = game.gameId || `no-id-${getGameTimestamp(game)}-${(game.players || []).length}`;
+                const key = `${gameId}-${game.savedAt || game.createdAt || ''}`;
+                const existing = map.get(key);
+
+                if (!existing || getGameTimestamp(game) >= getGameTimestamp(existing)) {
+                    map.set(key, game);
+                }
+            });
+
+            return Array.from(map.values());
+        }
+
+        function analyzeHistoryGames(inputGames) {
+            const games = dedupeHistoryGames(inputGames.filter(isValidHistoryGame));
+            const playerMap = new Map();
+
+            let totalRounds = 0;
+            let totalPlayersAcrossGames = 0;
+            let countedWinners = 0;
+            let totalTaxPaid = 0;
+            let totalDeferredCalls = 0;
+            let totalZeroBids = 0;
+            let totalRoundOutcomes = 0;
+            let totalSetOutcomes = 0;
+
+            games.forEach((game) => {
+                const scoredRounds = game.rounds.filter(r => r && r.scored).length;
+                totalRounds += scoredRounds;
+                totalPlayersAcrossGames += game.players.length;
+
+                const sorted = [...game.players].sort((a, b) => (b.score || 0) - (a.score || 0));
+                const topScore = sorted.length > 0 ? (sorted[0].score || 0) : null;
+                const winners = topScore === null
+                    ? []
+                    : sorted.filter(p => (p.score || 0) === topScore).map(p => p.name);
+
+                if (winners.length > 0) {
+                    countedWinners += winners.length;
+                }
+
+                game.rounds.forEach((round) => {
+                    if (!round || !round.scored || !Array.isArray(round.playerData)) return;
+
+                    round.playerData.forEach((pdata, idx) => {
+                        const playerName = game.players[idx]?.name;
+                        if (!playerName) return;
+
+                        if (!playerMap.has(playerName)) {
+                            playerMap.set(playerName, {
+                                name: playerName,
+                                games: 0,
+                                wins: 0,
+                                totalScore: 0,
+                                bestGame: Number.NEGATIVE_INFINITY,
+                                worstGame: Number.POSITIVE_INFINITY,
+                                rounds: 0,
+                                made: 0,
+                                set: 0,
+                                totalRoundScore: 0,
+                                totalTax: 0,
+                                deferredCount: 0,
+                                zeroBids: 0,
+                                zeroBidsMade: 0,
+                                highestRoundScore: Number.NEGATIVE_INFINITY,
+                                lowestRoundScore: Number.POSITIVE_INFINITY
+                            });
+                        }
+
+                        const stats = playerMap.get(playerName);
+                        const tax = Number(pdata.tax) || 0;
+                        const bid = Number(pdata.bid) || 0;
+                        const score = Number(pdata.score) || 0;
+                        const gotSet = !!pdata.gotSet;
+                        const deferred = !!pdata.deferred;
+
+                        totalTaxPaid += tax;
+                        totalDeferredCalls += deferred ? 1 : 0;
+                        totalRoundOutcomes += 1;
+                        totalSetOutcomes += gotSet ? 1 : 0;
+
+                        stats.totalTax += tax;
+                        if (deferred) stats.deferredCount += 1;
+
+                        if (bid === 0) {
+                            totalZeroBids += 1;
+                            stats.zeroBids += 1;
+                            if (!gotSet) {
+                                stats.zeroBidsMade += 1;
+                            }
+                        }
+
+                        stats.highestRoundScore = Math.max(stats.highestRoundScore, score);
+                        stats.lowestRoundScore = Math.min(stats.lowestRoundScore, score);
+                    });
+                });
+
+                game.players.forEach((player) => {
+                    const rounds = Array.isArray(player.rounds) ? player.rounds : [];
+                    const made = rounds.filter(r => !r.gotSet).length;
+                    const set = rounds.filter(r => !!r.gotSet).length;
+                    const totalRoundScore = rounds.reduce((sum, r) => sum + (r.score || 0), 0);
+
+                    if (!playerMap.has(player.name)) {
+                        playerMap.set(player.name, {
+                            name: player.name,
+                            games: 0,
+                            wins: 0,
+                            totalScore: 0,
+                            bestGame: Number.NEGATIVE_INFINITY,
+                            worstGame: Number.POSITIVE_INFINITY,
+                            rounds: 0,
+                            made: 0,
+                            set: 0,
+                            totalRoundScore: 0,
+                            totalTax: 0,
+                            deferredCount: 0,
+                            zeroBids: 0,
+                            zeroBidsMade: 0,
+                            highestRoundScore: Number.NEGATIVE_INFINITY,
+                            lowestRoundScore: Number.POSITIVE_INFINITY
+                        });
+                    }
+
+                    const stats = playerMap.get(player.name);
+                    stats.games += 1;
+                    if (winners.includes(player.name)) {
+                        stats.wins += 1;
+                    }
+
+                    const score = player.score || 0;
+                    stats.totalScore += score;
+                    stats.bestGame = Math.max(stats.bestGame, score);
+                    stats.worstGame = Math.min(stats.worstGame, score);
+                    stats.rounds += rounds.length;
+                    stats.made += made;
+                    stats.set += set;
+                    stats.totalRoundScore += totalRoundScore;
+                });
+            });
+
+            const players = Array.from(playerMap.values()).map((stats) => {
+                const avgGame = stats.games ? (stats.totalScore / stats.games) : 0;
+                const winRate = stats.games ? (stats.wins / stats.games) * 100 : 0;
+                const madeRate = (stats.made + stats.set) ? (stats.made / (stats.made + stats.set)) * 100 : 0;
+                const setRate = (stats.made + stats.set) ? (stats.set / (stats.made + stats.set)) * 100 : 0;
+                const avgTax = stats.rounds ? (stats.totalTax / stats.rounds) : 0;
+                const deferredRate = stats.rounds ? (stats.deferredCount / stats.rounds) * 100 : 0;
+                const zeroBidMakeRate = stats.zeroBids ? (stats.zeroBidsMade / stats.zeroBids) * 100 : 0;
+                return {
+                    ...stats,
+                    avgGame,
+                    winRate,
+                    madeRate,
+                    setRate,
+                    avgTax,
+                    deferredRate,
+                    zeroBidMakeRate,
+                    avgRound: stats.rounds ? (stats.totalRoundScore / stats.rounds) : 0,
+                    highestRoundScore: Number.isFinite(stats.highestRoundScore) ? stats.highestRoundScore : 0,
+                    lowestRoundScore: Number.isFinite(stats.lowestRoundScore) ? stats.lowestRoundScore : 0
+                };
+            }).sort((a, b) => {
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                if (b.avgGame !== a.avgGame) return b.avgGame - a.avgGame;
+                return a.name.localeCompare(b.name);
+            });
+
+            return {
+                games,
+                players,
+                summary: {
+                    totalGames: games.length,
+                    totalRounds,
+                    uniquePlayers: players.length,
+                    avgRoundsPerGame: games.length ? (totalRounds / games.length) : 0,
+                    avgPlayersPerGame: games.length ? (totalPlayersAcrossGames / games.length) : 0,
+                    countedWinners,
+                    totalTaxPaid,
+                    totalDeferredCalls,
+                    totalZeroBids,
+                    globalSetRate: totalRoundOutcomes ? (totalSetOutcomes / totalRoundOutcomes) * 100 : 0
+                }
+            };
+        }
+
+        function formatStatNumber(value, digits = 1) {
+            return Number(value).toFixed(digits);
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderStatsContent(allGames) {
+            const content = document.getElementById('statsContent');
+            const deduped = dedupeHistoryGames(allGames);
+            const { players, summary } = analyzeHistoryGames(deduped);
+
+            if (summary.totalGames === 0) {
+                content.innerHTML = `
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="refreshStats()">🔄 Retry Auto Extract</button>
+                        <button class="btn btn-primary" onclick="promptHistoryFolderImport()">📂 Manual Folder Pick (Fallback)</button>
+                    </div>
+                    <p style="color: #cbd5e1; line-height: 1.5;">
+                        No history game JSON files found yet.<br>
+                        Target local folder: <code>${LOCAL_HISTORY_FOLDER_PATH}</code>.<br>
+                        Automatic extract checks <code>${HISTORY_MANIFEST_PATH}</code> first, then tries scanning <code>history/</code>.<br>
+                        If your environment blocks folder scanning, use <strong>Manual Folder Pick (Fallback)</strong>.
+                    </p>
+                `;
+                return;
+            }
+
+            content.innerHTML = `
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh</button>
+                    <button class="btn btn-primary" onclick="promptHistoryFolderImport()">📂 Manual Folder Pick (Fallback)</button>
+                </div>
+
+                <div class="stats-summary-grid">
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Games</div>
+                        <div class="stats-tile-value">${summary.totalGames}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Unique Players</div>
+                        <div class="stats-tile-value">${summary.uniquePlayers}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Total Rounds</div>
+                        <div class="stats-tile-value">${summary.totalRounds}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Avg Rounds/Game</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.avgRoundsPerGame)}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Avg Players/Game</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.avgPlayersPerGame)}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Total Tax Paid</div>
+                        <div class="stats-tile-value">${summary.totalTaxPaid}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Deferred Calls</div>
+                        <div class="stats-tile-value">${summary.totalDeferredCalls}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Zero Bids</div>
+                        <div class="stats-tile-value">${summary.totalZeroBids}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Global Set %</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.globalSetRate)}%</div>
+                    </div>
+                </div>
+
+                <div class="stats-table-wrap">
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Games</th>
+                                <th>Wins</th>
+                                <th>Win %</th>
+                                <th>Avg Game</th>
+                                <th>Best</th>
+                                <th>Worst</th>
+                                <th>Rounds</th>
+                                <th>Made %</th>
+                                <th>Set %</th>
+                                <th>Avg Tax</th>
+                                <th>Deferred %</th>
+                                <th>Zero Bid Make %</th>
+                                <th>Avg Round</th>
+                                <th>Best Round</th>
+                                <th>Worst Round</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${players.map((player) => `
+                                <tr>
+                                    <td>${escapeHtml(player.name)}</td>
+                                    <td>${player.games}</td>
+                                    <td>${player.wins}</td>
+                                    <td>${formatStatNumber(player.winRate)}%</td>
+                                    <td>${formatStatNumber(player.avgGame)}</td>
+                                    <td>${player.bestGame}</td>
+                                    <td>${player.worstGame}</td>
+                                    <td>${player.rounds}</td>
+                                    <td>${formatStatNumber(player.madeRate)}%</td>
+                                    <td>${formatStatNumber(player.setRate)}%</td>
+                                    <td>${formatStatNumber(player.avgTax)}</td>
+                                    <td>${formatStatNumber(player.deferredRate)}%</td>
+                                    <td>${player.zeroBids > 0 ? `${formatStatNumber(player.zeroBidMakeRate)}%` : 'n/a'}</td>
+                                    <td>${formatStatNumber(player.avgRound)}</td>
+                                    <td>${player.highestRoundScore}</td>
+                                    <td>${player.lowestRoundScore}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="stats-source-note">
+                    Source: local <code>${LOCAL_HISTORY_FOLDER_PATH}</code> and <code>history/*.json</code>.
+                    Selected folder: <strong>${escapeHtml(selectedHistoryFolderLabel)}</strong>.
+                    Manual cache: ${manualHistoryGames.length} file(s).
+                </p>
+            `;
+        }
+
+        function handleHistoryFolderSelect(event) {
+            const files = Array.from(event.target.files || []).filter(file => file.name.toLowerCase().endsWith('.json'));
+
+            if (files.length === 0) {
+                alert('No JSON files found in that selection.');
+                return;
+            }
+
+            const readers = files.map(file => new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const game = JSON.parse(e.target.result);
+                        resolve(isValidHistoryGame(game) ? game : null);
+                    } catch (error) {
+                        resolve(null);
+                    }
+                };
+                reader.onerror = () => resolve(null);
+                reader.readAsText(file);
+            }));
+
+            Promise.all(readers).then((loadedGames) => {
+                const validGames = loadedGames.filter(Boolean);
+
+                if (validGames.length === 0) {
+                    alert('No valid game JSON files were found in that folder.');
+                    return;
+                }
+
+                manualHistoryGames = dedupeHistoryGames([...manualHistoryGames, ...validGames]);
+
+                const firstRelPath = files[0]?.webkitRelativePath || files[0]?.name || '';
+                const folderName = firstRelPath.includes('/') ? firstRelPath.split('/')[0] : 'history';
+                selectedHistoryFolderLabel = folderName;
+
+                saveManualHistoryGames();
+                refreshStats();
+            });
+
+            event.target.value = '';
         }
 
         function openSettingsModal() {
