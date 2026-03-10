@@ -1580,18 +1580,12 @@
             const games = dedupeHistoryGames(inputGames.filter(isValidHistoryGame));
             const playerMap = new Map();
 
-            let totalRounds = 0;
             let totalPlayersAcrossGames = 0;
-            let countedWinners = 0;
-            let totalTaxPaid = 0;
-            let totalDeferredCalls = 0;
-            let totalZeroBids = 0;
             let totalRoundOutcomes = 0;
             let totalSetOutcomes = 0;
 
             games.forEach((game) => {
                 const scoredRounds = game.rounds.filter(r => r && r.scored).length;
-                totalRounds += scoredRounds;
                 totalPlayersAcrossGames += game.players.length;
 
                 const sorted = [...game.players].sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -1599,10 +1593,6 @@
                 const winners = topScore === null
                     ? []
                     : sorted.filter(p => (p.score || 0) === topScore).map(p => p.name);
-
-                if (winners.length > 0) {
-                    countedWinners += winners.length;
-                }
 
                 game.rounds.forEach((round) => {
                     if (!round || !round.scored || !Array.isArray(round.playerData)) return;
@@ -1639,8 +1629,6 @@
                         const gotSet = !!pdata.gotSet;
                         const deferred = !!pdata.deferred;
 
-                        totalTaxPaid += tax;
-                        totalDeferredCalls += deferred ? 1 : 0;
                         totalRoundOutcomes += 1;
                         totalSetOutcomes += gotSet ? 1 : 0;
 
@@ -1648,7 +1636,6 @@
                         if (deferred) stats.deferredCount += 1;
 
                         if (bid === 0) {
-                            totalZeroBids += 1;
                             stats.zeroBids += 1;
                             if (!gotSet) {
                                 stats.zeroBidsMade += 1;
@@ -1736,14 +1723,9 @@
                 players,
                 summary: {
                     totalGames: games.length,
-                    totalRounds,
                     uniquePlayers: players.length,
-                    avgRoundsPerGame: games.length ? (totalRounds / games.length) : 0,
+                    avgRoundsPerGame: games.length ? (games.reduce((sum, game) => sum + game.rounds.filter(r => r && r.scored).length, 0) / games.length) : 0,
                     avgPlayersPerGame: games.length ? (totalPlayersAcrossGames / games.length) : 0,
-                    countedWinners,
-                    totalTaxPaid,
-                    totalDeferredCalls,
-                    totalZeroBids,
                     globalSetRate: totalRoundOutcomes ? (totalSetOutcomes / totalRoundOutcomes) * 100 : 0
                 }
             };
@@ -1800,28 +1782,12 @@
                         <div class="stats-tile-value">${summary.uniquePlayers}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Total Rounds</div>
-                        <div class="stats-tile-value">${summary.totalRounds}</div>
-                    </div>
-                    <div class="stats-tile">
                         <div class="stats-tile-label">Avg Rounds/Game</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgRoundsPerGame)}</div>
                     </div>
                     <div class="stats-tile">
                         <div class="stats-tile-label">Avg Players/Game</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgPlayersPerGame)}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">Total Tax Paid</div>
-                        <div class="stats-tile-value">${summary.totalTaxPaid}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">Deferred Calls</div>
-                        <div class="stats-tile-value">${summary.totalDeferredCalls}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">Zero Bids</div>
-                        <div class="stats-tile-value">${summary.totalZeroBids}</div>
                     </div>
                     <div class="stats-tile">
                         <div class="stats-tile-label">Global Set %</div>
