@@ -869,7 +869,6 @@
         const REVERSE_VALUE = ['R', 'N']; // R for Reverse, N for Normal
         const MANUAL_HISTORY_STORAGE_KEY = 'ohHellManualHistoryGames';
         const HISTORY_SOURCE_URL_STORAGE_KEY = 'ohHellHistorySourceUrl';
-        const HISTORY_MANIFEST_PATH = 'history/manifest.json';
         const LOCAL_HISTORY_FOLDER_PATH = '/home/ragarza/Github/Oh-Hell/history';
 
         let manualHistoryGames = [];
@@ -1499,27 +1498,6 @@
                 }
             }
 
-            // Preferred: explicit manifest listing all game files in history/.
-            try {
-                const manifestResponse = await fetch(HISTORY_MANIFEST_PATH);
-                if (manifestResponse.ok) {
-                    const manifestData = await manifestResponse.json();
-                    const files = Array.isArray(manifestData)
-                        ? manifestData
-                        : (Array.isArray(manifestData?.files) ? manifestData.files : []);
-
-                    const normalizedManifestFiles = files
-                        .filter(name => typeof name === 'string' && name.toLowerCase().endsWith('.json'))
-                        .map(name => name.startsWith('history/') ? name : `history/${name}`);
-
-                    if (normalizedManifestFiles.length > 0) {
-                        return [...new Set(normalizedManifestFiles)];
-                    }
-                }
-            } catch (error) {
-                // Ignore manifest errors and continue to other discovery approaches.
-            }
-
             try {
                 const response = await fetch('history/');
                 if (!response.ok) {
@@ -1799,7 +1777,7 @@
                     <p style="color: #cbd5e1; line-height: 1.5;">
                         No history game JSON files found yet.<br>
                         Target local folder: <code>${LOCAL_HISTORY_FOLDER_PATH}</code>.<br>
-                        Automatic extract checks <code>${HISTORY_MANIFEST_PATH}</code> first, then tries scanning <code>history/</code>.<br>
+                        Automatic extract checks your configured GitHub history folder first, then tries scanning <code>history/</code> locally.<br>
                         If your environment blocks folder scanning, use <strong>Manual Folder Pick (Fallback)</strong>.
                     </p>
                 `;
