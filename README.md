@@ -132,7 +132,7 @@ When checked, the player list is fetched from the sync URL every time the app lo
 - Older save shapes are handled for backward compatibility.
 
 ### Excel export
-- **📤 Export** copies TSV data to clipboard for the `Scorev2` sheet.
+- **📤 Export** copies TSV data to clipboard for the `ScoreV2` sheet.
 - In Excel: select cell `A1` and paste.
 
 ## History Stats
@@ -158,7 +158,6 @@ Games are deduplicated by `gameId` before analysis.
 | Best / Worst Game Score | Highest / lowest total score across all games |
 | Bid Accuracy | Percentage of rounds where the player made their bid |
 | Set Rate | Percentage of rounds where the player was set |
-| Avg Tax Paid/Round | Average tax applied per round |
 | Deferred Rate | Percentage of rounds where deferred was checked |
 | Zero Bid Success Rate | Percentage of zero-bid rounds that were made |
 | Avg Points/Round | Average round score |

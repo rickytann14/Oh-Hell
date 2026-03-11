@@ -1613,7 +1613,6 @@
                                 made: 0,
                                 set: 0,
                                 totalRoundScore: 0,
-                                totalTax: 0,
                                 deferredCount: 0,
                                 zeroBids: 0,
                                 zeroBidsMade: 0,
@@ -1623,7 +1622,6 @@
                         }
 
                         const stats = playerMap.get(playerName);
-                        const tax = Number(pdata.tax) || 0;
                         const bid = Number(pdata.bid) || 0;
                         const score = Number(pdata.score) || 0;
                         const gotSet = !!pdata.gotSet;
@@ -1632,7 +1630,6 @@
                         totalRoundOutcomes += 1;
                         totalSetOutcomes += gotSet ? 1 : 0;
 
-                        stats.totalTax += tax;
                         if (deferred) stats.deferredCount += 1;
 
                         if (bid === 0) {
@@ -1665,7 +1662,6 @@
                             made: 0,
                             set: 0,
                             totalRoundScore: 0,
-                            totalTax: 0,
                             deferredCount: 0,
                             zeroBids: 0,
                             zeroBidsMade: 0,
@@ -1696,7 +1692,6 @@
                 const winRate = stats.games ? (stats.wins / stats.games) * 100 : 0;
                 const madeRate = (stats.made + stats.set) ? (stats.made / (stats.made + stats.set)) * 100 : 0;
                 const setRate = (stats.made + stats.set) ? (stats.set / (stats.made + stats.set)) * 100 : 0;
-                const avgTax = stats.rounds ? (stats.totalTax / stats.rounds) : 0;
                 const deferredRate = stats.rounds ? (stats.deferredCount / stats.rounds) * 100 : 0;
                 const zeroBidMakeRate = stats.zeroBids ? (stats.zeroBidsMade / stats.zeroBids) * 100 : 0;
                 return {
@@ -1705,7 +1700,6 @@
                     winRate,
                     madeRate,
                     setRate,
-                    avgTax,
                     deferredRate,
                     zeroBidMakeRate,
                     avgRound: stats.rounds ? (stats.totalRoundScore / stats.rounds) : 0,
@@ -1808,7 +1802,6 @@
                                 <th>Worst Game Score</th>
                                 <th>Bid Accuracy</th>
                                 <th>Set Rate</th>
-                                <th>Avg Tax Paid/Round</th>
                                 <th>Deferred Rate</th>
                                 <th>Zero Bid Success Rate</th>
                                 <th>Avg Points/Round</th>
@@ -1828,7 +1821,6 @@
                                     <td>${player.worstGame}</td>
                                     <td>${formatStatNumber(player.madeRate)}%</td>
                                     <td>${formatStatNumber(player.setRate)}%</td>
-                                    <td>${formatStatNumber(player.avgTax)}</td>
                                     <td>${formatStatNumber(player.deferredRate)}%</td>
                                     <td>${player.zeroBids > 0 ? `${formatStatNumber(player.zeroBidMakeRate)}%` : 'n/a'}</td>
                                     <td>${formatStatNumber(player.avgRound)}</td>
