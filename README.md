@@ -2,6 +2,10 @@
 
 A mobile-friendly, single-file web app for tracking Oh Hell games with custom scoring, editable history, and easy file-based save/load.
 
+## Live Site
+
+**[🌐 Open on GitHub Pages](https://rickytann14.github.io/Oh-Hell/)**
+
 ## Download
 
 **[⬇️ Download index.html](https://raw.githubusercontent.com/rickytann14/Oh-Hell/main/index.html)**
