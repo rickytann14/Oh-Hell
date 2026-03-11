@@ -13,11 +13,12 @@ Save the file and open it directly in your browser — no installation required.
 - 📱 Mobile-optimized interface
 - 👥 Saved player management (add/remove/import/export)
 - 🔄 Optional player-list sync from URL
-- 🃏 Trump tracking per round (rank + suit)
+- 🃏 Trump tracking per round (rank + suit + Normal/Reverse)
 - 🎯 Starting hand size with per-round hand-size adjustment
 - ✏️ Edit any scored round from history
 - 💾 Save and load games as JSON files
 - 📤 Clipboard export formatted for Excel
+- 📊 Historical stats across multiple saved games
 
 ## Getting Started
 
@@ -63,6 +64,7 @@ When auto-sync is enabled, player updates are fetched on app load.
 For each round, enter:
 - **Hand Size** (starts from your game setup value, then adjustable each round)
 - **Trump (Big Boss)** rank + suit
+- **Reverse Value**: `N` (Normal) or `R` (Reverse)
 - Player **Bid**, **Tax**, **Confidence**, **Deferred**, and **Got Set**
 
 ### Validation before scoring
@@ -103,6 +105,25 @@ Use **✏️ Edit** in **Score History** to modify any scored round:
 
 Saving edits recalculates that round and updates overall standings.
 
+## Settings
+
+Open **⚙️ Settings** to configure:
+
+### Player List Sync URL
+Enter a URL pointing to a JSON file with your player list. The app fetches updates on load when auto-sync is enabled.
+- **Test Player URL** — verifies the endpoint is reachable and returns valid player data.
+- **Clear Player URL** — removes the configured sync endpoint.
+
+### History Stats Source URL
+Paste a GitHub folder URL (e.g. `https://github.com/owner/repo/tree/main/history`) and the app will auto-discover every JSON game file using the GitHub Contents API for the Stats view.
+- **Test History Source** — verifies discovery works and reports how many JSON files were found.
+- **Reset History Source** — resets to the default GitHub history folder.
+
+### Auto-sync on app load
+When checked, the player list is fetched from the sync URL every time the app loads.
+
+---
+
 ## Save, Load, and Export
 
 ### Save / Load
@@ -114,12 +135,42 @@ Saving edits recalculates that round and updates overall standings.
 - **📤 Export** copies TSV data to clipboard for the `Scorev2` sheet.
 - In Excel: select cell `A1` and paste.
 
+## History Stats
+
+Open **📊 Stats** (setup screen) to view aggregated statistics across all saved game files.
+
+### Data sources
+- **Auto-extract** — fetches game JSON files from the configured History Stats Source URL (GitHub Contents API).
+- **Manual Folder Pick** — fallback that lets you select a local folder of game JSON files directly in the browser.
+
+Games are deduplicated by `gameId` before analysis.
+
+### Summary tiles
+- Total games, unique players, average rounds per game, average players per game, global set rate.
+
+### Per-player stats table
+| Column | Description |
+|---|---|
+| Games Played | Number of games the player appeared in |
+| Wins | Games where the player finished with the highest score |
+| Win Rate | Wins ÷ Games Played |
+| Avg Final Score | Average end-of-game total score |
+| Best / Worst Game Score | Highest / lowest total score across all games |
+| Bid Accuracy | Percentage of rounds where the player made their bid |
+| Set Rate | Percentage of rounds where the player was set |
+| Avg Tax Paid/Round | Average tax applied per round |
+| Deferred Rate | Percentage of rounds where deferred was checked |
+| Zero Bid Success Rate | Percentage of zero-bid rounds that were made |
+| Avg Points/Round | Average round score |
+| Best / Worst Round Score | Highest / lowest individual round score |
+
 ## Header Actions
 
 ### Setup screen
 - **👥 Manage Players**
 - **⚙️ Settings**
 - **📖 Rules & Math**
+- **📊 Stats**
 - **📁 Load Game**
 
 ### In-game screen
