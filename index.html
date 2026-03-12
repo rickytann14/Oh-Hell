@@ -1827,6 +1827,11 @@
             let totalPlayersAcrossGames = 0;
             let totalRoundOutcomes = 0;
             let totalSetOutcomes = 0;
+            let totalRoundPoints = 0;
+            let totalWinningMargin = 0;
+            let gamesWithWinningMargin = 0;
+            let totalSetPointsAcrossRounds = 0;
+            let totalScoredRounds = 0;
 
             games.forEach((game) => {
                 const scoredRounds = game.rounds.filter(r => r && r.scored).length;
@@ -1838,8 +1843,17 @@
                     ? []
                     : sorted.filter(p => (p.score || 0) === topScore).map(p => p.name);
 
+                if (sorted.length > 1) {
+                    const winningMargin = (sorted[0].score || 0) - (sorted[1].score || 0);
+                    totalWinningMargin += winningMargin;
+                    gamesWithWinningMargin += 1;
+                }
+
                 game.rounds.forEach((round) => {
                     if (!round || !round.scored || !Array.isArray(round.playerData)) return;
+
+                    totalScoredRounds += 1;
+                    let setPointsThisRound = 0;
 
                     round.playerData.forEach((pdata, idx) => {
                         const playerName = game.players[idx]?.name;
@@ -1873,6 +1887,10 @@
 
                         totalRoundOutcomes += 1;
                         totalSetOutcomes += gotSet ? 1 : 0;
+                        totalRoundPoints += score;
+                        if (gotSet) {
+                            setPointsThisRound += score;
+                        }
 
                         if (deferred) stats.deferredCount += 1;
 
@@ -1886,6 +1904,8 @@
                         stats.highestRoundScore = Math.max(stats.highestRoundScore, score);
                         stats.lowestRoundScore = Math.min(stats.lowestRoundScore, score);
                     });
+
+                    totalSetPointsAcrossRounds += setPointsThisRound;
                 });
 
                 game.players.forEach((player) => {
@@ -1962,9 +1982,10 @@
                 summary: {
                     totalGames: games.length,
                     uniquePlayers: players.length,
-                    avgRoundsPerGame: games.length ? (games.reduce((sum, game) => sum + game.rounds.filter(r => r && r.scored).length, 0) / games.length) : 0,
-                    avgPlayersPerGame: games.length ? (totalPlayersAcrossGames / games.length) : 0,
-                    globalSetRate: totalRoundOutcomes ? (totalSetOutcomes / totalRoundOutcomes) * 100 : 0
+                    avgWinningMargin: gamesWithWinningMargin ? (totalWinningMargin / gamesWithWinningMargin) : 0,
+                    avgSetPointsPerRound: totalScoredRounds ? (totalSetPointsAcrossRounds / totalScoredRounds) : 0,
+                    globalSetRate: totalRoundOutcomes ? (totalSetOutcomes / totalRoundOutcomes) * 100 : 0,
+                    globalAvgPointsPerRound: totalRoundOutcomes ? (totalRoundPoints / totalRoundOutcomes) : 0
                 }
             };
         }
@@ -2020,16 +2041,20 @@
                         <div class="stats-tile-value">${summary.uniquePlayers}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Avg Rounds/Game</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.avgRoundsPerGame)}</div>
+                        <div class="stats-tile-label">Avg Winning Margin</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.avgWinningMargin)}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Avg Players/Game</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.avgPlayersPerGame)}</div>
+                        <div class="stats-tile-label">Avg Set Pts/Round</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.avgSetPointsPerRound)}</div>
                     </div>
                     <div class="stats-tile">
                         <div class="stats-tile-label">Global Set %</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.globalSetRate)}%</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Global Avg Pts/Round</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.globalAvgPointsPerRound)}</div>
                     </div>
                 </div>
 
