@@ -810,6 +810,16 @@
         </div>
     </div>
 
+    <div class="modal" id="gamePlayersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🪑 Manage Table</h2>
+                <button class="close-modal" onclick="closeModal('gamePlayersModal')">&times;</button>
+            </div>
+            <div id="gamePlayersContent"></div>
+        </div>
+    </div>
+
     <div class="modal" id="saveLoadModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -873,6 +883,88 @@
 
         let manualHistoryGames = [];
         let selectedHistoryFolderLabel = 'Not selected';
+
+        function createRoundPlayerData(participating = true, overrides = {}) {
+            return {
+                bid: 0,
+                tax: 0,
+                deferred: false,
+                confidence: 'MAX',
+                gotSet: false,
+                score: 0,
+                participating,
+                absentReason: participating ? '' : 'inactive',
+                ...overrides
+            };
+        }
+
+        function getActivePlayerIndexes() {
+            return gameState.players
+                .map((player, idx) => (player.active === false ? null : idx))
+                .filter(idx => idx !== null);
+        }
+
+        function getRoundParticipatingCount(round) {
+            return (round.playerData || []).filter(pdata => pdata && pdata.participating).length;
+        }
+
+        function calculateMissedRoundCredit(playerCount) {
+            if (!playerCount) return 0;
+            return Math.round(((playerCount - 2) * 20) / playerCount);
+        }
+
+        function getNextDealerIndex(previousRound = null) {
+            const activeIndexes = getActivePlayerIndexes();
+            if (activeIndexes.length === 0) return 0;
+            if (!previousRound) return activeIndexes[0];
+
+            const nextDealer = activeIndexes.find(idx => idx > previousRound.dealerIndex);
+            return nextDealer !== undefined ? nextDealer : activeIndexes[0];
+        }
+
+        function normalizeGameState(game) {
+            const normalizedPlayers = (game.players || []).map((player, idx) => ({
+                ...player,
+                rounds: Array.isArray(player.rounds) ? player.rounds : [],
+                active: player.active !== false,
+                previousPosition: player.previousPosition === undefined ? idx + 1 : player.previousPosition
+            }));
+
+            const normalizedRounds = (game.rounds || []).map((round) => {
+                const existingPlayerData = Array.isArray(round.playerData) ? round.playerData : [];
+                const normalizedPlayerData = normalizedPlayers.map((player, idx) => {
+                    const existing = existingPlayerData[idx];
+                    if (!existing) {
+                        return createRoundPlayerData(false, { absentReason: 'not-in-game' });
+                    }
+
+                    return {
+                        ...createRoundPlayerData(existing.participating !== false),
+                        ...existing,
+                        participating: existing.participating !== false,
+                        absentReason: existing.participating === false
+                            ? (existing.absentReason || 'inactive')
+                            : ''
+                    };
+                });
+
+                return {
+                    ...round,
+                    reverseValue: REVERSE_VALUE.includes(round.reverseValue) ? round.reverseValue : 'N',
+                    playerData: normalizedPlayerData
+                };
+            });
+
+            return {
+                ...game,
+                players: normalizedPlayers,
+                rounds: normalizedRounds,
+                currentRound: game.currentRound || 0,
+                startingHandSize: game.startingHandSize || 10,
+                gameId: game.gameId || null,
+                createdAt: game.createdAt || null
+            };
+        }
 
         function normalizeSyncUrl(url) {
             if (!url) return '';
@@ -982,14 +1074,7 @@
                 }
                 
                 // Initialize previousPosition if not present
-                game.players.forEach((player, idx) => {
-                    if (player.previousPosition === undefined) {
-                        player.previousPosition = idx + 1;
-                    }
-                });
-                
-                // Auto-load the game
-                gameState = game;
+                gameState = normalizeGameState(game);
                 document.getElementById('setupScreen').classList.add('hidden');
                 document.getElementById('gameScreen').classList.remove('hidden');
                 loadHeaderActions('game');
@@ -1299,6 +1384,7 @@
             } else if (mode === 'game') {
                 actions.innerHTML = `
                     <div class="header-action-buttons">
+                        <button class="btn btn-secondary btn-small" onclick="openGamePlayersModal()">👥 Table</button>
                         <button class="btn btn-secondary btn-small" onclick="saveGame()">💾 Save</button>
                         <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load</button>
                         <button class="btn btn-primary btn-small" onclick="exportToExcel()">📤 Export</button>
@@ -1312,6 +1398,164 @@
         function openManagePlayersModal() {
             loadSavedPlayers();
             document.getElementById('managePlayersModal').classList.add('active');
+        }
+
+        function renderGamePlayersModal() {
+            const container = document.getElementById('gamePlayersContent');
+            const activePlayers = gameState.players.filter(player => player.active !== false);
+            const inactivePlayers = gameState.players.filter(player => player.active === false);
+            const availableSavedPlayers = getSavedPlayers().filter(name => !gameState.players.some(player => player.name === name));
+
+            container.innerHTML = `
+                <div class="input-group">
+                    <label>Active Players</label>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        ${activePlayers.map(player => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; background: rgba(51, 65, 85, 0.7); padding: 0.75rem 0.9rem; border-radius: 10px;">
+                                <div>
+                                    <div style="font-weight: 700; color: #f8fafc;">${player.name}</div>
+                                    <div style="font-size: 0.82rem; color: #94a3b8;">Score: ${player.score}</div>
+                                </div>
+                                <button class="btn btn-danger btn-small" onclick="disablePlayerMidGame('${player.name.replace(/'/g, "\\'")}')">Disable</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                ${inactivePlayers.length > 0 ? `
+                    <div class="input-group">
+                        <label>Disabled Players</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            ${inactivePlayers.map(player => `
+                                <div style="padding: 0.5rem 0.85rem; border-radius: 999px; background: rgba(71, 85, 105, 0.65); color: #cbd5e1; font-size: 0.9rem;">
+                                    ${player.name} • ${player.score}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="input-group">
+                    <label>Add Player Mid-Game</label>
+                    <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 0.75rem; line-height: 1.5;">
+                        Missed-round credit uses Math.round(((players - 2) * 20) / players) for each scored round they missed.
+                    </p>
+                    <select id="midGamePlayerSelect" style="margin-bottom: 0.5rem;">
+                        <option value="">-- Choose saved player --</option>
+                        ${availableSavedPlayers.map(player => `<option value="${player}">${player}</option>`).join('')}
+                    </select>
+                    <input type="text" id="midGamePlayerName" placeholder="Or type a new player name" style="margin-bottom: 0.75rem;">
+                    <button class="btn btn-success" onclick="addPlayerMidGame()" style="width: 100%;">➕ Add To Current Game</button>
+                </div>
+            `;
+        }
+
+        function openGamePlayersModal() {
+            renderGamePlayersModal();
+            document.getElementById('gamePlayersModal').classList.add('active');
+        }
+
+        function addPlayerMidGame() {
+            const select = document.getElementById('midGamePlayerSelect');
+            const input = document.getElementById('midGamePlayerName');
+            const name = (input.value.trim() || select.value.trim());
+
+            if (!name) {
+                alert('Choose a saved player or type a new player name.');
+                return;
+            }
+
+            if (gameState.players.some(player => player.name.toLowerCase() === name.toLowerCase())) {
+                alert('That player is already part of this game.');
+                return;
+            }
+
+            if (getActivePlayerIndexes().length >= 11) {
+                alert('You already have 11 active players. Disable someone first.');
+                return;
+            }
+
+            const player = {
+                name,
+                score: 0,
+                rounds: [],
+                active: true,
+                previousPosition: gameState.players.length + 1
+            };
+            const playerIndex = gameState.players.push(player) - 1;
+
+            gameState.rounds.forEach((round, roundIndex) => {
+                if (round.scored) {
+                    const credit = calculateMissedRoundCredit(getRoundParticipatingCount(round));
+                    round.playerData[playerIndex] = createRoundPlayerData(false, {
+                        score: credit,
+                        absentReason: 'joined-late'
+                    });
+                    player.score += credit;
+                    player.rounds.push({
+                        round: roundIndex + 1,
+                        bid: null,
+                        gotSet: false,
+                        score: credit,
+                        joinedLate: true
+                    });
+                } else {
+                    round.playerData[playerIndex] = createRoundPlayerData(true);
+                }
+            });
+
+            const savedPlayers = getSavedPlayers();
+            if (!savedPlayers.includes(name)) {
+                savePlayers([...savedPlayers, name]);
+                loadSavedPlayers();
+            }
+
+            renderRoundSetup();
+            renderScoreboard();
+            renderHistory();
+            updatePlayerPositions();
+            autoSave();
+            renderGamePlayersModal();
+
+            alert(`${name} added with ${player.score} catch-up points.`);
+        }
+
+        function disablePlayerMidGame(playerName) {
+            const playerIndex = gameState.players.findIndex(player => player.name === playerName);
+            if (playerIndex < 0) return;
+
+            const activeIndexes = getActivePlayerIndexes();
+            if (activeIndexes.length <= 3) {
+                alert('You need at least 3 active players.');
+                return;
+            }
+
+            if (!confirm(`Disable ${playerName} for the rest of the game?`)) {
+                return;
+            }
+
+            const currentRound = gameState.rounds[gameState.currentRound];
+            const currentRoundData = currentRound?.playerData?.[playerIndex];
+
+            gameState.players[playerIndex].active = false;
+
+            if (currentRound && !currentRound.scored && currentRoundData?.participating) {
+                currentRound.playerData[playerIndex] = createRoundPlayerData(false, { absentReason: 'disabled' });
+
+                if (currentRound.dealerIndex === playerIndex) {
+                    const remainingActive = gameState.players
+                        .map((player, idx) => (currentRound.playerData[idx]?.participating ? idx : null))
+                        .filter(idx => idx !== null);
+                    currentRound.dealerIndex = remainingActive[0] ?? currentRound.dealerIndex;
+                }
+            }
+
+            renderRoundSetup();
+            renderScoreboard();
+            renderHistory();
+            updatePlayerPositions();
+            autoSave();
+            renderGamePlayersModal();
         }
 
         function openRulesModal() {
@@ -1960,7 +2204,7 @@
             const startingHandSize = parseInt(document.getElementById('startingHandSize').value) || 10;
 
             gameState = {
-                players: players.map((p, idx) => ({...p, previousPosition: idx + 1})),
+                players: players.map((p, idx) => ({...p, previousPosition: idx + 1, active: true})),
                 rounds: [],
                 currentRound: 0,
                 startingHandSize: startingHandSize,
@@ -1981,7 +2225,7 @@
             const handSize = gameState.currentRound === 0
                 ? gameState.startingHandSize
                 : (previousRound?.handSize || gameState.startingHandSize);
-            const dealerIndex = gameState.currentRound % gameState.players.length;
+            const dealerIndex = getNextDealerIndex(previousRound);
 
             const round = {
                 handSize: handSize,
@@ -1990,14 +2234,7 @@
                 trumpRank: '',
                 trumpSuit: '',
                 reverseValue: 'N',
-                playerData: gameState.players.map(p => ({
-                    bid: 0,
-                    tax: 0,
-                    deferred: false,
-                    confidence: 'MAX',
-                    gotSet: false,
-                    score: 0
-                })),
+                playerData: gameState.players.map(player => createRoundPlayerData(player.active !== false)),
                 scored: false
             };
 
@@ -2014,7 +2251,7 @@
 
             syncTrumpParts(round);
             
-            const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
+            const totalBids = round.playerData.reduce((sum, p) => sum + (p && p.participating ? p.bid : 0), 0);
             let bidStatus = '';
             let bidClass = '';
             
@@ -2034,7 +2271,7 @@
                 .sort((a, b) => b.score - a.score);
             const leader = sortedPlayers[0];
             const lowPlayer = sortedPlayers[sortedPlayers.length - 1];
-            const dealer = gameState.players[round.dealerIndex];
+            const dealer = gameState.players[round.dealerIndex] || leader;
             
             // Check if low player is unique (no ties)
             const lowScore = lowPlayer.score;
@@ -2113,6 +2350,11 @@
                     
                     <div class="players-grid">
                         ${gameState.players.map((player, idx) => {
+                            const pdata = round.playerData[idx];
+                            if (!pdata || !pdata.participating) {
+                                return '';
+                            }
+
                             const madePrediction = calculatePlayerRoundScore(round, round.playerData[idx], false);
                             const setPrediction = calculatePlayerRoundScore(round, round.playerData[idx], true);
                             const existingRoundScore = round.scored ? (round.playerData[idx].score || 0) : 0;
@@ -2349,7 +2591,7 @@
                 return 10 + (bid * bid) + confidenceValue - deferredPenalty - tax;
             }
 
-            const zeroBonus = gameState.players.length <= 6 ? 10 : 5;
+            const zeroBonus = getRoundParticipatingCount(round) <= 6 ? 10 : 5;
             return zeroBonus + round.handSize + confidenceValue - deferredPenalty - tax;
         }
 
@@ -2423,14 +2665,14 @@
             const round = gameState.rounds[gameState.currentRound];
             
             // Check if bids are exact (cannot score an exact round)
-            const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
+            const totalBids = round.playerData.reduce((sum, p) => sum + (p && p.participating ? p.bid : 0), 0);
             if (totalBids === round.handSize) {
                 alert('❌ Cannot score round when bids are EXACT!\n\nThe total bids equal the hand size. Someone must change their bid.');
                 return;
             }
             
             // Check if at least one player got set
-            const anyoneSet = round.playerData.some(p => p.gotSet);
+            const anyoneSet = round.playerData.some(p => p && p.participating && p.gotSet);
             if (!anyoneSet) {
                 alert('Please mark at least one player as "Got Set" to score the round!');
                 return;
@@ -2440,6 +2682,10 @@
 
             // Calculate scores
             round.playerData.forEach((pdata, idx) => {
+                if (!pdata || !pdata.participating) {
+                    return;
+                }
+
                 const bid = pdata.bid;
                 const roundScore = calculatePlayerRoundScore(round, pdata, pdata.gotSet);
 
@@ -2484,6 +2730,10 @@
             
             // Reverse the scores
             round.playerData.forEach((pdata, idx) => {
+                if (!pdata || !pdata.participating) {
+                    return;
+                }
+
                 gameState.players[idx].score -= pdata.score;
                 gameState.players[idx].rounds.pop();
             });
@@ -2508,7 +2758,7 @@
                         ${sortedPlayers.map((player, idx) => `
                             <div class="rank-item ${idx === 0 ? 'first' : ''}">
                                 <div class="rank-position">#${idx + 1}</div>
-                                <div class="rank-name">${player.name}</div>
+                                <div class="rank-name">${player.name}${player.active === false ? ' <span style="font-size: 0.78rem; color: #cbd5e1;">(inactive)</span>' : ''}</div>
                                 <div class="rank-score ${player.score < 0 ? 'negative' : ''}">${player.score}</div>
                             </div>
                         `).join('')}
@@ -2549,6 +2799,23 @@
                                     <div class="history-players">
                                         ${gameState.players.map((player, pIdx) => {
                                             const pdata = round.playerData[pIdx];
+                                            if (!pdata || (!pdata.participating && pdata.absentReason !== 'joined-late')) {
+                                                return '';
+                                            }
+
+                                            if (!pdata.participating && pdata.absentReason === 'joined-late') {
+                                                return `
+                                                    <div style="line-height: 1.4;">
+                                                        <strong>${player.name}:</strong>
+                                                        ⏱️ Joined later
+                                                        <br>
+                                                        <span style="color: #10b981; font-weight: 600;">
+                                                            +${pdata.score}
+                                                        </span>
+                                                    </div>
+                                                `;
+                                            }
+
                                             return `
                                                 <div style="line-height: 1.4;">
                                                     <strong>${player.name}:</strong> 
@@ -2587,7 +2854,7 @@
                         ${sortedPlayers.map((player, idx) => `
                             <div class="rank-item ${idx === 0 ? 'first' : ''}">
                                 <div class="rank-position">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1)}</div>
-                                <div class="rank-name">${player.name}</div>
+                                <div class="rank-name">${player.name}${player.active === false ? ' <span style="font-size: 0.78rem; color: rgba(15, 23, 42, 0.75);">(inactive)</span>' : ''}</div>
                                 <div class="rank-score">${player.score}</div>
                             </div>
                         `).join('')}
@@ -2664,13 +2931,7 @@
                     }
                     
                     // Initialize previousPosition if not present
-                    game.players.forEach((player, idx) => {
-                        if (player.previousPosition === undefined) {
-                            player.previousPosition = idx + 1;
-                        }
-                    });
-                    
-                    gameState = game;
+                    gameState = normalizeGameState(game);
                     document.getElementById('setupScreen').classList.add('hidden');
                     document.getElementById('gameScreen').classList.remove('hidden');
                     loadHeaderActions('game');
@@ -2759,6 +3020,20 @@
 
                 <div class="players-grid" id="editPlayersGrid">
                     ${gameState.players.map((player, idx) => {
+                        const pdata = round.playerData[idx];
+                        if (!pdata || !pdata.participating) {
+                            const label = pdata?.absentReason === 'joined-late'
+                                ? `Missed round credit: +${pdata.score}`
+                                : 'Did not play this round';
+
+                            return `
+                                <div class="player-card" style="border-style: dashed; opacity: 0.78;">
+                                    <div class="player-name">${player.name}</div>
+                                    <div style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.5;">${label}</div>
+                                </div>
+                            `;
+                        }
+
                         const madePrediction = calculatePlayerRoundScore(round, round.playerData[idx], false);
                         const setPrediction = calculatePlayerRoundScore(round, round.playerData[idx], true);
                         const existingRoundScore = round.playerData[idx].score || 0;
@@ -2913,7 +3188,7 @@
             const round = gameState.rounds[editingRoundIndex];
             
             // Check if at least one player got set
-            const anyoneSet = round.playerData.some(p => p.gotSet);
+            const anyoneSet = round.playerData.some(p => p && p.participating && p.gotSet);
             if (!anyoneSet) {
                 alert('Please mark at least one player as "Got Set"!');
                 return;
@@ -2921,6 +3196,10 @@
 
             // First, reverse the old scores for this round
             round.playerData.forEach((pdata, idx) => {
+                if (!pdata) {
+                    return;
+                }
+
                 gameState.players[idx].score -= pdata.score;
                 
                 // Find and remove the old round data from player history
@@ -2934,6 +3213,26 @@
 
             // Now recalculate scores with new data
             round.playerData.forEach((pdata, idx) => {
+                if (!pdata) {
+                    return;
+                }
+
+                if (!pdata.participating) {
+                    gameState.players[idx].score += pdata.score;
+
+                    if (pdata.absentReason === 'joined-late' && pdata.score) {
+                        gameState.players[idx].rounds.push({
+                            round: editingRoundIndex + 1,
+                            bid: null,
+                            gotSet: false,
+                            score: pdata.score,
+                            joinedLate: true
+                        });
+                        gameState.players[idx].rounds.sort((a, b) => a.round - b.round);
+                    }
+                    return;
+                }
+
                 const bid = pdata.bid;
                 const roundScore = calculatePlayerRoundScore(round, pdata, pdata.gotSet);
 
