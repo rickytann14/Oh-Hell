@@ -587,6 +587,18 @@
             border-bottom: none;
         }
 
+        .stats-table th:first-child,
+        .stats-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .stats-table td:first-child {
+            background: rgba(30, 41, 59, 0.9);
+        }
+
         .stats-source-note {
             color: #94a3b8;
             font-size: 0.82rem;
@@ -1864,6 +1876,8 @@
                                 name: playerName,
                                 games: 0,
                                 wins: 0,
+                                second: 0,
+                                third: 0,
                                 totalScore: 0,
                                 bestGame: Number.NEGATIVE_INFINITY,
                                 worstGame: Number.POSITIVE_INFINITY,
@@ -1919,6 +1933,8 @@
                             name: player.name,
                             games: 0,
                             wins: 0,
+                            second: 0,
+                            third: 0,
                             totalScore: 0,
                             bestGame: Number.NEGATIVE_INFINITY,
                             worstGame: Number.POSITIVE_INFINITY,
@@ -1938,6 +1954,20 @@
                     stats.games += 1;
                     if (winners.includes(player.name)) {
                         stats.wins += 1;
+                    } else {
+                        // Track 2nd and 3rd place finishes (only if not a winner)
+                        const playerScore = player.score || 0;
+                        const uniqueScoresAbove = new Set(
+                            sorted
+                                .filter(p => (p.score || 0) > playerScore)
+                                .map(p => p.score)
+                        ).size;
+                        
+                        if (uniqueScoresAbove === 1) {
+                            stats.second += 1;
+                        } else if (uniqueScoresAbove === 2) {
+                            stats.third += 1;
+                        }
                     }
 
                     const score = player.score || 0;
@@ -2065,6 +2095,8 @@
                                 <th>Player</th>
                                 <th>Games Played</th>
                                 <th>Wins</th>
+                                <th>2nd Place</th>
+                                <th>3rd Place</th>
                                 <th>Win Rate</th>
                                 <th>Avg Final Score</th>
                                 <th>Best Game Score</th>
@@ -2084,6 +2116,8 @@
                                     <td>${escapeHtml(player.name)}</td>
                                     <td>${player.games}</td>
                                     <td>${player.wins}</td>
+                                    <td>${player.second}</td>
+                                    <td>${player.third}</td>
                                     <td>${formatStatNumber(player.winRate)}%</td>
                                     <td>${formatStatNumber(player.avgGame)}</td>
                                     <td>${player.bestGame}</td>
