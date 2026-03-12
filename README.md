@@ -1,6 +1,6 @@
 # Oh Hell Scorekeeper
 
-A mobile-friendly, single-file web app for tracking Oh Hell games with custom scoring, editable history, and easy file-based save/load.
+A mobile-friendly, single-file web app for tracking Oh Hell games with custom scoring, editable history, mid-game player management, and easy file-based save/load.
 
 ## Live Site
 
@@ -17,12 +17,18 @@ Save the file and open it directly in your browser — no installation required.
 - 📱 Mobile-optimized interface
 - 👥 Saved player management (add/remove/import/export)
 - 🔄 Optional player-list sync from URL
+- 💾 Auto-save to browser (never lose progress)
 - 🃏 Trump tracking per round (rank + suit + Normal/Reverse)
 - 🎯 Starting hand size with per-round hand-size adjustment
-- ✏️ Edit any scored round from history
+- ✏️ Edit any scored round from history with score prediction
+- ↩️ Undo/reverse any scored round
+- ➕ Add players mid-game with automatic missed-round credit
+- 🪑 Manage active/inactive players during gameplay
 - 💾 Save and load games as JSON files
 - 📤 Clipboard export formatted for Excel
-- 📊 Historical stats across multiple saved games
+- 📊 Historical stats and analytics across multiple saved games
+- 📖 Built-in comprehensive rules guide with scoring examples
+- 🎴 Bid status tracking (Under/Over/Exact)
 
 ## Getting Started
 
@@ -64,50 +70,76 @@ When auto-sync is enabled, player updates are fetched on app load.
 
 ## Game Flow
 
-### Round setup
+### Setup
+1. Open **Manage Players** and add your player list
+2. Set **Number of Players** (3-11) and choose players
+3. Set **Starting Hand Size** (typically 1-15)
+4. Click **Start Game** to begin
+
+The game's starting hand size is used for round 1, then you can manually adjust per-round as needed.
+
+### Round Setup
 For each round, enter:
 - **Hand Size** (starts from your game setup value, then adjustable each round)
-- **Trump (Big Boss)** rank + suit
+- **Trump (Big Boss)**: rank + suit
 - **Reverse Value**: `N` (Normal) or `R` (Reverse)
 - Player **Bid**, **Tax**, **Confidence**, **Deferred**, and **Got Set**
 
-### Validation before scoring
-- **Exact bids are invalid**: total bids cannot equal hand size.
-- At least one player must be marked **Got Set**.
+**Score Prediction** shows what score each player will receive if they make their bid or get set, before you score the round.
 
-### After scoring a round
-- **↩️ Undo Round** reverses that round’s score impact.
-- **➡️ Next Round** starts the next round.
-- **🏁 End Game** shows final rankings.
+**Dealer** is marked with 🎴 — rotates through active players each round.
+
+### Bid Validation
+- **Under (🦆)**: total bids < hand size - Valid ✅
+- **Over (🦢)**: total bids > hand size - Valid ✅  
+- **Exact (❌)**: total bids = hand size - INVALID, cannot score
+
+### After Scoring a Round
+Four options appear:
+- **↩️ Undo Round** — reverses that round's score impact and resets the round to unscored
+- **➡️ Next Round** — starts the next round with incremented/decremented hand size
+- **🏁 End Game** — shows final rankings and game over screen
+- **✏️ Edit** (in history) — modify any scored round
+
+### Table Management
+During play, click **👥 Table** to:
+- See active players with current round contribution
+- View disabled players (won't participate in new rounds)
+- **Disable players mid-game** (minimum 3 must remain active)
+- **Add new players mid-game** with automatic catch-up points based on scored rounds
+
+Players added after rounds have been scored receive **missed-round credit** equal to:
+- `Math.round(((activePlayerCount - 2) * 20) / activePlayerCount)` points per scored round missed
 
 ## Scoring Rules
 
-### If player got set
-`score = -confidence - deferredPenalty - tax`
+The app uses a classic Oh Hell scoring system:
 
-### If player made bid and bid > 0
-`score = 10 + (bid × bid) + confidence - deferredPenalty - tax`
+- **Got Set**: `–confidence – deferredPenalty – tax`
+- **Made Positive Bid**: `10 + (bid²) + confidence – deferredPenalty – tax`
+- **Made Zero Bid**: `zeroBonus + handSize + confidence – deferredPenalty – tax`
 
-### If player made zero bid
-`score = zeroBonus + handSize + confidence - deferredPenalty - tax`
+### Key Modifiers
+- **Confidence**: MAX (10), 10, 5, or 0 points
+- **Deferred**: –2 penalty when deferred is checked
+- **Tax**: Custom penalty subtracted from score  
+- **Zero Bonus**: 10 points (≤6 players) or 5 points (>6 players)
 
-### Modifiers
-- **Confidence**: `MAX`, `10`, `5`, `0`
-  - `MAX` = 10 for positive bids, 5 for zero bids
-- **Deferred penalty**: 2 points when deferred is checked
-- **Tax**: custom penalty subtracted from score
-- **Zero bonus**:
-  - 10 points when player count is 6 or fewer
-  - 5 points when player count is 7 or more
+For complete examples and detailed breakdowns, open **📖 Rules & Math** from the setup screen.
 
 ## Editing History
 
-Use **✏️ Edit** in **Score History** to modify any scored round:
-- hand size
-- bids/tax/confidence
-- deferred / got set flags
+Use **✏️ Edit** in **Score History** to modify any scored round. Edit mode includes:
 
-Saving edits recalculates that round and updates overall standings.
+- **Hand Size**
+- **Trump** (rank + suit)
+- **Reverse Value**
+- Individual player **bid**, **tax**, **confidence**, **deferred**, and **got set** flags
+- **Score Prediction** showing projected totals for each scenario
+
+**Bid Status** (Under/Over/Exact) updates live as you change bids.
+
+After saving edits, scores recalculate automatically and overall standings update.
 
 ## Settings
 
@@ -115,13 +147,13 @@ Open **⚙️ Settings** to configure:
 
 ### Player List Sync URL
 Enter a URL pointing to a JSON file with your player list. The app fetches updates on load when auto-sync is enabled.
-- **Test Player URL** — verifies the endpoint is reachable and returns valid player data.
-- **Clear Player URL** — removes the configured sync endpoint.
+- **Test Player URL** — verifies the endpoint is reachable and returns valid player data, shows count of synced players
+- **Clear Player URL** — removes the configured sync endpoint and resets to default
 
 ### History Stats Source URL
 Paste a GitHub folder URL (e.g. `https://github.com/owner/repo/tree/main/history`) and the app will auto-discover every JSON game file using the GitHub Contents API for the Stats view.
-- **Test History Source** — verifies discovery works and reports how many JSON files were found.
-- **Reset History Source** — resets to the default GitHub history folder.
+- **Test History Source** — verifies discovery works and reports how many JSON files were found
+- **Reset History Source** — resets to the default GitHub history folder
 
 ### Auto-sync on app load
 When checked, the player list is fetched from the sync URL every time the app loads.
@@ -130,57 +162,134 @@ When checked, the player list is fetched from the sync URL every time the app lo
 
 ## Save, Load, and Export
 
+### Auto-save
+- Games are automatically saved to your browser's local storage after every action (bid change, score, etc.)
+- If the app crashes or you close the browser unexpectedly, your game is recovered on reload
+- Auto-save is cleared when you start a new game explicitly
+
 ### Save / Load
-- **💾 Save** downloads the current game as JSON.
-- **📁 Load** restores a game from JSON.
-- Older save shapes are handled for backward compatibility.
+- **💾 Save** downloads the current game state as a JSON file with name format: `oh-hell-YYYY-MM-DD-rN.json`
+- **📁 Load** restores a previously saved game from JSON
+- Supports backward compatibility with older game save formats
 
 ### Excel export
-- **📤 Export** copies TSV data to clipboard for the `ScoreV2` sheet.
-- In Excel: select cell `A1` and paste.
+- **📤 Export** copies TSV data to clipboard formatted for the `ScoreV2` sheet
+- In Excel: select cell `A1` and paste
+- Includes full game state, scores, and player details
+
+---
+
+## New Features
+
+### Mid-Game Player Management
+
+During active gameplay, click **👥 Table** to:
+
+#### Add Players
+- Choose from saved players or add a new player by name
+- New players receive **missed-round credit** for each round already scored
+- Credit formula: `Math.round(((activePlayerCount - 2) * 20) / activePlayerCount)` per scored round
+- Players can be added until you have 11 active players maximum
+
+#### Disable Players
+- Remove a player from active participation (minimum 3 must remain active)
+- Disabled players won't participate in new rounds
+- They remain visible in standings with their final score
+- Can only disable inactive players if they're already set to inactive
+
+### Advanced Round Editing
+
+Click **✏️ Edit** on any scored round to:
+- Adjust **hand size**, **trump rank/suit**, **reverse value**
+- Modify bids, tax, confidence, deferred, or got set for any player
+- View **projected totals** for both made-bid and got-set scenarios in real-time
+- See **bid status** (Under/Over/Exact) update as you change values
+
+### Undo/Reverse Rounds
+
+After scoring a round, click **↩️ Undo Round** to:
+- Reverse all score changes from that round
+- Reset the round to unscored state
+- Allows re-entry of bids or correction of mistakes
+- Useful for fixing input errors without editing
+
+---
 
 ## History Stats
 
 Open **📊 Stats** (setup screen) to view aggregated statistics across all saved game files.
 
 ### Data sources
-- **Auto-extract** — fetches game JSON files from the configured History Stats Source URL (GitHub Contents API).
-- **Manual Folder Pick** — fallback that lets you select a local folder of game JSON files directly in the browser.
+- **Auto-extract** — fetches game JSON files from the configured History Stats Source URL (GitHub Contents API)
+- **Manual Folder Pick** — fallback that lets you select a local folder of game JSON files directly in the browser
 
-Games are deduplicated by `gameId` before analysis.
+Games are deduplicated by `gameId` before analysis to prevent duplicate counting.
 
 ### Summary tiles
-- Total games, unique players, average rounds per game, average players per game, global set rate.
+- Total games, unique players, average rounds per game, average players per game, average winning margin, global set rate, average points per round
 
 ### Per-player stats table
 | Column | Description |
 |---|---|
-| Games Played | Number of games the player appeared in |
+| Games | Number of games the player appeared in |
 | Wins | Games where the player finished with the highest score |
-| Win Rate | Wins ÷ Games Played |
+| Win Rate % | Wins ÷ Games |
+| 2nd/3rd Place | Times finished 2nd or 3rd overall |
+| Top 3 Rate % | (Wins + 2nd + 3rd) ÷ Games |
 | Avg Final Score | Average end-of-game total score |
-| Best / Worst Game Score | Highest / lowest total score across all games |
-| Bid Accuracy | Percentage of rounds where the player made their bid |
-| Set Rate | Percentage of rounds where the player was set |
-| Deferred Rate | Percentage of rounds where deferred was checked |
-| Zero Bid Success Rate | Percentage of zero-bid rounds that were made |
-| Avg Points/Round | Average round score |
-| Best / Worst Round Score | Highest / lowest individual round score |
+| Best / Worst | Highest / lowest total score across all games |
+| Bid Accuracy % | Rounds made ÷ (rounds made + set) |
+| Set Rate % | Rounds set ÷ (rounds made + set) |
+| Deferred Rate % | Times deferred ÷ total rounds played |
+| Zero Bid Success % | Zero bids made ÷ total zero bids |
+| Avg Round Score | Average points per individual round |
+| Best / Worst Round | Highest / lowest single round score |
+
+### Fallback import
+If automatic history discovery fails (network issues, wrong URL format), use **📂 Manual Folder Pick (Fallback)** to:
+- Browse and select a local folder on your computer
+- Import all JSON game files from that folder
+- Manually cache them for stat analysis
 
 ## Header Actions
 
 ### Setup screen
-- **👥 Manage Players**
-- **⚙️ Settings**
-- **📖 Rules & Math**
-- **📊 Stats**
-- **📁 Load Game**
+- **👥 Manage Players** — add, remove, import, export player list
+- **⚙️ Settings** — configure sync URLs and auto-sync
+- **📖 Rules & Math** — comprehensive guide with scoring examples and formulas
+- **📊 Stats** — view aggregated stats from history
+- **📁 Load Game** — restore a previously saved game
 
 ### In-game screen
-- **💾 Save**
-- **📁 Load**
-- **📤 Export**
-- **🆕 New**
+- **👥 Table** — manage active/inactive players, add mid-game players
+- **💾 Save** — download current game as JSON
+- **📁 Load** — restore a saved game (pauses current)
+- **📤 Export** — copy game data to clipboard (Excel format)
+- **🆕 New** — start a new game (prompts to confirm if game in progress)
+
+---
+
+## Rules & Math Guide
+
+Click **📖 Rules & Math** from the setup screen to access a comprehensive built-in guide covering:
+
+### Game Overview
+- Explanation of Oh Hell mechanics
+- Bid rules (Under/Over/Exact)
+
+### Detailed Scoring Formulas and Examples
+- **Made Bid (positive bid)**: `10 + (bid × bid) + confidence - deferred - tax`
+- **Made Zero Bid**: `zeroBonus + handSize + confidence - deferred - tax`
+- **Got Set**: `-confidence - deferred - tax`
+- Includes 3+ worked examples with calculations
+
+### Modifiers Explained
+- **Confidence**: MAX (10 for positive bids, 5 for zero), or 0/5/10
+- **Deferred**: 2-point penalty when checked
+- **Tax**: Custom points deducted from score
+- **Zero Bonus**: 10 points (≤6 players) or 5 points (>6 players)
+
+---
 
 ## Browser Support
 
