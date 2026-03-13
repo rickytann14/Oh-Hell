@@ -743,6 +743,39 @@
             margin-top: 0.75rem;
         }
 
+        .stats-section-title {
+            color: #fbbf24;
+            margin: 1rem 0 0.75rem;
+            font-size: 1.05rem;
+        }
+
+        .stats-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-mini-card {
+            background: rgba(51, 65, 85, 0.4);
+            border: 1px solid rgba(100, 116, 139, 0.4);
+            border-radius: 10px;
+            padding: 0.65rem 0.75rem;
+        }
+
+        .stats-mini-label {
+            color: #94a3b8;
+            font-size: 0.76rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .stats-mini-value {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
         .game-info h3 {
             color: #fbbf24;
             margin-bottom: 0.25rem;
@@ -1257,7 +1290,9 @@ Open **📊 Stats** (setup screen) to view aggregated statistics across all save
 Games are deduplicated by `gameId` before analysis to prevent duplicate counting.
 
 ### Summary tiles
-- Total games, unique players, average rounds per game, average players per game, average winning margin, global set rate, average points per round
+- Total games, unique players, average rounds per game, average players per game
+- Average winning margin, average set points per round, global set rate, global average points per round
+- Exact-bid blocks per game, chaos round rate, best global trump suit average, best global reverse-mode average
 
 ### Per-player stats table
 | Column | Description |
@@ -1272,9 +1307,59 @@ Games are deduplicated by `gameId` before analysis to prevent duplicate counting
 | Bid Accuracy % | Rounds made ÷ (rounds made + set) |
 | Set Rate % | Rounds set ÷ (rounds made + set) |
 | Deferred Rate % | Times deferred ÷ total rounds played |
+| Clutch % | MAX-confidence made ÷ MAX-confidence attempts |
+| Greed Index | Average of `(bid / handSize)` for positive bids |
+| Tax Total / Tax per Round | Total tax paid and average tax paid per round |
+| Deferred Made % / Non-Deferred Made % | Made-rate when deferred vs when not deferred |
+| Dealer Edge | `(avg score as dealer) - (avg score as non-dealer)` |
+| Set Hunter % | Opponent set-rate in rounds where player bid at least half the hand size |
+| Comeback Wins | Wins where player was outside top 2 at the halfway checkpoint |
+| Choke % | Share of games where player led at 70% checkpoint but did not win |
+| Hot Hand / Disaster | Longest consecutive made-bid streak / got-set streak |
+| Boom/Bust | Standard deviation of round scores |
+| Peak/Floor Round | Best and worst single-round score |
+| 20+ / <=-10 | Count of very high rounds and deep negative rounds |
+| Zero Bid Try % | Zero-bid attempts ÷ total rounds |
 | Zero Bid Success % | Zero bids made ÷ total zero bids |
+| Momentum | `(avg last 3 round scores) - (avg first 3 round scores)` per game, then averaged |
+| Best Suit / Best Reverse | Highest average score by trump suit and by reverse mode |
 | Avg Round Score | Average points per individual round |
-| Best / Worst Round | Highest / lowest single round score |
+| Avg Finish / Finish by Table Size | Average finishing place overall and per table size (`3p`, `4p`, etc.) |
+| Chaos % | Share of rounds with score spread >= 25 |
+| Exact Block % | Share of rounds where player was present when exact bids blocked scoring |
+
+### Rivalry split
+- Rivalries are tracked for every player pair appearing in the same game.
+- Record format is `A-wins / B-wins / ties`.
+- The rivalry table is sorted by games played, then by decisiveness of the record.
+
+### How the new fun stats are calculated
+1. `Clutch Rate`: `MAX-confidence made / MAX-confidence attempts`.
+2. `Greed Index`: average `bid / handSize` across positive bids only.
+3. `Tax Burden`: `total tax`, with per-game and per-round averages.
+4. `Deferred Specialist`: compare `deferred made-rate` vs `non-deferred made-rate`.
+5. `Dealer Edge`: `(dealer round avg) - (non-dealer round avg)`.
+6. `Suit Mastery`: average round score grouped by trump suit (`♠ ♥ ♦ ♣`); best suit shown.
+7. `Set Hunter`: opponent set-rate in high-bid rounds (`bid >= ceil(handSize / 2)`).
+8. `Set Magnet`: standard set rate, `set / (made + set)`.
+9. `Comeback Wins`: winner was rank 3+ at halfway checkpoint.
+10. `Choke Rate`: player led at 70% checkpoint but did not finish first.
+11. `Hot Hand`: longest consecutive rounds not set.
+12. `Disaster Streak`: longest consecutive got-set rounds.
+13. `Boom/Bust`: standard deviation of round scores.
+14. `Peak Round`: highest single-round score.
+15. `Floor Round`: lowest single-round score.
+16. `Zero-Bid Personality`: `zero-bid attempts / total rounds`.
+17. `Momentum Finish`: `avg(last up to 3 rounds) - avg(first up to 3 rounds)` per game.
+18. `Rivalry Split`: head-to-head record for each pair of players across shared games.
+19. `Table Impact`: average final position overall and by table size.
+20. `Bid Discipline`: exact-bid block frequency.
+21. `Chaos Factor`: round considered chaos when `maxScore - minScore >= 25`; report player participation rate.
+
+### Exact-bid block tracking
+- When scoring is attempted while bids are exactly equal to hand size, the round increments `exactBidBlocks`.
+- Edit mode enforces the same rule and also increments `exactBidBlocks` on invalid exact-save attempts.
+- This value feeds both summary and per-player bid-discipline metrics.
 
 ### Fallback import
 If automatic history discovery fails (network issues, wrong URL format), use **📂 Manual Folder Pick (Fallback)** to:
@@ -1427,6 +1512,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 return {
                     ...round,
                     reverseValue: REVERSE_VALUE.includes(round.reverseValue) ? round.reverseValue : 'N',
+                    exactBidBlocks: Number(round.exactBidBlocks) || 0,
                     playerData: normalizedPlayerData
                 };
             });
@@ -2554,8 +2640,83 @@ All game/player data is stored locally in your browser unless you use URL sync. 
         function analyzeHistoryGames(inputGames) {
             const games = dedupeHistoryGames(inputGames.filter(isValidHistoryGame));
             const playerMap = new Map();
+            const rivalryMap = new Map();
+            const suitKeys = ['♠', '♥', '♦', '♣'];
+
+            function createEmptyStats(name) {
+                return {
+                    name,
+                    games: 0,
+                    wins: 0,
+                    second: 0,
+                    third: 0,
+                    totalScore: 0,
+                    bestGame: Number.NEGATIVE_INFINITY,
+                    worstGame: Number.POSITIVE_INFINITY,
+                    rounds: 0,
+                    made: 0,
+                    set: 0,
+                    totalRoundScore: 0,
+                    deferredCount: 0,
+                    zeroBids: 0,
+                    zeroBidsMade: 0,
+                    highestRoundScore: Number.NEGATIVE_INFINITY,
+                    lowestRoundScore: Number.POSITIVE_INFINITY,
+                    clutchAttempts: 0,
+                    clutchMade: 0,
+                    positiveBidFractionSum: 0,
+                    positiveBidCount: 0,
+                    totalTax: 0,
+                    deferredAttempts: 0,
+                    deferredMade: 0,
+                    nonDeferredAttempts: 0,
+                    nonDeferredMade: 0,
+                    dealerRounds: 0,
+                    dealerScoreTotal: 0,
+                    nonDealerRounds: 0,
+                    nonDealerScoreTotal: 0,
+                    suitScore: { '♠': 0, '♥': 0, '♦': 0, '♣': 0 },
+                    suitCount: { '♠': 0, '♥': 0, '♦': 0, '♣': 0 },
+                    reverseScore: { R: 0, N: 0 },
+                    reverseCount: { R: 0, N: 0 },
+                    highBidRounds: 0,
+                    highBidOppSet: 0,
+                    highBidOppTotal: 0,
+                    comebackWins: 0,
+                    chokeCount: 0,
+                    chokeOpportunities: 0,
+                    bestMadeStreak: 0,
+                    worstSetStreak: 0,
+                    roundScoreSumSquares: 0,
+                    rounds20Plus: 0,
+                    roundsNeg10: 0,
+                    momentumDiffSum: 0,
+                    momentumGames: 0,
+                    finishByTableSize: {},
+                    chaosRounds: 0,
+                    chaosOpportunities: 0,
+                    exactBlockRounds: 0
+                };
+            }
+
+            function getStats(name) {
+                if (!playerMap.has(name)) {
+                    playerMap.set(name, createEmptyStats(name));
+                }
+                return playerMap.get(name);
+            }
+
+            function getRankByScores(scores, targetScore) {
+                return new Set(scores.filter(score => score > targetScore)).size + 1;
+            }
+
+            function getAverage(values) {
+                if (!values.length) return 0;
+                return values.reduce((sum, value) => sum + value, 0) / values.length;
+            }
 
             let totalPlayersAcrossGames = 0;
+            let totalScoredRoundsAcrossGames = 0;
             let totalRoundOutcomes = 0;
             let totalSetOutcomes = 0;
             let totalRoundPoints = 0;
@@ -2563,16 +2724,32 @@ All game/player data is stored locally in your browser unless you use URL sync. 
             let gamesWithWinningMargin = 0;
             let totalSetPointsAcrossRounds = 0;
             let totalScoredRounds = 0;
+            let totalExactBidBlocks = 0;
+            let totalChaosRounds = 0;
+
+            const globalSuitScore = { '♠': 0, '♥': 0, '♦': 0, '♣': 0 };
+            const globalSuitCount = { '♠': 0, '♥': 0, '♦': 0, '♣': 0 };
+            const globalReverseScore = { R: 0, N: 0 };
+            const globalReverseCount = { R: 0, N: 0 };
 
             games.forEach((game) => {
-                const scoredRounds = game.rounds.filter(r => r && r.scored).length;
-                totalPlayersAcrossGames += game.players.length;
+                const scoredRounds = game.rounds
+                    .map((round) => ({ round }))
+                    .filter(entry => entry.round && entry.round.scored && Array.isArray(entry.round.playerData));
+                const scoredRoundCount = scoredRounds.length;
 
+                totalPlayersAcrossGames += game.players.length;
+                totalScoredRoundsAcrossGames += scoredRoundCount;
+
+                const finalScores = game.players.map(player => Number(player.score) || 0);
                 const sorted = [...game.players].sort((a, b) => (b.score || 0) - (a.score || 0));
                 const topScore = sorted.length > 0 ? (sorted[0].score || 0) : null;
                 const winners = topScore === null
                     ? []
-                    : sorted.filter(p => (p.score || 0) === topScore).map(p => p.name);
+                    : sorted.filter(player => (player.score || 0) === topScore).map(player => player.name);
+                const winnerSet = new Set(winners);
+
+                const positionByPlayer = finalScores.map(score => getRankByScores(finalScores, score));
 
                 if (sorted.length > 1) {
                     const winningMargin = (sorted[0].score || 0) - (sorted[1].score || 0);
@@ -2580,43 +2757,92 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     gamesWithWinningMargin += 1;
                 }
 
-                game.rounds.forEach((round) => {
-                    if (!round || !round.scored || !Array.isArray(round.playerData)) return;
+                if (scoredRoundCount > 0) {
+                    const halfwayRoundCount = Math.ceil(scoredRoundCount * 0.5);
+                    const lateRoundCount = Math.ceil(scoredRoundCount * 0.7);
 
+                    function getScoresAfter(roundCount) {
+                        const scores = game.players.map(() => 0);
+
+                        scoredRounds.slice(0, roundCount).forEach(({ round }) => {
+                            round.playerData.forEach((pdata, idx) => {
+                                if (!pdata || !game.players[idx]) return;
+                                scores[idx] += Number(pdata.score) || 0;
+                            });
+                        });
+
+                        return scores;
+                    }
+
+                    const halfwayScores = getScoresAfter(halfwayRoundCount);
+                    const lateScores = getScoresAfter(lateRoundCount);
+                    const halfwayRanks = halfwayScores.map(score => getRankByScores(halfwayScores, score));
+                    const lateRanks = lateScores.map(score => getRankByScores(lateScores, score));
+
+                    game.players.forEach((player, idx) => {
+                        const stats = getStats(player.name);
+
+                        if (winnerSet.has(player.name) && halfwayRanks[idx] > 2) {
+                            stats.comebackWins += 1;
+                        }
+
+                        if (lateRanks[idx] === 1) {
+                            stats.chokeOpportunities += 1;
+                            if (!winnerSet.has(player.name)) {
+                                stats.chokeCount += 1;
+                            }
+                        }
+                    });
+                }
+
+                const streaks = new Map();
+                const gameRoundScoresByPlayer = new Map();
+
+                scoredRounds.forEach(({ round }) => {
                     totalScoredRounds += 1;
                     let setPointsThisRound = 0;
 
+                    const participants = round.playerData
+                        .map((pdata, idx) => (pdata && pdata.participating && game.players[idx] ? idx : null))
+                        .filter(idx => idx !== null);
+
+                    const roundScores = participants.map(idx => Number(round.playerData[idx].score) || 0);
+                    const maxRoundScore = roundScores.length ? Math.max(...roundScores) : 0;
+                    const minRoundScore = roundScores.length ? Math.min(...roundScores) : 0;
+                    const spread = maxRoundScore - minRoundScore;
+                    const isChaosRound = spread >= 25;
+
+                    if (isChaosRound) {
+                        totalChaosRounds += 1;
+                    }
+
+                    const exactBlocks = Number(round.exactBidBlocks) || 0;
+                    totalExactBidBlocks += exactBlocks;
+                    if (exactBlocks > 0) {
+                        participants.forEach((idx) => {
+                            const playerName = game.players[idx]?.name;
+                            if (!playerName) return;
+                            getStats(playerName).exactBlockRounds += 1;
+                        });
+                    }
+
+                    const roundTrumpSuit = suitKeys.includes(round.trumpSuit) ? round.trumpSuit : '';
+                    const roundReverse = round.reverseValue === 'R' ? 'R' : 'N';
+
                     round.playerData.forEach((pdata, idx) => {
+                        if (!pdata || pdata.participating === false) return;
+
                         const playerName = game.players[idx]?.name;
                         if (!playerName) return;
 
-                        if (!playerMap.has(playerName)) {
-                            playerMap.set(playerName, {
-                                name: playerName,
-                                games: 0,
-                                wins: 0,
-                                second: 0,
-                                third: 0,
-                                totalScore: 0,
-                                bestGame: Number.NEGATIVE_INFINITY,
-                                worstGame: Number.POSITIVE_INFINITY,
-                                rounds: 0,
-                                made: 0,
-                                set: 0,
-                                totalRoundScore: 0,
-                                deferredCount: 0,
-                                zeroBids: 0,
-                                zeroBidsMade: 0,
-                                highestRoundScore: Number.NEGATIVE_INFINITY,
-                                lowestRoundScore: Number.POSITIVE_INFINITY
-                            });
-                        }
-
-                        const stats = playerMap.get(playerName);
+                        const stats = getStats(playerName);
                         const bid = Number(pdata.bid) || 0;
+                        const tax = Number(pdata.tax) || 0;
                         const score = Number(pdata.score) || 0;
                         const gotSet = !!pdata.gotSet;
                         const deferred = !!pdata.deferred;
+                        const confidence = String(pdata.confidence || '');
+                        const confidenceIsMax = confidence.toUpperCase() === 'MAX';
 
                         totalRoundOutcomes += 1;
                         totalSetOutcomes += gotSet ? 1 : 0;
@@ -2625,7 +2851,24 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                             setPointsThisRound += score;
                         }
 
-                        if (deferred) stats.deferredCount += 1;
+                        stats.rounds += 1;
+                        stats.totalRoundScore += score;
+                        stats.roundScoreSumSquares += score * score;
+                        stats.made += gotSet ? 0 : 1;
+                        stats.set += gotSet ? 1 : 0;
+
+                        if (deferred) {
+                            stats.deferredCount += 1;
+                            stats.deferredAttempts += 1;
+                            if (!gotSet) {
+                                stats.deferredMade += 1;
+                            }
+                        } else {
+                            stats.nonDeferredAttempts += 1;
+                            if (!gotSet) {
+                                stats.nonDeferredMade += 1;
+                            }
+                        }
 
                         if (bid === 0) {
                             stats.zeroBids += 1;
@@ -2634,70 +2877,162 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                             }
                         }
 
+                        if (confidenceIsMax) {
+                            stats.clutchAttempts += 1;
+                            if (!gotSet) {
+                                stats.clutchMade += 1;
+                            }
+                        }
+
+                        if (bid > 0 && round.handSize > 0) {
+                            stats.positiveBidCount += 1;
+                            stats.positiveBidFractionSum += bid / round.handSize;
+                        }
+
+                        stats.totalTax += tax;
                         stats.highestRoundScore = Math.max(stats.highestRoundScore, score);
                         stats.lowestRoundScore = Math.min(stats.lowestRoundScore, score);
+
+                        if (score >= 20) {
+                            stats.rounds20Plus += 1;
+                        }
+                        if (score <= -10) {
+                            stats.roundsNeg10 += 1;
+                        }
+
+                        if (idx === round.dealerIndex) {
+                            stats.dealerRounds += 1;
+                            stats.dealerScoreTotal += score;
+                        } else {
+                            stats.nonDealerRounds += 1;
+                            stats.nonDealerScoreTotal += score;
+                        }
+
+                        if (roundTrumpSuit) {
+                            stats.suitScore[roundTrumpSuit] += score;
+                            stats.suitCount[roundTrumpSuit] += 1;
+                            globalSuitScore[roundTrumpSuit] += score;
+                            globalSuitCount[roundTrumpSuit] += 1;
+                        }
+
+                        stats.reverseScore[roundReverse] += score;
+                        stats.reverseCount[roundReverse] += 1;
+                        globalReverseScore[roundReverse] += score;
+                        globalReverseCount[roundReverse] += 1;
+
+                        const highBidThreshold = Math.ceil((Number(round.handSize) || 0) / 2);
+                        if (highBidThreshold > 0 && bid >= highBidThreshold) {
+                            const opponents = participants.filter(pidx => pidx !== idx);
+                            const opponentsSet = opponents.reduce((count, pidx) => {
+                                return count + (round.playerData[pidx]?.gotSet ? 1 : 0);
+                            }, 0);
+
+                            stats.highBidRounds += 1;
+                            stats.highBidOppTotal += opponents.length;
+                            stats.highBidOppSet += opponentsSet;
+                        }
+
+                        const streak = streaks.get(idx) || { made: 0, set: 0 };
+                        if (gotSet) {
+                            streak.set += 1;
+                            streak.made = 0;
+                        } else {
+                            streak.made += 1;
+                            streak.set = 0;
+                        }
+                        stats.bestMadeStreak = Math.max(stats.bestMadeStreak, streak.made);
+                        stats.worstSetStreak = Math.max(stats.worstSetStreak, streak.set);
+                        streaks.set(idx, streak);
+
+                        stats.chaosOpportunities += 1;
+                        if (isChaosRound) {
+                            stats.chaosRounds += 1;
+                        }
+
+                        if (!gameRoundScoresByPlayer.has(idx)) {
+                            gameRoundScoresByPlayer.set(idx, []);
+                        }
+                        gameRoundScoresByPlayer.get(idx).push(score);
                     });
 
                     totalSetPointsAcrossRounds += setPointsThisRound;
                 });
 
-                game.players.forEach((player) => {
-                    const rounds = Array.isArray(player.rounds) ? player.rounds : [];
-                    const made = rounds.filter(r => !r.gotSet).length;
-                    const set = rounds.filter(r => !!r.gotSet).length;
-                    const totalRoundScore = rounds.reduce((sum, r) => sum + (r.score || 0), 0);
-
-                    if (!playerMap.has(player.name)) {
-                        playerMap.set(player.name, {
-                            name: player.name,
-                            games: 0,
-                            wins: 0,
-                            second: 0,
-                            third: 0,
-                            totalScore: 0,
-                            bestGame: Number.NEGATIVE_INFINITY,
-                            worstGame: Number.POSITIVE_INFINITY,
-                            rounds: 0,
-                            made: 0,
-                            set: 0,
-                            totalRoundScore: 0,
-                            deferredCount: 0,
-                            zeroBids: 0,
-                            zeroBidsMade: 0,
-                            highestRoundScore: Number.NEGATIVE_INFINITY,
-                            lowestRoundScore: Number.POSITIVE_INFINITY
-                        });
+                gameRoundScoresByPlayer.forEach((scores, idx) => {
+                    if (!scores.length || !game.players[idx]) {
+                        return;
                     }
 
-                    const stats = playerMap.get(player.name);
+                    const n = Math.min(3, scores.length);
+                    const first = getAverage(scores.slice(0, n));
+                    const last = getAverage(scores.slice(-n));
+
+                    const stats = getStats(game.players[idx].name);
+                    stats.momentumDiffSum += (last - first);
+                    stats.momentumGames += 1;
+                });
+
+                game.players.forEach((player, idx) => {
+                    const stats = getStats(player.name);
+                    const score = Number(player.score) || 0;
+                    const position = positionByPlayer[idx] || 1;
+
                     stats.games += 1;
-                    if (winners.includes(player.name)) {
+                    if (winnerSet.has(player.name)) {
                         stats.wins += 1;
-                    } else {
-                        // Track 2nd and 3rd place finishes (only if not a winner)
-                        const playerScore = player.score || 0;
-                        const uniqueScoresAbove = new Set(
-                            sorted
-                                .filter(p => (p.score || 0) > playerScore)
-                                .map(p => p.score)
-                        ).size;
-                        
-                        if (uniqueScoresAbove === 1) {
+                    }
+
+                    if (!winnerSet.has(player.name)) {
+                        if (position === 2) {
                             stats.second += 1;
-                        } else if (uniqueScoresAbove === 2) {
+                        } else if (position === 3) {
                             stats.third += 1;
                         }
                     }
 
-                    const score = player.score || 0;
+                    const tableSize = String(game.players.length);
+                    if (!stats.finishByTableSize[tableSize]) {
+                        stats.finishByTableSize[tableSize] = { total: 0, count: 0 };
+                    }
+                    stats.finishByTableSize[tableSize].total += position;
+                    stats.finishByTableSize[tableSize].count += 1;
+
                     stats.totalScore += score;
                     stats.bestGame = Math.max(stats.bestGame, score);
                     stats.worstGame = Math.min(stats.worstGame, score);
-                    stats.rounds += rounds.length;
-                    stats.made += made;
-                    stats.set += set;
-                    stats.totalRoundScore += totalRoundScore;
                 });
+
+                for (let i = 0; i < game.players.length; i++) {
+                    for (let j = i + 1; j < game.players.length; j++) {
+                        const playerA = game.players[i]?.name;
+                        const playerB = game.players[j]?.name;
+                        if (!playerA || !playerB) continue;
+
+                        const a = playerA < playerB ? playerA : playerB;
+                        const b = playerA < playerB ? playerB : playerA;
+                        const key = `${a}||${b}`;
+
+                        if (!rivalryMap.has(key)) {
+                            rivalryMap.set(key, { a, b, games: 0, aWins: 0, bWins: 0, ties: 0 });
+                        }
+
+                        const rivalry = rivalryMap.get(key);
+                        rivalry.games += 1;
+
+                        const indexA = game.players.findIndex(player => player.name === a);
+                        const indexB = game.players.findIndex(player => player.name === b);
+                        const scoreA = Number(finalScores[indexA]) || 0;
+                        const scoreB = Number(finalScores[indexB]) || 0;
+
+                        if (scoreA > scoreB) {
+                            rivalry.aWins += 1;
+                        } else if (scoreB > scoreA) {
+                            rivalry.bWins += 1;
+                        } else {
+                            rivalry.ties += 1;
+                        }
+                    }
+                }
             });
 
             const players = Array.from(playerMap.values()).map((stats) => {
@@ -2708,6 +3043,62 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 const setRate = (stats.made + stats.set) ? (stats.set / (stats.made + stats.set)) * 100 : 0;
                 const deferredRate = stats.rounds ? (stats.deferredCount / stats.rounds) * 100 : 0;
                 const zeroBidMakeRate = stats.zeroBids ? (stats.zeroBidsMade / stats.zeroBids) * 100 : 0;
+                const clutchRate = stats.clutchAttempts ? (stats.clutchMade / stats.clutchAttempts) * 100 : 0;
+                const greedIndex = stats.positiveBidCount ? (stats.positiveBidFractionSum / stats.positiveBidCount) : 0;
+                const avgTaxPerGame = stats.games ? (stats.totalTax / stats.games) : 0;
+                const avgTaxPerRound = stats.rounds ? (stats.totalTax / stats.rounds) : 0;
+                const deferredMadeRate = stats.deferredAttempts ? (stats.deferredMade / stats.deferredAttempts) * 100 : 0;
+                const nonDeferredMadeRate = stats.nonDeferredAttempts ? (stats.nonDeferredMade / stats.nonDeferredAttempts) * 100 : 0;
+                const dealerAvg = stats.dealerRounds ? (stats.dealerScoreTotal / stats.dealerRounds) : 0;
+                const nonDealerAvg = stats.nonDealerRounds ? (stats.nonDealerScoreTotal / stats.nonDealerRounds) : 0;
+                const dealerEdge = dealerAvg - nonDealerAvg;
+                const setHunterRate = stats.highBidOppTotal ? (stats.highBidOppSet / stats.highBidOppTotal) * 100 : 0;
+                const boomBustStdDev = stats.rounds
+                    ? Math.sqrt(Math.max(0, (stats.roundScoreSumSquares / stats.rounds) - Math.pow(stats.totalRoundScore / stats.rounds, 2)))
+                    : 0;
+                const zeroBidAttemptRate = stats.rounds ? (stats.zeroBids / stats.rounds) * 100 : 0;
+                const momentumDelta = stats.momentumGames ? (stats.momentumDiffSum / stats.momentumGames) : 0;
+                const chaosRate = stats.chaosOpportunities ? (stats.chaosRounds / stats.chaosOpportunities) * 100 : 0;
+                const exactBlockRate = stats.rounds ? (stats.exactBlockRounds / stats.rounds) * 100 : 0;
+
+                const suitAverages = suitKeys.map((suit) => {
+                    const count = stats.suitCount[suit] || 0;
+                    return {
+                        suit,
+                        count,
+                        avg: count ? (stats.suitScore[suit] / count) : Number.NEGATIVE_INFINITY
+                    };
+                });
+                const bestSuit = suitAverages
+                    .filter(entry => entry.count > 0)
+                    .sort((a, b) => b.avg - a.avg)[0] || null;
+
+                const reverseAverages = ['R', 'N'].map((value) => {
+                    const count = stats.reverseCount[value] || 0;
+                    return {
+                        value,
+                        count,
+                        avg: count ? (stats.reverseScore[value] / count) : Number.NEGATIVE_INFINITY
+                    };
+                });
+                const bestReverse = reverseAverages
+                    .filter(entry => entry.count > 0)
+                    .sort((a, b) => b.avg - a.avg)[0] || null;
+
+                const finishBySizeEntries = Object.entries(stats.finishByTableSize)
+                    .sort((a, b) => Number(a[0]) - Number(b[0]))
+                    .map(([size, detail]) => {
+                        const avg = detail.count ? (detail.total / detail.count) : 0;
+                        return `${size}p:${avg.toFixed(2)}`;
+                    });
+
+                const finishTotals = Object.values(stats.finishByTableSize).reduce((acc, detail) => {
+                    acc.total += detail.total;
+                    acc.count += detail.count;
+                    return acc;
+                }, { total: 0, count: 0 });
+                const avgFinish = finishTotals.count ? (finishTotals.total / finishTotals.count) : 0;
+
                 return {
                     ...stats,
                     avgGame,
@@ -2717,9 +3108,30 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     setRate,
                     deferredRate,
                     zeroBidMakeRate,
+                    clutchRate,
+                    greedIndex,
+                    avgTaxPerGame,
+                    avgTaxPerRound,
+                    deferredMadeRate,
+                    nonDeferredMadeRate,
+                    dealerAvg,
+                    nonDealerAvg,
+                    dealerEdge,
+                    setHunterRate,
+                    boomBustStdDev,
+                    zeroBidAttemptRate,
+                    momentumDelta,
+                    chaosRate,
+                    exactBlockRate,
+                    avgFinish,
+                    finishBySizeLabel: finishBySizeEntries.join(' | ') || 'n/a',
+                    bestSuit,
+                    bestReverse,
                     avgRound: stats.rounds ? (stats.totalRoundScore / stats.rounds) : 0,
                     highestRoundScore: Number.isFinite(stats.highestRoundScore) ? stats.highestRoundScore : 0,
-                    lowestRoundScore: Number.isFinite(stats.lowestRoundScore) ? stats.lowestRoundScore : 0
+                    lowestRoundScore: Number.isFinite(stats.lowestRoundScore) ? stats.lowestRoundScore : 0,
+                    bestGame: Number.isFinite(stats.bestGame) ? stats.bestGame : 0,
+                    worstGame: Number.isFinite(stats.worstGame) ? stats.worstGame : 0
                 };
             }).sort((a, b) => {
                 if (b.wins !== a.wins) return b.wins - a.wins;
@@ -2727,16 +3139,64 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 return a.name.localeCompare(b.name);
             });
 
+            const rivalries = Array.from(rivalryMap.values()).map((entry) => {
+                const decisiveGames = entry.games - entry.ties;
+                const aWinRate = decisiveGames ? (entry.aWins / decisiveGames) * 100 : 0;
+                const bWinRate = decisiveGames ? (entry.bWins / decisiveGames) * 100 : 0;
+
+                return {
+                    ...entry,
+                    decisiveGames,
+                    aWinRate,
+                    bWinRate,
+                    leader: entry.aWins === entry.bWins
+                        ? 'Tied'
+                        : (entry.aWins > entry.bWins ? entry.a : entry.b)
+                };
+            }).sort((a, b) => {
+                if (b.games !== a.games) return b.games - a.games;
+                const aGap = Math.abs(a.aWins - a.bWins);
+                const bGap = Math.abs(b.aWins - b.bWins);
+                return bGap - aGap;
+            });
+
+            const globalSuitAverages = suitKeys.map((suit) => {
+                const count = globalSuitCount[suit] || 0;
+                return {
+                    suit,
+                    count,
+                    avg: count ? (globalSuitScore[suit] / count) : 0
+                };
+            });
+
+            const globalReverseAverages = ['R', 'N'].map((value) => {
+                const count = globalReverseCount[value] || 0;
+                return {
+                    value,
+                    count,
+                    avg: count ? (globalReverseScore[value] / count) : 0
+                };
+            });
+
             return {
                 games,
                 players,
+                rivalries,
                 summary: {
                     totalGames: games.length,
                     uniquePlayers: players.length,
+                    avgRoundsPerGame: games.length ? (totalScoredRoundsAcrossGames / games.length) : 0,
+                    avgPlayersPerGame: games.length ? (totalPlayersAcrossGames / games.length) : 0,
                     avgWinningMargin: gamesWithWinningMargin ? (totalWinningMargin / gamesWithWinningMargin) : 0,
                     avgSetPointsPerRound: totalScoredRounds ? (totalSetPointsAcrossRounds / totalScoredRounds) : 0,
                     globalSetRate: totalRoundOutcomes ? (totalSetOutcomes / totalRoundOutcomes) * 100 : 0,
-                    globalAvgPointsPerRound: totalRoundOutcomes ? (totalRoundPoints / totalRoundOutcomes) : 0
+                    globalAvgPointsPerRound: totalRoundOutcomes ? (totalRoundPoints / totalRoundOutcomes) : 0,
+                    avgExactBidBlocksPerGame: games.length ? (totalExactBidBlocks / games.length) : 0,
+                    chaosRoundRate: totalScoredRounds ? (totalChaosRounds / totalScoredRounds) * 100 : 0,
+                    totalExactBidBlocks,
+                    totalChaosRounds,
+                    globalSuitAverages,
+                    globalReverseAverages
                 }
             };
         }
@@ -2757,8 +3217,76 @@ All game/player data is stored locally in your browser unless you use URL sync. 
         function renderStatsContent(allGames) {
             const content = document.getElementById('statsContent');
             const deduped = dedupeHistoryGames(allGames);
-            const { players, summary } = analyzeHistoryGames(deduped);
+            const { players, summary, rivalries } = analyzeHistoryGames(deduped);
             const historySourceUrl = getHistorySourceUrl();
+
+            function pickLeader(metricSelector, predicate = null) {
+                const candidates = predicate ? players.filter(predicate) : players;
+                if (!candidates.length) return null;
+
+                return [...candidates].sort((a, b) => {
+                    const av = metricSelector(a);
+                    const bv = metricSelector(b);
+                    if (bv !== av) return bv - av;
+                    return a.name.localeCompare(b.name);
+                })[0];
+            }
+
+            function pickLowLeader(metricSelector, predicate = null) {
+                const candidates = predicate ? players.filter(predicate) : players;
+                if (!candidates.length) return null;
+
+                return [...candidates].sort((a, b) => {
+                    const av = metricSelector(a);
+                    const bv = metricSelector(b);
+                    if (av !== bv) return av - bv;
+                    return a.name.localeCompare(b.name);
+                })[0];
+            }
+
+            function formatLeader(leader, valueText) {
+                if (!leader) return 'n/a';
+                return `${escapeHtml(leader.name)} - ${valueText}`;
+            }
+
+            const bestClutch = pickLeader(p => p.clutchRate, p => p.clutchAttempts >= 3);
+            const greediest = pickLeader(p => p.greedIndex, p => p.positiveBidCount >= 3);
+            const taxKing = pickLeader(p => p.totalTax, p => p.totalTax > 0);
+            const deferredSpecialist = pickLeader(p => p.deferredMadeRate, p => p.deferredAttempts >= 3);
+            const dealerEdge = pickLeader(p => p.dealerEdge, p => p.dealerRounds >= 2 && p.nonDealerRounds >= 2);
+            const suitMaster = pickLeader(
+                p => (p.bestSuit && p.bestSuit.count >= 3 ? p.bestSuit.avg : Number.NEGATIVE_INFINITY),
+                p => p.bestSuit && p.bestSuit.count >= 3
+            );
+            const setHunter = pickLeader(p => p.setHunterRate, p => p.highBidOppTotal >= 6);
+            const setMagnet = pickLeader(p => p.setRate, p => p.rounds >= 5);
+            const comebackHero = pickLeader(p => p.comebackWins, p => p.comebackWins > 0);
+            const chokeLeader = pickLeader(
+                p => (p.chokeOpportunities ? (p.chokeCount / p.chokeOpportunities) * 100 : 0),
+                p => p.chokeOpportunities > 0
+            );
+            const hotHand = pickLeader(p => p.bestMadeStreak, p => p.bestMadeStreak > 0);
+            const disasterStreak = pickLeader(p => p.worstSetStreak, p => p.worstSetStreak > 0);
+            const boomBust = pickLeader(p => p.boomBustStdDev, p => p.rounds >= 5);
+            const peakRound = pickLeader(p => p.highestRoundScore, p => p.rounds > 0);
+            const floorRound = pickLowLeader(p => p.lowestRoundScore, p => p.rounds > 0);
+            const zeroBidPersonality = pickLeader(p => p.zeroBidAttemptRate, p => p.rounds >= 5);
+            const momentum = pickLeader(p => p.momentumDelta, p => p.momentumGames > 0);
+            const tableImpact = pickLowLeader(p => p.avgFinish, p => p.games >= 3);
+            const bidDiscipline = pickLeader(p => p.exactBlockRate, p => p.rounds > 0);
+            const chaosFactor = pickLeader(p => p.chaosRate, p => p.chaosOpportunities >= 5);
+
+            const topRivalry = rivalries.length ? rivalries[0] : null;
+            const topRivalryText = topRivalry
+                ? `${escapeHtml(topRivalry.a)} ${topRivalry.aWins}-${topRivalry.bWins}-${topRivalry.ties} ${escapeHtml(topRivalry.b)}`
+                : 'n/a';
+
+            const bestGlobalSuit = [...summary.globalSuitAverages]
+                .filter(item => item.count > 0)
+                .sort((a, b) => b.avg - a.avg)[0] || null;
+            const bestGlobalReverse = [...summary.globalReverseAverages]
+                .filter(item => item.count > 0)
+                .sort((a, b) => b.avg - a.avg)[0] || null;
 
             if (summary.totalGames === 0) {
                 content.innerHTML = `
@@ -2792,6 +3320,14 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                         <div class="stats-tile-value">${summary.uniquePlayers}</div>
                     </div>
                     <div class="stats-tile">
+                        <div class="stats-tile-label">Avg Rounds/Game</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.avgRoundsPerGame)}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Avg Players/Game</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.avgPlayersPerGame)}</div>
+                    </div>
+                    <div class="stats-tile">
                         <div class="stats-tile-label">Avg Winning Margin</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgWinningMargin)}</div>
                     </div>
@@ -2807,6 +3343,71 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                         <div class="stats-tile-label">Global Avg Pts/Round</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.globalAvgPointsPerRound)}</div>
                     </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Exact Blocks/Game</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.avgExactBidBlocksPerGame)}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Chaos Round %</div>
+                        <div class="stats-tile-value">${formatStatNumber(summary.chaosRoundRate)}%</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Best Global Suit</div>
+                        <div class="stats-tile-value">${bestGlobalSuit ? `${bestGlobalSuit.suit} (${formatStatNumber(bestGlobalSuit.avg)})` : 'n/a'}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">Best Reverse Mode</div>
+                        <div class="stats-tile-value">${bestGlobalReverse ? `${bestGlobalReverse.value} (${formatStatNumber(bestGlobalReverse.avg)})` : 'n/a'}</div>
+                    </div>
+                </div>
+
+                <h3 class="stats-section-title">Fun Leaders</h3>
+                <div class="stats-mini-grid">
+                    <div class="stats-mini-card"><div class="stats-mini-label">Clutch Rate</div><div class="stats-mini-value">${formatLeader(bestClutch, bestClutch ? `${formatStatNumber(bestClutch.clutchRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Greed Index</div><div class="stats-mini-value">${formatLeader(greediest, greediest ? formatStatNumber(greediest.greedIndex, 2) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Tax Burden (Total)</div><div class="stats-mini-value">${formatLeader(taxKing, taxKing ? `${taxKing.totalTax}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Deferred Specialist</div><div class="stats-mini-value">${formatLeader(deferredSpecialist, deferredSpecialist ? `${formatStatNumber(deferredSpecialist.deferredMadeRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Dealer Edge</div><div class="stats-mini-value">${formatLeader(dealerEdge, dealerEdge ? formatStatNumber(dealerEdge.dealerEdge) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Suit Mastery</div><div class="stats-mini-value">${suitMaster && suitMaster.bestSuit ? `${escapeHtml(suitMaster.name)} - ${suitMaster.bestSuit.suit} ${formatStatNumber(suitMaster.bestSuit.avg)}` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Set Hunter</div><div class="stats-mini-value">${formatLeader(setHunter, setHunter ? `${formatStatNumber(setHunter.setHunterRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Set Magnet</div><div class="stats-mini-value">${formatLeader(setMagnet, setMagnet ? `${formatStatNumber(setMagnet.setRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Comeback Wins</div><div class="stats-mini-value">${formatLeader(comebackHero, comebackHero ? `${comebackHero.comebackWins}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Choke Rate</div><div class="stats-mini-value">${chokeLeader ? `${escapeHtml(chokeLeader.name)} - ${formatStatNumber((chokeLeader.chokeCount / chokeLeader.chokeOpportunities) * 100)}%` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Hot Hand Streak</div><div class="stats-mini-value">${formatLeader(hotHand, hotHand ? `${hotHand.bestMadeStreak}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Disaster Streak</div><div class="stats-mini-value">${formatLeader(disasterStreak, disasterStreak ? `${disasterStreak.worstSetStreak}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Boom/Bust (StdDev)</div><div class="stats-mini-value">${formatLeader(boomBust, boomBust ? formatStatNumber(boomBust.boomBustStdDev) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Peak Round</div><div class="stats-mini-value">${peakRound ? `${escapeHtml(peakRound.name)} - ${peakRound.highestRoundScore} (${peakRound.rounds20Plus}x 20+)` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Floor Round</div><div class="stats-mini-value">${floorRound ? `${escapeHtml(floorRound.name)} - ${floorRound.lowestRoundScore} (${floorRound.roundsNeg10}x <=-10)` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Zero-Bid Personality</div><div class="stats-mini-value">${formatLeader(zeroBidPersonality, zeroBidPersonality ? `${formatStatNumber(zeroBidPersonality.zeroBidAttemptRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Momentum Finish</div><div class="stats-mini-value">${formatLeader(momentum, momentum ? formatStatNumber(momentum.momentumDelta) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Rivalry Split</div><div class="stats-mini-value">${topRivalryText}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Table Impact (Avg Finish)</div><div class="stats-mini-value">${tableImpact ? `${escapeHtml(tableImpact.name)} - ${formatStatNumber(tableImpact.avgFinish, 2)}` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Bid Discipline Alerts</div><div class="stats-mini-value">${bidDiscipline ? `${escapeHtml(bidDiscipline.name)} - ${formatStatNumber(bidDiscipline.exactBlockRate)}% rounds` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">Chaos Factor</div><div class="stats-mini-value">${formatLeader(chaosFactor, chaosFactor ? `${formatStatNumber(chaosFactor.chaosRate)}%` : 'n/a')}</div></div>
+                </div>
+
+                <h3 class="stats-section-title">Rivalries</h3>
+                <div class="stats-table-wrap" style="margin-bottom: 1rem;">
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Pair</th>
+                                <th>Games</th>
+                                <th>Record</th>
+                                <th>Leader</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rivalries.slice(0, 12).map((rivalry) => `
+                                <tr>
+                                    <td>${escapeHtml(rivalry.a)} vs ${escapeHtml(rivalry.b)}</td>
+                                    <td>${rivalry.games}</td>
+                                    <td>${rivalry.aWins}-${rivalry.bWins}-${rivalry.ties}</td>
+                                    <td>${escapeHtml(rivalry.leader)}</td>
+                                </tr>
+                            `).join('') || '<tr><td colspan="4">No rivalry data yet.</td></tr>'}
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="stats-table-wrap">
@@ -2814,22 +3415,42 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                         <thead>
                             <tr>
                                 <th>Player</th>
-                                <th>Games Played</th>
+                                <th>Games</th>
                                 <th>Wins</th>
-                                <th>2nd Place</th>
-                                <th>3rd Place</th>
-                                <th>Win Rate</th>
+                                <th>2nd</th>
+                                <th>3rd</th>
+                                <th>Win %</th>
                                 <th>Top 3 %</th>
-                                <th>Avg Final Score</th>
-                                <th>Best Game Score</th>
-                                <th>Worst Game Score</th>
-                                <th>Bid Accuracy</th>
+                                <th>Avg Final</th>
+                                <th>Best/Worst Game</th>
+                                <th>Bid Accuracy %</th>
                                 <th>Set Rate</th>
-                                <th>Deferred Rate</th>
-                                <th>Zero Bid Success Rate</th>
-                                <th>Avg Points/Round</th>
-                                <th>Best Round Score</th>
-                                <th>Worst Round Score</th>
+                                <th>Clutch %</th>
+                                <th>Greed</th>
+                                <th>Tax Total</th>
+                                <th>Tax/Round</th>
+                                <th>Def Made %</th>
+                                <th>Non-Def Made %</th>
+                                <th>Dealer Edge</th>
+                                <th>Set Hunter %</th>
+                                <th>Set Magnet %</th>
+                                <th>Comeback Wins</th>
+                                <th>Choke %</th>
+                                <th>Hot Hand</th>
+                                <th>Disaster</th>
+                                <th>Boom/Bust</th>
+                                <th>Peak/Floor Round</th>
+                                <th>20+ / <=-10</th>
+                                <th>Zero Bid Try %</th>
+                                <th>Zero Bid Success %</th>
+                                <th>Momentum</th>
+                                <th>Best Suit</th>
+                                <th>Best Reverse</th>
+                                <th>Avg Round</th>
+                                <th>Avg Finish</th>
+                                <th>Finish by Table Size</th>
+                                <th>Chaos %</th>
+                                <th>Exact Block %</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2843,15 +3464,35 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                                     <td>${formatStatNumber(player.winRate)}%</td>
                                     <td>${formatStatNumber(player.top3Rate)}%</td>
                                     <td>${formatStatNumber(player.avgGame)}</td>
-                                    <td>${player.bestGame}</td>
-                                    <td>${player.worstGame}</td>
+                                    <td>${player.bestGame}/${player.worstGame}</td>
                                     <td>${formatStatNumber(player.madeRate)}%</td>
                                     <td>${formatStatNumber(player.setRate)}%</td>
-                                    <td>${formatStatNumber(player.deferredRate)}%</td>
+                                    <td>${player.clutchAttempts > 0 ? `${formatStatNumber(player.clutchRate)}%` : 'n/a'}</td>
+                                    <td>${player.positiveBidCount > 0 ? formatStatNumber(player.greedIndex, 2) : 'n/a'}</td>
+                                    <td>${player.totalTax}</td>
+                                    <td>${formatStatNumber(player.avgTaxPerRound, 2)}</td>
+                                    <td>${player.deferredAttempts > 0 ? `${formatStatNumber(player.deferredMadeRate)}%` : 'n/a'}</td>
+                                    <td>${player.nonDeferredAttempts > 0 ? `${formatStatNumber(player.nonDeferredMadeRate)}%` : 'n/a'}</td>
+                                    <td>${formatStatNumber(player.dealerEdge)}</td>
+                                    <td>${player.highBidOppTotal > 0 ? `${formatStatNumber(player.setHunterRate)}%` : 'n/a'}</td>
+                                    <td>${formatStatNumber(player.setRate)}%</td>
+                                    <td>${player.comebackWins}</td>
+                                    <td>${player.chokeOpportunities > 0 ? `${formatStatNumber((player.chokeCount / player.chokeOpportunities) * 100)}%` : 'n/a'}</td>
+                                    <td>${player.bestMadeStreak}</td>
+                                    <td>${player.worstSetStreak}</td>
+                                    <td>${formatStatNumber(player.boomBustStdDev)}</td>
+                                    <td>${player.highestRoundScore}/${player.lowestRoundScore}</td>
+                                    <td>${player.rounds20Plus}/${player.roundsNeg10}</td>
+                                    <td>${formatStatNumber(player.zeroBidAttemptRate)}%</td>
                                     <td>${player.zeroBids > 0 ? `${formatStatNumber(player.zeroBidMakeRate)}%` : 'n/a'}</td>
+                                    <td>${player.momentumGames > 0 ? formatStatNumber(player.momentumDelta) : 'n/a'}</td>
+                                    <td>${player.bestSuit ? `${player.bestSuit.suit} ${formatStatNumber(player.bestSuit.avg)}` : 'n/a'}</td>
+                                    <td>${player.bestReverse ? `${player.bestReverse.value} ${formatStatNumber(player.bestReverse.avg)}` : 'n/a'}</td>
                                     <td>${formatStatNumber(player.avgRound)}</td>
-                                    <td>${player.highestRoundScore}</td>
-                                    <td>${player.lowestRoundScore}</td>
+                                    <td>${player.games > 0 ? formatStatNumber(player.avgFinish, 2) : 'n/a'}</td>
+                                    <td>${escapeHtml(player.finishBySizeLabel)}</td>
+                                    <td>${formatStatNumber(player.chaosRate)}%</td>
+                                    <td>${formatStatNumber(player.exactBlockRate)}%</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -3014,6 +3655,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 trumpRank: '',
                 trumpSuit: '',
                 reverseValue: 'N',
+                exactBidBlocks: 0,
                 playerData: gameState.players.map(player => createRoundPlayerData(player.active !== false)),
                 scored: false
             };
@@ -3447,6 +4089,8 @@ All game/player data is stored locally in your browser unless you use URL sync. 
             // Check if bids are exact (cannot score an exact round)
             const totalBids = round.playerData.reduce((sum, p) => sum + (p && p.participating ? p.bid : 0), 0);
             if (totalBids === round.handSize) {
+                round.exactBidBlocks = (Number(round.exactBidBlocks) || 0) + 1;
+                autoSave();
                 alert('❌ Cannot score round when bids are EXACT!\n\nThe total bids equal the hand size. Someone must change their bid.');
                 return;
             }
@@ -3964,6 +4608,18 @@ All game/player data is stored locally in your browser unless you use URL sync. 
 
         function saveEditedRound() {
             const round = gameState.rounds[editingRoundIndex];
+
+            // Keep exact bids invalid in edit mode too.
+            const totalBids = round.playerData.reduce((sum, pdata) => {
+                if (!pdata || pdata.participating === false) return sum;
+                return sum + (Number(pdata.bid) || 0);
+            }, 0);
+            if (totalBids === round.handSize) {
+                round.exactBidBlocks = (Number(round.exactBidBlocks) || 0) + 1;
+                autoSave();
+                alert('❌ Cannot save an EXACT-bid round. Change at least one bid first.');
+                return;
+            }
             
             // Check if at least one player got set
             const anyoneSet = round.playerData.some(p => p && p.participating && p.gotSet);

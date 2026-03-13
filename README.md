@@ -227,7 +227,9 @@ Open **📊 Stats** (setup screen) to view aggregated statistics across all save
 Games are deduplicated by `gameId` before analysis to prevent duplicate counting.
 
 ### Summary tiles
-- Total games, unique players, average rounds per game, average players per game, average winning margin, global set rate, average points per round
+- Total games, unique players, average rounds per game, average players per game
+- Average winning margin, average set points per round, global set rate, global average points per round
+- Exact-bid blocks per game, chaos round rate, best global trump suit average, best global reverse-mode average
 
 ### Per-player stats table
 | Column | Description |
@@ -242,9 +244,59 @@ Games are deduplicated by `gameId` before analysis to prevent duplicate counting
 | Bid Accuracy % | Rounds made ÷ (rounds made + set) |
 | Set Rate % | Rounds set ÷ (rounds made + set) |
 | Deferred Rate % | Times deferred ÷ total rounds played |
+| Clutch % | MAX-confidence made ÷ MAX-confidence attempts |
+| Greed Index | Average of `(bid / handSize)` for positive bids |
+| Tax Total / Tax per Round | Total tax paid and average tax paid per round |
+| Deferred Made % / Non-Deferred Made % | Made-rate when deferred vs when not deferred |
+| Dealer Edge | `(avg score as dealer) - (avg score as non-dealer)` |
+| Set Hunter % | Opponent set-rate in rounds where player bid at least half the hand size |
+| Comeback Wins | Wins where player was outside top 2 at the halfway checkpoint |
+| Choke % | Share of games where player led at 70% checkpoint but did not win |
+| Hot Hand / Disaster | Longest consecutive made-bid streak / got-set streak |
+| Boom/Bust | Standard deviation of round scores |
+| Peak/Floor Round | Best and worst single-round score |
+| 20+ / <=-10 | Count of very high rounds and deep negative rounds |
+| Zero Bid Try % | Zero-bid attempts ÷ total rounds |
 | Zero Bid Success % | Zero bids made ÷ total zero bids |
+| Momentum | `(avg last 3 round scores) - (avg first 3 round scores)` per game, then averaged |
+| Best Suit / Best Reverse | Highest average score by trump suit and by reverse mode |
 | Avg Round Score | Average points per individual round |
-| Best / Worst Round | Highest / lowest single round score |
+| Avg Finish / Finish by Table Size | Average finishing place overall and per table size (`3p`, `4p`, etc.) |
+| Chaos % | Share of rounds with score spread >= 25 |
+| Exact Block % | Share of rounds where player was present when exact bids blocked scoring |
+
+### Rivalry split
+- Rivalries are tracked for every player pair appearing in the same game.
+- Record format is `A-wins / B-wins / ties`.
+- The rivalry table is sorted by games played, then by decisiveness of the record.
+
+### How the new fun stats are calculated
+1. `Clutch Rate`: `MAX-confidence made / MAX-confidence attempts`.
+2. `Greed Index`: average `bid / handSize` across positive bids only.
+3. `Tax Burden`: `total tax`, with per-game and per-round averages.
+4. `Deferred Specialist`: compare `deferred made-rate` vs `non-deferred made-rate`.
+5. `Dealer Edge`: `(dealer round avg) - (non-dealer round avg)`.
+6. `Suit Mastery`: average round score grouped by trump suit (`♠ ♥ ♦ ♣`); best suit shown.
+7. `Set Hunter`: opponent set-rate in high-bid rounds (`bid >= ceil(handSize / 2)`).
+8. `Set Magnet`: standard set rate, `set / (made + set)`.
+9. `Comeback Wins`: winner was rank 3+ at halfway checkpoint.
+10. `Choke Rate`: player led at 70% checkpoint but did not finish first.
+11. `Hot Hand`: longest consecutive rounds not set.
+12. `Disaster Streak`: longest consecutive got-set rounds.
+13. `Boom/Bust`: standard deviation of round scores.
+14. `Peak Round`: highest single-round score.
+15. `Floor Round`: lowest single-round score.
+16. `Zero-Bid Personality`: `zero-bid attempts / total rounds`.
+17. `Momentum Finish`: `avg(last up to 3 rounds) - avg(first up to 3 rounds)` per game.
+18. `Rivalry Split`: head-to-head record for each pair of players across shared games.
+19. `Table Impact`: average final position overall and by table size.
+20. `Bid Discipline`: exact-bid block frequency.
+21. `Chaos Factor`: round considered chaos when `maxScore - minScore >= 25`; report player participation rate.
+
+### Exact-bid block tracking
+- When scoring is attempted while bids are exactly equal to hand size, the round increments `exactBidBlocks`.
+- Edit mode enforces the same rule and also increments `exactBidBlocks` on invalid exact-save attempts.
+- This value feeds both summary and per-player bid-discipline metrics.
 
 ### Fallback import
 If automatic history discovery fails (network issues, wrong URL format), use **📂 Manual Folder Pick (Fallback)** to:
