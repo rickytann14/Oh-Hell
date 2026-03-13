@@ -229,13 +229,14 @@ Games are deduplicated by `gameId` before analysis to prevent duplicate counting
 ### Summary tiles
 - Total games, unique players, average rounds per game, average players per game
 - Average winning margin, average set points per round, global set rate, global average points per round
-- Exact-bid blocks per game, chaos round rate, best global trump suit average, best global reverse-mode average
+- Exact-bid blocks per game, chaos round rate, most sets in one game, most sets in a round, best global trump suit average, best global reverse-mode average
 
 ### Per-player stats table
 | Column | Description |
 |---|---|
 | Games | Number of games the player appeared in |
 | Wins | Games where the player finished with the highest score |
+| Max Sets/Game | Highest number of times the player got set in a single game |
 | Win Rate % | Wins ÷ Games |
 | 2nd/3rd Place | Times finished 2nd or 3rd overall |
 | Top 3 Rate % | (Wins + 2nd + 3rd) ÷ Games |
@@ -292,6 +293,9 @@ Games are deduplicated by `gameId` before analysis to prevent duplicate counting
 19. `Table Impact`: average final position overall and by table size.
 20. `Bid Discipline`: exact-bid block frequency.
 21. `Chaos Factor`: round considered chaos when `maxScore - minScore >= 25`; report player participation rate.
+22. `Player Max Sets/Game`: maximum number of got-set rounds a single player recorded inside one game.
+23. `Most Sets in One Game`: maximum number of got-set outcomes recorded across all rounds of a single game.
+24. `Most Sets in a Round`: maximum number of players marked got set in the same scored round.
 
 ### Exact-bid block tracking
 - When scoring is attempted while bids are exactly equal to hand size, the round increments `exactBidBlocks`.

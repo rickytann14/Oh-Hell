@@ -1332,13 +1332,14 @@ Games are deduplicated by `gameId` before analysis to prevent duplicate counting
 ### Summary tiles
 - Total games, unique players, average rounds per game, average players per game
 - Average winning margin, average set points per round, global set rate, global average points per round
-- Exact-bid blocks per game, chaos round rate, best global trump suit average, best global reverse-mode average
+- Exact-bid blocks per game, chaos round rate, most sets in one game, most sets in a round, best global trump suit average, best global reverse-mode average
 
 ### Per-player stats table
 | Column | Description |
 |---|---|
 | Games | Number of games the player appeared in |
 | Wins | Games where the player finished with the highest score |
+| Max Sets/Game | Highest number of times the player got set in a single game |
 | Win Rate % | Wins ÷ Games |
 | 2nd/3rd Place | Times finished 2nd or 3rd overall |
 | Top 3 Rate % | (Wins + 2nd + 3rd) ÷ Games |
@@ -1395,6 +1396,9 @@ Games are deduplicated by `gameId` before analysis to prevent duplicate counting
 19. `Table Impact`: average final position overall and by table size.
 20. `Bid Discipline`: exact-bid block frequency.
 21. `Chaos Factor`: round considered chaos when `maxScore - minScore >= 25`; report player participation rate.
+22. `Player Max Sets/Game`: maximum number of got-set rounds a single player recorded inside one game.
+23. `Most Sets in One Game`: maximum number of got-set outcomes recorded across all rounds of a single game.
+24. `Most Sets in a Round`: maximum number of players marked got set in the same scored round.
 
 ### Exact-bid block tracking
 - When scoring is attempted while bids are exactly equal to hand size, the round increments `exactBidBlocks`.
@@ -2732,6 +2736,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     roundsNeg10: 0,
                     momentumDiffSum: 0,
                     momentumGames: 0,
+                    maxSetsInGame: 0,
                     finishByTableSize: {},
                     chaosRounds: 0,
                     chaosOpportunities: 0,
@@ -2766,6 +2771,8 @@ All game/player data is stored locally in your browser unless you use URL sync. 
             let totalScoredRounds = 0;
             let totalExactBidBlocks = 0;
             let totalChaosRounds = 0;
+            let highestSetsInGame = 0;
+            let highestSetsInRound = 0;
 
             const globalSuitScore = { '♠': 0, '♥': 0, '♦': 0, '♣': 0 };
             const globalSuitCount = { '♠': 0, '♥': 0, '♦': 0, '♣': 0 };
@@ -2777,6 +2784,8 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     .map((round) => ({ round }))
                     .filter(entry => entry.round && entry.round.scored && Array.isArray(entry.round.playerData));
                 const scoredRoundCount = scoredRounds.length;
+                const gameSetCounts = new Map();
+                let totalSetsThisGame = 0;
 
                 totalPlayersAcrossGames += game.players.length;
                 totalScoredRoundsAcrossGames += scoredRoundCount;
@@ -2841,6 +2850,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 scoredRounds.forEach(({ round }) => {
                     totalScoredRounds += 1;
                     let setPointsThisRound = 0;
+                    let setCountThisRound = 0;
 
                     const participants = round.playerData
                         .map((pdata, idx) => (pdata && pdata.participating && game.players[idx] ? idx : null))
@@ -2889,6 +2899,9 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                         totalRoundPoints += score;
                         if (gotSet) {
                             setPointsThisRound += score;
+                            setCountThisRound += 1;
+                            totalSetsThisGame += 1;
+                            gameSetCounts.set(idx, (gameSetCounts.get(idx) || 0) + 1);
                         }
 
                         stats.rounds += 1;
@@ -2995,8 +3008,11 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                         gameRoundScoresByPlayer.get(idx).push(score);
                     });
 
+                    highestSetsInRound = Math.max(highestSetsInRound, setCountThisRound);
                     totalSetPointsAcrossRounds += setPointsThisRound;
                 });
+
+                highestSetsInGame = Math.max(highestSetsInGame, totalSetsThisGame);
 
                 gameRoundScoresByPlayer.forEach((scores, idx) => {
                     if (!scores.length || !game.players[idx]) {
@@ -3016,6 +3032,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     const stats = getStats(player.name);
                     const score = Number(player.score) || 0;
                     const position = positionByPlayer[idx] || 1;
+                    const setsThisGame = gameSetCounts.get(idx) || 0;
 
                     stats.games += 1;
                     if (winnerSet.has(player.name)) {
@@ -3040,6 +3057,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     stats.totalScore += score;
                     stats.bestGame = Math.max(stats.bestGame, score);
                     stats.worstGame = Math.min(stats.worstGame, score);
+                    stats.maxSetsInGame = Math.max(stats.maxSetsInGame, setsThisGame);
                 });
 
                 for (let i = 0; i < game.players.length; i++) {
@@ -3233,6 +3251,8 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     globalAvgPointsPerRound: totalRoundOutcomes ? (totalRoundPoints / totalRoundOutcomes) : 0,
                     avgExactBidBlocksPerGame: games.length ? (totalExactBidBlocks / games.length) : 0,
                     chaosRoundRate: totalScoredRounds ? (totalChaosRounds / totalScoredRounds) * 100 : 0,
+                    highestSetsInGame,
+                    highestSetsInRound,
                     totalExactBidBlocks,
                     totalChaosRounds,
                     globalSuitAverages,
@@ -3274,6 +3294,8 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 globalAvgPointsPerRound: 'Total player round points divided by all scored player outcomes.',
                 exactBlocksPerGame: 'Exact-bid block attempts divided by games. A block is recorded whenever scoring or saving is attempted while bids exactly equal hand size.',
                 chaosRoundRate: 'Share of scored rounds where the round score spread is at least 25 points.',
+                highestSetsInGame: 'Largest total number of got-set outcomes recorded across all rounds of a single game.',
+                highestSetsInRound: 'Largest number of players who got set in the same scored round.',
                 bestGlobalSuit: 'Trump suit with the highest average round score across all analyzed player outcomes.',
                 bestGlobalReverse: 'Reverse mode with the highest average round score across all analyzed player outcomes.',
                 clutchRate: 'MAX-confidence made divided by MAX-confidence attempts.',
@@ -3303,6 +3325,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 rivalryLeader: 'Player currently ahead in the rivalry record, or Tied.',
                 player: 'Player name.',
                 wins: 'Games where the player finished with the top final score.',
+                maxSetsInGame: 'Highest number of times this player got set in any single game.',
                 second: 'Games where the player finished in 2nd place.',
                 third: 'Games where the player finished in 3rd place.',
                 winRate: 'Wins divided by games played.',
@@ -3388,6 +3411,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
             const tableImpact = pickLowLeader(p => p.avgFinish, p => p.games >= 3);
             const bidDiscipline = pickLeader(p => p.exactBlockRate, p => p.rounds > 0);
             const chaosFactor = pickLeader(p => p.chaosRate, p => p.chaosOpportunities >= 5);
+            const mostSetsInGame = pickLeader(p => p.maxSetsInGame, p => p.maxSetsInGame > 0);
 
             const topRivalry = rivalries.length ? rivalries[0] : null;
             const topRivalryText = topRivalry
@@ -3465,6 +3489,14 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                         <div class="stats-tile-value">${formatStatNumber(summary.chaosRoundRate)}%</div>
                     </div>
                     <div class="stats-tile">
+                        <div class="stats-tile-label">${tip('Most Sets In One Game', 'highestSetsInGame')}</div>
+                        <div class="stats-tile-value">${summary.highestSetsInGame}</div>
+                    </div>
+                    <div class="stats-tile">
+                        <div class="stats-tile-label">${tip('Most Sets In Round', 'highestSetsInRound')}</div>
+                        <div class="stats-tile-value">${summary.highestSetsInRound}</div>
+                    </div>
+                    <div class="stats-tile">
                         <div class="stats-tile-label">${tip('Best Global Suit', 'bestGlobalSuit')}</div>
                         <div class="stats-tile-value">${bestGlobalSuit ? `${bestGlobalSuit.suit} (${formatStatNumber(bestGlobalSuit.avg)})` : 'n/a'}</div>
                     </div>
@@ -3497,6 +3529,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Table Impact (Avg Finish)', 'tableImpact')}</div><div class="stats-mini-value">${tableImpact ? `${escapeHtml(tableImpact.name)} - ${formatStatNumber(tableImpact.avgFinish, 2)}` : 'n/a'}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Bid Discipline Alerts', 'bidDiscipline')}</div><div class="stats-mini-value">${bidDiscipline ? `${escapeHtml(bidDiscipline.name)} - ${formatStatNumber(bidDiscipline.exactBlockRate)}% rounds` : 'n/a'}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Chaos Factor', 'chaosFactor')}</div><div class="stats-mini-value">${formatLeader(chaosFactor, chaosFactor ? `${formatStatNumber(chaosFactor.chaosRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Player Max Sets/Game', 'maxSetsInGame')}</div><div class="stats-mini-value">${formatLeader(mostSetsInGame, mostSetsInGame ? `${mostSetsInGame.maxSetsInGame}` : 'n/a')}</div></div>
                 </div>
 
                 <h3 class="stats-section-title">Rivalries</h3>
@@ -3530,6 +3563,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                                 <th>${tip('Player', 'player')}</th>
                                 <th>${tip('Games', 'games')}</th>
                                 <th>${tip('Wins', 'wins')}</th>
+                                <th>${tip('Max Sets/Game', 'maxSetsInGame')}</th>
                                 <th>${tip('2nd', 'second')}</th>
                                 <th>${tip('3rd', 'third')}</th>
                                 <th>${tip('Win %', 'winRate')}</th>
@@ -3572,6 +3606,7 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                                     <td>${escapeHtml(player.name)}</td>
                                     <td>${player.games}</td>
                                     <td>${player.wins}</td>
+                                    <td>${player.maxSetsInGame}</td>
                                     <td>${player.second}</td>
                                     <td>${player.third}</td>
                                     <td>${formatStatNumber(player.winRate)}%</td>
