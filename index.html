@@ -776,6 +776,46 @@
             line-height: 1.35;
         }
 
+        .stat-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: help;
+            border-bottom: 1px dotted rgba(251, 191, 36, 0.45);
+            line-height: 1.2;
+        }
+
+        .stat-tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 0;
+            top: calc(100% + 0.45rem);
+            width: min(280px, 70vw);
+            background: rgba(15, 23, 42, 0.98);
+            color: #e2e8f0;
+            border: 1px solid rgba(251, 191, 36, 0.28);
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+            padding: 0.6rem 0.7rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            line-height: 1.45;
+            white-space: normal;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-4px);
+            transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .stat-tooltip:hover::after,
+        .stat-tooltip:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
         .game-info h3 {
             color: #fbbf24;
             margin-bottom: 0.25rem;
@@ -3214,11 +3254,84 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                 .replace(/'/g, '&#39;');
         }
 
+        function renderTooltipLabel(label, description) {
+            return `<span class="stat-tooltip" tabindex="0" data-tooltip="${escapeHtml(description)}">${escapeHtml(label)}</span>`;
+        }
+
         function renderStatsContent(allGames) {
             const content = document.getElementById('statsContent');
             const deduped = dedupeHistoryGames(allGames);
             const { players, summary, rivalries } = analyzeHistoryGames(deduped);
             const historySourceUrl = getHistorySourceUrl();
+            const statDescriptions = {
+                games: 'Number of deduped history game files included in analysis.',
+                uniquePlayers: 'Number of distinct player names across all analyzed games.',
+                avgRoundsPerGame: 'Total scored rounds divided by total games.',
+                avgPlayersPerGame: 'Total player entries divided by total games.',
+                avgWinningMargin: 'Winner score minus runner-up score, averaged across games with at least two players.',
+                avgSetPointsPerRound: 'Sum of all got-set scores in each round, averaged across scored rounds.',
+                globalSetRate: 'Got-set outcomes divided by all scored player outcomes.',
+                globalAvgPointsPerRound: 'Total player round points divided by all scored player outcomes.',
+                exactBlocksPerGame: 'Exact-bid block attempts divided by games. A block is recorded whenever scoring or saving is attempted while bids exactly equal hand size.',
+                chaosRoundRate: 'Share of scored rounds where the round score spread is at least 25 points.',
+                bestGlobalSuit: 'Trump suit with the highest average round score across all analyzed player outcomes.',
+                bestGlobalReverse: 'Reverse mode with the highest average round score across all analyzed player outcomes.',
+                clutchRate: 'MAX-confidence made divided by MAX-confidence attempts.',
+                greedIndex: 'Average of bid divided by hand size, using positive bids only.',
+                taxBurden: 'Total tax paid. The player shown paid the most total tax.',
+                deferredSpecialist: 'Made-rate on deferred rounds. This highlights who performs best after deferring.',
+                dealerEdge: 'Average score as dealer minus average score as non-dealer.',
+                suitMastery: 'Best average score for a player under any trump suit, requiring at least 3 rounds in that suit.',
+                setHunter: 'Opponent got-set rate in rounds where the player bid at least half the hand size.',
+                setMagnet: 'Set rate: got-set rounds divided by all resolved rounds.',
+                comebackWins: 'Wins where the player was outside the top 2 at the halfway checkpoint.',
+                chokeRate: 'Share of games where the player led at the 70% checkpoint but did not win.',
+                hotHand: 'Longest consecutive streak of rounds without getting set.',
+                disasterStreak: 'Longest consecutive streak of got-set rounds.',
+                boomBust: 'Standard deviation of round scores. Higher means more volatility.',
+                peakRound: 'Highest single-round score recorded for a player.',
+                floorRound: 'Lowest single-round score recorded for a player.',
+                zeroBidPersonality: 'Zero-bid attempts divided by total rounds.',
+                momentumFinish: 'Average of last up to 3 round scores minus average of first up to 3 round scores, then averaged per game.',
+                rivalrySplit: 'Head-to-head record for a pair of players across games they both played.',
+                tableImpact: 'Average final finishing position overall. Lower is better.',
+                bidDiscipline: 'Frequency of exact-bid blocks while the player was present in the round.',
+                chaosFactor: 'Share of rounds the player participated in that were chaos rounds.',
+                rivalryPair: 'Two players who appeared in the same games.',
+                rivalryGames: 'Number of games this pair played together.',
+                rivalryRecord: 'Head-to-head record in the form A wins - B wins - ties.',
+                rivalryLeader: 'Player currently ahead in the rivalry record, or Tied.',
+                player: 'Player name.',
+                wins: 'Games where the player finished with the top final score.',
+                second: 'Games where the player finished in 2nd place.',
+                third: 'Games where the player finished in 3rd place.',
+                winRate: 'Wins divided by games played.',
+                top3Rate: 'Wins plus 2nd plus 3rd, divided by games played.',
+                avgFinal: 'Average final score across games.',
+                bestWorstGame: 'Highest and lowest final game score.',
+                bidAccuracy: 'Rounds made divided by made plus set rounds.',
+                setRate: 'Got-set rounds divided by made plus set rounds.',
+                taxTotal: 'Total tax paid across all rounds.',
+                taxPerRound: 'Average tax paid per round.',
+                deferredMadeRate: 'Made-rate on deferred rounds.',
+                nonDeferredMadeRate: 'Made-rate on non-deferred rounds.',
+                setHunterRate: 'Opponent got-set rate in the player\'s high-bid rounds.',
+                setMagnetRate: 'Same as Set Rate. Included in the table as a direct per-player percentage.',
+                twentyPlusNegTen: 'Count of 20+ rounds and count of rounds at -10 or worse.',
+                zeroBidTryRate: 'Zero-bid attempts divided by total rounds.',
+                zeroBidSuccessRate: 'Successful zero bids divided by all zero-bid attempts.',
+                bestSuit: 'Trump suit with the highest average score for this player.',
+                bestReverse: 'Reverse mode with the highest average score for this player.',
+                avgRound: 'Average score per round.',
+                avgFinish: 'Average finishing position across games. Lower is better.',
+                finishByTableSize: 'Average finishing position broken out by table size, such as 3p or 4p.',
+                chaosRate: 'Share of rounds this player participated in that had a 25+ point spread.',
+                exactBlockRate: 'Share of rounds where this player was present and the round registered an exact-bid block.'
+            };
+
+            function tip(label, key) {
+                return renderTooltipLabel(label, statDescriptions[key] || label);
+            }
 
             function pickLeader(metricSelector, predicate = null) {
                 const candidates = predicate ? players.filter(predicate) : players;
@@ -3312,78 +3425,78 @@ All game/player data is stored locally in your browser unless you use URL sync. 
 
                 <div class="stats-summary-grid">
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Games</div>
+                        <div class="stats-tile-label">${tip('Games', 'games')}</div>
                         <div class="stats-tile-value">${summary.totalGames}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Unique Players</div>
+                        <div class="stats-tile-label">${tip('Unique Players', 'uniquePlayers')}</div>
                         <div class="stats-tile-value">${summary.uniquePlayers}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Avg Rounds/Game</div>
+                        <div class="stats-tile-label">${tip('Avg Rounds/Game', 'avgRoundsPerGame')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgRoundsPerGame)}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Avg Players/Game</div>
+                        <div class="stats-tile-label">${tip('Avg Players/Game', 'avgPlayersPerGame')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgPlayersPerGame)}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Avg Winning Margin</div>
+                        <div class="stats-tile-label">${tip('Avg Winning Margin', 'avgWinningMargin')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgWinningMargin)}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Avg Set Pts/Round</div>
+                        <div class="stats-tile-label">${tip('Avg Set Pts/Round', 'avgSetPointsPerRound')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgSetPointsPerRound)}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Global Set %</div>
+                        <div class="stats-tile-label">${tip('Global Set %', 'globalSetRate')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.globalSetRate)}%</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Global Avg Pts/Round</div>
+                        <div class="stats-tile-label">${tip('Global Avg Pts/Round', 'globalAvgPointsPerRound')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.globalAvgPointsPerRound)}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Exact Blocks/Game</div>
+                        <div class="stats-tile-label">${tip('Exact Blocks/Game', 'exactBlocksPerGame')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.avgExactBidBlocksPerGame)}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Chaos Round %</div>
+                        <div class="stats-tile-label">${tip('Chaos Round %', 'chaosRoundRate')}</div>
                         <div class="stats-tile-value">${formatStatNumber(summary.chaosRoundRate)}%</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Best Global Suit</div>
+                        <div class="stats-tile-label">${tip('Best Global Suit', 'bestGlobalSuit')}</div>
                         <div class="stats-tile-value">${bestGlobalSuit ? `${bestGlobalSuit.suit} (${formatStatNumber(bestGlobalSuit.avg)})` : 'n/a'}</div>
                     </div>
                     <div class="stats-tile">
-                        <div class="stats-tile-label">Best Reverse Mode</div>
+                        <div class="stats-tile-label">${tip('Best Reverse Mode', 'bestGlobalReverse')}</div>
                         <div class="stats-tile-value">${bestGlobalReverse ? `${bestGlobalReverse.value} (${formatStatNumber(bestGlobalReverse.avg)})` : 'n/a'}</div>
                     </div>
                 </div>
 
                 <h3 class="stats-section-title">Fun Leaders</h3>
                 <div class="stats-mini-grid">
-                    <div class="stats-mini-card"><div class="stats-mini-label">Clutch Rate</div><div class="stats-mini-value">${formatLeader(bestClutch, bestClutch ? `${formatStatNumber(bestClutch.clutchRate)}%` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Greed Index</div><div class="stats-mini-value">${formatLeader(greediest, greediest ? formatStatNumber(greediest.greedIndex, 2) : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Tax Burden (Total)</div><div class="stats-mini-value">${formatLeader(taxKing, taxKing ? `${taxKing.totalTax}` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Deferred Specialist</div><div class="stats-mini-value">${formatLeader(deferredSpecialist, deferredSpecialist ? `${formatStatNumber(deferredSpecialist.deferredMadeRate)}%` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Dealer Edge</div><div class="stats-mini-value">${formatLeader(dealerEdge, dealerEdge ? formatStatNumber(dealerEdge.dealerEdge) : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Suit Mastery</div><div class="stats-mini-value">${suitMaster && suitMaster.bestSuit ? `${escapeHtml(suitMaster.name)} - ${suitMaster.bestSuit.suit} ${formatStatNumber(suitMaster.bestSuit.avg)}` : 'n/a'}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Set Hunter</div><div class="stats-mini-value">${formatLeader(setHunter, setHunter ? `${formatStatNumber(setHunter.setHunterRate)}%` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Set Magnet</div><div class="stats-mini-value">${formatLeader(setMagnet, setMagnet ? `${formatStatNumber(setMagnet.setRate)}%` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Comeback Wins</div><div class="stats-mini-value">${formatLeader(comebackHero, comebackHero ? `${comebackHero.comebackWins}` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Choke Rate</div><div class="stats-mini-value">${chokeLeader ? `${escapeHtml(chokeLeader.name)} - ${formatStatNumber((chokeLeader.chokeCount / chokeLeader.chokeOpportunities) * 100)}%` : 'n/a'}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Hot Hand Streak</div><div class="stats-mini-value">${formatLeader(hotHand, hotHand ? `${hotHand.bestMadeStreak}` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Disaster Streak</div><div class="stats-mini-value">${formatLeader(disasterStreak, disasterStreak ? `${disasterStreak.worstSetStreak}` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Boom/Bust (StdDev)</div><div class="stats-mini-value">${formatLeader(boomBust, boomBust ? formatStatNumber(boomBust.boomBustStdDev) : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Peak Round</div><div class="stats-mini-value">${peakRound ? `${escapeHtml(peakRound.name)} - ${peakRound.highestRoundScore} (${peakRound.rounds20Plus}x 20+)` : 'n/a'}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Floor Round</div><div class="stats-mini-value">${floorRound ? `${escapeHtml(floorRound.name)} - ${floorRound.lowestRoundScore} (${floorRound.roundsNeg10}x <=-10)` : 'n/a'}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Zero-Bid Personality</div><div class="stats-mini-value">${formatLeader(zeroBidPersonality, zeroBidPersonality ? `${formatStatNumber(zeroBidPersonality.zeroBidAttemptRate)}%` : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Momentum Finish</div><div class="stats-mini-value">${formatLeader(momentum, momentum ? formatStatNumber(momentum.momentumDelta) : 'n/a')}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Rivalry Split</div><div class="stats-mini-value">${topRivalryText}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Table Impact (Avg Finish)</div><div class="stats-mini-value">${tableImpact ? `${escapeHtml(tableImpact.name)} - ${formatStatNumber(tableImpact.avgFinish, 2)}` : 'n/a'}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Bid Discipline Alerts</div><div class="stats-mini-value">${bidDiscipline ? `${escapeHtml(bidDiscipline.name)} - ${formatStatNumber(bidDiscipline.exactBlockRate)}% rounds` : 'n/a'}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">Chaos Factor</div><div class="stats-mini-value">${formatLeader(chaosFactor, chaosFactor ? `${formatStatNumber(chaosFactor.chaosRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Clutch Rate', 'clutchRate')}</div><div class="stats-mini-value">${formatLeader(bestClutch, bestClutch ? `${formatStatNumber(bestClutch.clutchRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Greed Index', 'greedIndex')}</div><div class="stats-mini-value">${formatLeader(greediest, greediest ? formatStatNumber(greediest.greedIndex, 2) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Tax Burden (Total)', 'taxBurden')}</div><div class="stats-mini-value">${formatLeader(taxKing, taxKing ? `${taxKing.totalTax}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Deferred Specialist', 'deferredSpecialist')}</div><div class="stats-mini-value">${formatLeader(deferredSpecialist, deferredSpecialist ? `${formatStatNumber(deferredSpecialist.deferredMadeRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Dealer Edge', 'dealerEdge')}</div><div class="stats-mini-value">${formatLeader(dealerEdge, dealerEdge ? formatStatNumber(dealerEdge.dealerEdge) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Suit Mastery', 'suitMastery')}</div><div class="stats-mini-value">${suitMaster && suitMaster.bestSuit ? `${escapeHtml(suitMaster.name)} - ${suitMaster.bestSuit.suit} ${formatStatNumber(suitMaster.bestSuit.avg)}` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Set Hunter', 'setHunter')}</div><div class="stats-mini-value">${formatLeader(setHunter, setHunter ? `${formatStatNumber(setHunter.setHunterRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Set Magnet', 'setMagnet')}</div><div class="stats-mini-value">${formatLeader(setMagnet, setMagnet ? `${formatStatNumber(setMagnet.setRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Comeback Wins', 'comebackWins')}</div><div class="stats-mini-value">${formatLeader(comebackHero, comebackHero ? `${comebackHero.comebackWins}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Choke Rate', 'chokeRate')}</div><div class="stats-mini-value">${chokeLeader ? `${escapeHtml(chokeLeader.name)} - ${formatStatNumber((chokeLeader.chokeCount / chokeLeader.chokeOpportunities) * 100)}%` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Hot Hand Streak', 'hotHand')}</div><div class="stats-mini-value">${formatLeader(hotHand, hotHand ? `${hotHand.bestMadeStreak}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Disaster Streak', 'disasterStreak')}</div><div class="stats-mini-value">${formatLeader(disasterStreak, disasterStreak ? `${disasterStreak.worstSetStreak}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Boom/Bust (StdDev)', 'boomBust')}</div><div class="stats-mini-value">${formatLeader(boomBust, boomBust ? formatStatNumber(boomBust.boomBustStdDev) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Peak Round', 'peakRound')}</div><div class="stats-mini-value">${peakRound ? `${escapeHtml(peakRound.name)} - ${peakRound.highestRoundScore} (${peakRound.rounds20Plus}x 20+)` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Floor Round', 'floorRound')}</div><div class="stats-mini-value">${floorRound ? `${escapeHtml(floorRound.name)} - ${floorRound.lowestRoundScore} (${floorRound.roundsNeg10}x <=-10)` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Zero-Bid Personality', 'zeroBidPersonality')}</div><div class="stats-mini-value">${formatLeader(zeroBidPersonality, zeroBidPersonality ? `${formatStatNumber(zeroBidPersonality.zeroBidAttemptRate)}%` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Momentum Finish', 'momentumFinish')}</div><div class="stats-mini-value">${formatLeader(momentum, momentum ? formatStatNumber(momentum.momentumDelta) : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Rivalry Split', 'rivalrySplit')}</div><div class="stats-mini-value">${topRivalryText}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Table Impact (Avg Finish)', 'tableImpact')}</div><div class="stats-mini-value">${tableImpact ? `${escapeHtml(tableImpact.name)} - ${formatStatNumber(tableImpact.avgFinish, 2)}` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Bid Discipline Alerts', 'bidDiscipline')}</div><div class="stats-mini-value">${bidDiscipline ? `${escapeHtml(bidDiscipline.name)} - ${formatStatNumber(bidDiscipline.exactBlockRate)}% rounds` : 'n/a'}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Chaos Factor', 'chaosFactor')}</div><div class="stats-mini-value">${formatLeader(chaosFactor, chaosFactor ? `${formatStatNumber(chaosFactor.chaosRate)}%` : 'n/a')}</div></div>
                 </div>
 
                 <h3 class="stats-section-title">Rivalries</h3>
@@ -3391,10 +3504,10 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     <table class="stats-table">
                         <thead>
                             <tr>
-                                <th>Pair</th>
-                                <th>Games</th>
-                                <th>Record</th>
-                                <th>Leader</th>
+                                <th>${tip('Pair', 'rivalryPair')}</th>
+                                <th>${tip('Games', 'rivalryGames')}</th>
+                                <th>${tip('Record', 'rivalryRecord')}</th>
+                                <th>${tip('Leader', 'rivalryLeader')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -3414,43 +3527,43 @@ All game/player data is stored locally in your browser unless you use URL sync. 
                     <table class="stats-table">
                         <thead>
                             <tr>
-                                <th>Player</th>
-                                <th>Games</th>
-                                <th>Wins</th>
-                                <th>2nd</th>
-                                <th>3rd</th>
-                                <th>Win %</th>
-                                <th>Top 3 %</th>
-                                <th>Avg Final</th>
-                                <th>Best/Worst Game</th>
-                                <th>Bid Accuracy %</th>
-                                <th>Set Rate</th>
-                                <th>Clutch %</th>
-                                <th>Greed</th>
-                                <th>Tax Total</th>
-                                <th>Tax/Round</th>
-                                <th>Def Made %</th>
-                                <th>Non-Def Made %</th>
-                                <th>Dealer Edge</th>
-                                <th>Set Hunter %</th>
-                                <th>Set Magnet %</th>
-                                <th>Comeback Wins</th>
-                                <th>Choke %</th>
-                                <th>Hot Hand</th>
-                                <th>Disaster</th>
-                                <th>Boom/Bust</th>
-                                <th>Peak/Floor Round</th>
-                                <th>20+ / <=-10</th>
-                                <th>Zero Bid Try %</th>
-                                <th>Zero Bid Success %</th>
-                                <th>Momentum</th>
-                                <th>Best Suit</th>
-                                <th>Best Reverse</th>
-                                <th>Avg Round</th>
-                                <th>Avg Finish</th>
-                                <th>Finish by Table Size</th>
-                                <th>Chaos %</th>
-                                <th>Exact Block %</th>
+                                <th>${tip('Player', 'player')}</th>
+                                <th>${tip('Games', 'games')}</th>
+                                <th>${tip('Wins', 'wins')}</th>
+                                <th>${tip('2nd', 'second')}</th>
+                                <th>${tip('3rd', 'third')}</th>
+                                <th>${tip('Win %', 'winRate')}</th>
+                                <th>${tip('Top 3 %', 'top3Rate')}</th>
+                                <th>${tip('Avg Final', 'avgFinal')}</th>
+                                <th>${tip('Best/Worst Game', 'bestWorstGame')}</th>
+                                <th>${tip('Bid Accuracy %', 'bidAccuracy')}</th>
+                                <th>${tip('Set Rate', 'setRate')}</th>
+                                <th>${tip('Clutch %', 'clutchRate')}</th>
+                                <th>${tip('Greed', 'greedIndex')}</th>
+                                <th>${tip('Tax Total', 'taxTotal')}</th>
+                                <th>${tip('Tax/Round', 'taxPerRound')}</th>
+                                <th>${tip('Def Made %', 'deferredMadeRate')}</th>
+                                <th>${tip('Non-Def Made %', 'nonDeferredMadeRate')}</th>
+                                <th>${tip('Dealer Edge', 'dealerEdge')}</th>
+                                <th>${tip('Set Hunter %', 'setHunterRate')}</th>
+                                <th>${tip('Set Magnet %', 'setMagnetRate')}</th>
+                                <th>${tip('Comeback Wins', 'comebackWins')}</th>
+                                <th>${tip('Choke %', 'chokeRate')}</th>
+                                <th>${tip('Hot Hand', 'hotHand')}</th>
+                                <th>${tip('Disaster', 'disasterStreak')}</th>
+                                <th>${tip('Boom/Bust', 'boomBust')}</th>
+                                <th>${tip('Peak/Floor Round', 'peakRound')}</th>
+                                <th>${tip('20+ / <=-10', 'twentyPlusNegTen')}</th>
+                                <th>${tip('Zero Bid Try %', 'zeroBidTryRate')}</th>
+                                <th>${tip('Zero Bid Success %', 'zeroBidSuccessRate')}</th>
+                                <th>${tip('Momentum', 'momentumFinish')}</th>
+                                <th>${tip('Best Suit', 'bestSuit')}</th>
+                                <th>${tip('Best Reverse', 'bestReverse')}</th>
+                                <th>${tip('Avg Round', 'avgRound')}</th>
+                                <th>${tip('Avg Finish', 'avgFinish')}</th>
+                                <th>${tip('Finish by Table Size', 'finishByTableSize')}</th>
+                                <th>${tip('Chaos %', 'chaosRate')}</th>
+                                <th>${tip('Exact Block %', 'exactBlockRate')}</th>
                             </tr>
                         </thead>
                         <tbody>
