@@ -28,6 +28,7 @@ Save the file and open it directly in your browser — no installation required.
 - 📤 Clipboard export formatted for Excel
 - 📊 Historical stats and analytics across multiple saved games
 - 📖 Built-in comprehensive rules guide with scoring examples
+- 📘 In-app README screen for quick reference
 - 🎴 Bid status tracking (Under/Over/Exact)
 
 ## Getting Started
@@ -256,12 +257,14 @@ If automatic history discovery fails (network issues, wrong URL format), use **�
 ### Setup screen
 - **👥 Manage Players** — add, remove, import, export player list
 - **⚙️ Settings** — configure sync URLs and auto-sync
+- **📘 README** — open the full project guide inside the app
 - **📖 Rules & Math** — comprehensive guide with scoring examples and formulas
 - **📊 Stats** — view aggregated stats from history
 - **📁 Load Game** — restore a previously saved game
 
 ### In-game screen
 - **👥 Table** — manage active/inactive players, add mid-game players
+- **📘 README** — open the project guide without leaving the current game
 - **💾 Save** — download current game as JSON
 - **📁 Load** — restore a saved game (pauses current)
 - **📤 Export** — copy game data to clipboard (Excel format)
