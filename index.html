@@ -790,7 +790,10 @@
             position: absolute;
             left: 0;
             top: calc(100% + 0.45rem);
-            width: min(280px, 70vw);
+            transform: translateX(0) translateY(-4px);
+            width: auto;
+            max-width: none;
+            box-sizing: border-box;
             background: rgba(15, 23, 42, 0.98);
             color: #e2e8f0;
             border: 1px solid rgba(251, 191, 36, 0.28);
@@ -803,7 +806,6 @@
             white-space: normal;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-4px);
             transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
             pointer-events: none;
             z-index: 20;
