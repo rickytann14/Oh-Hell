@@ -1182,9 +1182,7 @@
                 // Initialize previousPosition if not present
                 gameState = normalizeGameState(game);
                 setActiveView('game');
-                renderRoundSetup();
-                renderScoreboard();
-                renderHistory();
+                renderGame();
             } catch (error) {
                 console.error('Error loading auto-save:', error);
             }
@@ -1616,9 +1614,7 @@
                 loadSavedPlayers();
             }
 
-            renderRoundSetup();
-            renderScoreboard();
-            renderHistory();
+            renderGame();
             updatePlayerPositions();
             autoSave();
             renderGamePlayersModal();
@@ -1656,9 +1652,7 @@
                 }
             }
 
-            renderRoundSetup();
-            renderScoreboard();
-            renderHistory();
+            renderGame();
             updatePlayerPositions();
             autoSave();
             renderGamePlayersModal();
@@ -2686,6 +2680,23 @@
                 return;
             }
 
+            const statsTiles = [
+                { label: 'Games',                  key: 'games',                   value: summary.totalGames },
+                { label: 'Unique Players',          key: 'uniquePlayers',           value: summary.uniquePlayers },
+                { label: 'Avg Rounds/Game',         key: 'avgRoundsPerGame',        value: formatStatNumber(summary.avgRoundsPerGame) },
+                { label: 'Avg Players/Game',        key: 'avgPlayersPerGame',       value: formatStatNumber(summary.avgPlayersPerGame) },
+                { label: 'Avg Winning Margin',      key: 'avgWinningMargin',        value: formatStatNumber(summary.avgWinningMargin) },
+                { label: 'Avg Set Pts/Round',       key: 'avgSetPointsPerRound',    value: formatStatNumber(summary.avgSetPointsPerRound) },
+                { label: 'Global Set %',            key: 'globalSetRate',           value: `${formatStatNumber(summary.globalSetRate)}%` },
+                { label: 'Global Avg Pts/Round',    key: 'globalAvgPointsPerRound', value: formatStatNumber(summary.globalAvgPointsPerRound) },
+                { label: 'Exact Blocks/Game',       key: 'exactBlocksPerGame',      value: formatStatNumber(summary.avgExactBidBlocksPerGame) },
+                { label: 'Chaos Round %',           key: 'chaosRoundRate',          value: `${formatStatNumber(summary.chaosRoundRate)}%` },
+                { label: 'Most Sets In One Game',   key: 'highestSetsInGame',       value: summary.highestSetsInGame },
+                { label: 'Most Sets In Round',      key: 'highestSetsInRound',      value: summary.highestSetsInRound },
+                { label: 'Best Global Suit',        key: 'bestGlobalSuit',          value: bestGlobalSuit ? `${bestGlobalSuit.suit} (${formatStatNumber(bestGlobalSuit.avg)})` : 'n/a' },
+                { label: 'Best Reverse Mode',       key: 'bestGlobalReverse',       value: bestGlobalReverse ? `${bestGlobalReverse.value} (${formatStatNumber(bestGlobalReverse.avg)})` : 'n/a' },
+            ];
+
             content.innerHTML = `
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
                     <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh</button>
@@ -2693,62 +2704,11 @@
                 </div>
 
                 <div class="stats-summary-grid">
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Games', 'games')}</div>
-                        <div class="stats-tile-value">${summary.totalGames}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Unique Players', 'uniquePlayers')}</div>
-                        <div class="stats-tile-value">${summary.uniquePlayers}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Avg Rounds/Game', 'avgRoundsPerGame')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.avgRoundsPerGame)}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Avg Players/Game', 'avgPlayersPerGame')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.avgPlayersPerGame)}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Avg Winning Margin', 'avgWinningMargin')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.avgWinningMargin)}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Avg Set Pts/Round', 'avgSetPointsPerRound')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.avgSetPointsPerRound)}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Global Set %', 'globalSetRate')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.globalSetRate)}%</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Global Avg Pts/Round', 'globalAvgPointsPerRound')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.globalAvgPointsPerRound)}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Exact Blocks/Game', 'exactBlocksPerGame')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.avgExactBidBlocksPerGame)}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Chaos Round %', 'chaosRoundRate')}</div>
-                        <div class="stats-tile-value">${formatStatNumber(summary.chaosRoundRate)}%</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Most Sets In One Game', 'highestSetsInGame')}</div>
-                        <div class="stats-tile-value">${summary.highestSetsInGame}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Most Sets In Round', 'highestSetsInRound')}</div>
-                        <div class="stats-tile-value">${summary.highestSetsInRound}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Best Global Suit', 'bestGlobalSuit')}</div>
-                        <div class="stats-tile-value">${bestGlobalSuit ? `${bestGlobalSuit.suit} (${formatStatNumber(bestGlobalSuit.avg)})` : 'n/a'}</div>
-                    </div>
-                    <div class="stats-tile">
-                        <div class="stats-tile-label">${tip('Best Reverse Mode', 'bestGlobalReverse')}</div>
-                        <div class="stats-tile-value">${bestGlobalReverse ? `${bestGlobalReverse.value} (${formatStatNumber(bestGlobalReverse.avg)})` : 'n/a'}</div>
-                    </div>
+                    ${statsTiles.map(({ label, key, value }) => `
+                        <div class="stats-tile">
+                            <div class="stats-tile-label">${tip(label, key)}</div>
+                            <div class="stats-tile-value">${value}</div>
+                        </div>`).join('')}
                 </div>
 
                 <h3 class="stats-section-title">Fun Leaders</h3>
@@ -3306,6 +3266,21 @@
             `;
         }
 
+        // Shared helpers used by both current-round and edit-round functions
+        function _applyHandSize(roundIdx, value) {
+            const round = gameState.rounds[roundIdx];
+            round.handSize = Math.max(1, parseInt(value) || 1);
+            round.playerData.forEach(pdata => { if (pdata.bid > round.handSize) pdata.bid = round.handSize; });
+        }
+
+        function _clampedBid(roundIdx, playerIdx, value) {
+            const round = gameState.rounds[roundIdx];
+            return Math.max(0, Math.min(round.handSize, parseInt(value) || 0));
+        }
+
+        function _clampedTax(value) { return Math.max(0, Math.min(25, parseInt(value) || 0)); }
+
+        // Current-round mutation functions
         function updateBid(playerIdx, value) {
             gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = parseInt(value) || 0;
             renderRoundSetup();
@@ -3314,54 +3289,36 @@
 
         function adjustBid(playerIdx, delta) {
             const round = gameState.rounds[gameState.currentRound];
-            const currentBid = round.playerData[playerIdx].bid;
-            const newBid = Math.max(0, Math.min(round.handSize, currentBid + delta));
-            round.playerData[playerIdx].bid = newBid;
+            round.playerData[playerIdx].bid = Math.max(0, Math.min(round.handSize, round.playerData[playerIdx].bid + delta));
             renderRoundSetup();
             autoSave();
         }
 
         function setBid(playerIdx, value) {
-            const round = gameState.rounds[gameState.currentRound];
-            const newBid = Math.max(0, Math.min(round.handSize, parseInt(value) || 0));
-            round.playerData[playerIdx].bid = newBid;
+            gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = _clampedBid(gameState.currentRound, playerIdx, value);
             renderRoundSetup();
         }
 
         function adjustTax(playerIdx, delta) {
             const round = gameState.rounds[gameState.currentRound];
-            const currentTax = round.playerData[playerIdx].tax;
-            const newTax = Math.max(0, Math.min(25, currentTax + delta));
-            round.playerData[playerIdx].tax = newTax;
+            round.playerData[playerIdx].tax = _clampedTax(round.playerData[playerIdx].tax + delta);
             renderRoundSetup();
         }
 
         function setTax(playerIdx, value) {
-            const round = gameState.rounds[gameState.currentRound];
-            const newTax = Math.max(0, Math.min(25, parseInt(value) || 0));
-            round.playerData[playerIdx].tax = newTax;
+            gameState.rounds[gameState.currentRound].playerData[playerIdx].tax = _clampedTax(value);
             renderRoundSetup();
         }
 
         function updateCurrentRoundHandSize(value) {
-            const round = gameState.rounds[gameState.currentRound];
-            round.handSize = Math.max(1, parseInt(value) || 1);
-
-            round.playerData.forEach(pdata => {
-                if (pdata.bid > round.handSize) {
-                    pdata.bid = round.handSize;
-                }
-            });
-
+            _applyHandSize(gameState.currentRound, value);
             renderRoundSetup();
         }
 
         function adjustCurrentRoundHandSize(delta) {
             const round = gameState.rounds[gameState.currentRound];
             if (round.scored) return;
-
-            const newSize = Math.max(1, Math.min(20, round.handSize + delta));
-            updateCurrentRoundHandSize(newSize);
+            updateCurrentRoundHandSize(Math.max(1, Math.min(20, round.handSize + delta)));
         }
 
         function updateTax(playerIdx, value) {
@@ -3516,9 +3473,7 @@
                 });
             });
 
-            renderRoundSetup();
-            renderScoreboard();
-            renderHistory();
+            renderGame();
             updatePlayerPositions();
             autoSave();
         }
@@ -3556,10 +3511,14 @@
             });
 
             round.scored = false;
+            renderGame();
+            updatePlayerPositions();
+        }
+
+        function renderGame() {
             renderRoundSetup();
             renderScoreboard();
             renderHistory();
-            updatePlayerPositions();
         }
 
         function renderScoreboard() {
@@ -3750,9 +3709,7 @@
                     // Initialize previousPosition if not present
                     gameState = normalizeGameState(game);
                     setActiveView('game');
-                    renderRoundSetup();
-                    renderScoreboard();
-                    renderHistory();
+                    renderGame();
                     closeModal('saveLoadModal');
                     
                     alert('✅ Game loaded successfully!');
@@ -3938,35 +3895,24 @@
             document.getElementById('editRoundModal').classList.add('active');
         }
 
+        // Edit-round mutation functions (mirror current-round but target editingRoundIndex)
         function updateEditBid(playerIdx, value) {
             gameState.rounds[editingRoundIndex].playerData[playerIdx].bid = parseInt(value) || 0;
-            // Re-render the bid tracker
             editRound(editingRoundIndex);
         }
 
         function setEditBid(playerIdx, value) {
-            const round = gameState.rounds[editingRoundIndex];
-            round.playerData[playerIdx].bid = Math.max(0, Math.min(round.handSize, parseInt(value) || 0));
+            gameState.rounds[editingRoundIndex].playerData[playerIdx].bid = _clampedBid(editingRoundIndex, playerIdx, value);
             editRound(editingRoundIndex);
         }
 
         function updateEditHandSize(value) {
-            const round = gameState.rounds[editingRoundIndex];
-            round.handSize = Math.max(1, parseInt(value) || 1);
-
-            round.playerData.forEach(pdata => {
-                if (pdata.bid > round.handSize) {
-                    pdata.bid = round.handSize;
-                }
-            });
-
+            _applyHandSize(editingRoundIndex, value);
             editRound(editingRoundIndex);
         }
 
         function adjustEditHandSize(delta) {
-            const round = gameState.rounds[editingRoundIndex];
-            const newSize = Math.max(1, Math.min(20, round.handSize + delta));
-            updateEditHandSize(newSize);
+            updateEditHandSize(Math.max(1, Math.min(20, gameState.rounds[editingRoundIndex].handSize + delta)));
         }
 
         function updateEditTax(playerIdx, value) {
@@ -3975,15 +3921,12 @@
 
         function adjustEditTax(playerIdx, delta) {
             const round = gameState.rounds[editingRoundIndex];
-            const currentTax = round.playerData[playerIdx].tax;
-            const newTax = Math.max(0, Math.min(25, currentTax + delta));
-            round.playerData[playerIdx].tax = newTax;
+            round.playerData[playerIdx].tax = _clampedTax(round.playerData[playerIdx].tax + delta);
             editRound(editingRoundIndex);
         }
 
         function setEditTax(playerIdx, value) {
-            const round = gameState.rounds[editingRoundIndex];
-            round.playerData[playerIdx].tax = Math.max(0, Math.min(25, parseInt(value) || 0));
+            gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = _clampedTax(value);
             editRound(editingRoundIndex);
         }
 
