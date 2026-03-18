@@ -656,10 +656,11 @@
             content: attr(data-tooltip);
             position: absolute;
             left: 0;
+            right: auto;
             top: calc(100% + 0.45rem);
             transform: translateX(0) translateY(-4px);
-            width: auto;
-            max-width: none;
+            min-width: 180px;
+            max-width: min(260px, 80vw);
             box-sizing: border-box;
             background: rgba(15, 23, 42, 0.98);
             color: #e2e8f0;
@@ -676,6 +677,11 @@
             transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
             pointer-events: none;
             z-index: 20;
+        }
+
+        .stat-tooltip.flip-right::after {
+            left: auto;
+            right: 0;
         }
 
         .stat-tooltip:hover::after,
@@ -1979,6 +1985,7 @@
                     finishByTableSize: {},
                     chaosRounds: 0,
                     chaosOpportunities: 0,
+                    dealerRounds: 0,
                     exactBlockRounds: 0
                 };
             }
@@ -2107,12 +2114,12 @@
 
                     const exactBlocks = Number(round.exactBidBlocks) || 0;
                     totalExactBidBlocks += exactBlocks;
-                    if (exactBlocks > 0) {
-                        participants.forEach((idx) => {
-                            const playerName = game.players[idx]?.name;
-                            if (!playerName) return;
-                            getStats(playerName).exactBlockRounds += 1;
-                        });
+                    const dealerName = game.players[round.dealerIndex]?.name;
+                    if (dealerName) {
+                        getStats(dealerName).dealerRounds += 1;
+                        if (exactBlocks > 0) {
+                            getStats(dealerName).exactBlockRounds += 1;
+                        }
                     }
 
                     const roundTrumpSuit = suitKeys.includes(round.trumpSuit) ? round.trumpSuit : '';
@@ -2356,7 +2363,7 @@
                 const zeroBidAttemptRate = stats.rounds ? (stats.zeroBids / stats.rounds) * 100 : 0;
                 const momentumDelta = stats.momentumGames ? (stats.momentumDiffSum / stats.momentumGames) : 0;
                 const chaosRate = stats.chaosOpportunities ? (stats.chaosRounds / stats.chaosOpportunities) * 100 : 0;
-                const exactBlockRate = stats.rounds ? (stats.exactBlockRounds / stats.rounds) * 100 : 0;
+                const exactBlockRate = stats.dealerRounds ? (stats.exactBlockRounds / stats.dealerRounds) * 100 : 0;
 
                 const suitAverages = suitKeys.map((suit) => {
                     const count = stats.suitCount[suit] || 0;
@@ -2531,7 +2538,7 @@
                 avgSetPointsPerRound: 'Sum of all got-set scores in each round, averaged across scored rounds.',
                 globalSetRate: 'Got-set outcomes divided by all scored player outcomes.',
                 globalAvgPointsPerRound: 'Total player round points divided by all scored player outcomes.',
-                exactBlocksPerGame: 'Exact-bid block attempts divided by games. A block is recorded whenever scoring or saving is attempted while bids exactly equal hand size.',
+                exactBlocksPerGame: 'Average number of rounds per game where the dealer was blocked from bidding zero.',
                 chaosRoundRate: 'Share of scored rounds where the round score spread is at least 25 points.',
                 highestSetsInGame: 'Largest total number of got-set outcomes recorded across all rounds of a single game.',
                 highestSetsInRound: 'Largest number of players who got set in the same scored round.',
@@ -2556,7 +2563,7 @@
                 momentumFinish: 'Average of last up to 3 round scores minus average of first up to 3 round scores, then averaged per game.',
                 rivalrySplit: 'Head-to-head record for a pair of players across games they both played.',
                 tableImpact: 'Average final finishing position overall. Lower is better.',
-                bidDiscipline: 'Frequency of exact-bid blocks while the player was present in the round.',
+                bidDiscipline: 'Share of rounds where the dealer was blocked from bidding zero.',
                 chaosFactor: 'Share of rounds the player participated in that were chaos rounds.',
                 rivalryPair: 'Two players who appeared in the same games.',
                 rivalryGames: 'Number of games this pair played together.',
@@ -2588,7 +2595,7 @@
                 avgFinish: 'Average finishing position across games. Lower is better.',
                 finishByTableSize: 'Average finishing position broken out by table size, such as 3p or 4p.',
                 chaosRate: 'Share of rounds this player participated in that had a 25+ point spread.',
-                exactBlockRate: 'Share of rounds where this player was present and the round registered an exact-bid block.'
+                exactBlockRate: 'Share of rounds where the dealer was blocked from bidding zero.'
             };
 
             function tip(label, key) {
@@ -2648,7 +2655,6 @@
             const zeroBidPersonality = pickLeader(p => p.zeroBidAttemptRate, p => p.rounds >= 5);
             const momentum = pickLeader(p => p.momentumDelta, p => p.momentumGames > 0);
             const tableImpact = pickLowLeader(p => p.avgFinish, p => p.games >= 3);
-            const bidDiscipline = pickLeader(p => p.exactBlockRate, p => p.rounds > 0);
             const chaosFactor = pickLeader(p => p.chaosRate, p => p.chaosOpportunities >= 5);
             const mostSetsInGame = pickLeader(p => p.maxSetsInGame, p => p.maxSetsInGame > 0);
 
@@ -2689,7 +2695,7 @@
                 { label: 'Avg Set Pts/Round',       key: 'avgSetPointsPerRound',    value: formatStatNumber(summary.avgSetPointsPerRound) },
                 { label: 'Global Set %',            key: 'globalSetRate',           value: `${formatStatNumber(summary.globalSetRate)}%` },
                 { label: 'Global Avg Pts/Round',    key: 'globalAvgPointsPerRound', value: formatStatNumber(summary.globalAvgPointsPerRound) },
-                { label: 'Exact Blocks/Game',       key: 'exactBlocksPerGame',      value: formatStatNumber(summary.avgExactBidBlocksPerGame) },
+                { label: 'Dealer Zero Blocks/Game', key: 'exactBlocksPerGame',      value: formatStatNumber(summary.avgExactBidBlocksPerGame) },
                 { label: 'Chaos Round %',           key: 'chaosRoundRate',          value: `${formatStatNumber(summary.chaosRoundRate)}%` },
                 { label: 'Most Sets In One Game',   key: 'highestSetsInGame',       value: summary.highestSetsInGame },
                 { label: 'Most Sets In Round',      key: 'highestSetsInRound',      value: summary.highestSetsInRound },
@@ -2732,7 +2738,6 @@
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Momentum Finish', 'momentumFinish')}</div><div class="stats-mini-value">${formatLeader(momentum, momentum ? formatStatNumber(momentum.momentumDelta) : 'n/a')}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Rivalry Split', 'rivalrySplit')}</div><div class="stats-mini-value">${topRivalryText}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Table Impact (Avg Finish)', 'tableImpact')}</div><div class="stats-mini-value">${tableImpact ? `${escapeHtml(tableImpact.name)} - ${formatStatNumber(tableImpact.avgFinish, 2)}` : 'n/a'}</div></div>
-                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Bid Discipline Alerts', 'bidDiscipline')}</div><div class="stats-mini-value">${bidDiscipline ? `${escapeHtml(bidDiscipline.name)} - ${formatStatNumber(bidDiscipline.exactBlockRate)}% rounds` : 'n/a'}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Chaos Factor', 'chaosFactor')}</div><div class="stats-mini-value">${formatLeader(chaosFactor, chaosFactor ? `${formatStatNumber(chaosFactor.chaosRate)}%` : 'n/a')}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Player Max Sets/Game', 'maxSetsInGame')}</div><div class="stats-mini-value">${formatLeader(mostSetsInGame, mostSetsInGame ? `${mostSetsInGame.maxSetsInGame}` : 'n/a')}</div></div>
                 </div>
@@ -4162,6 +4167,28 @@
                 document.body.removeChild(textarea);
             });
         }
+        (function () {
+            function positionTooltip(tip) {
+                const modal = document.getElementById('statsModal');
+                const modalContent = modal && modal.querySelector('.modal-content');
+                if (!modalContent) return;
+                const tipRect = tip.getBoundingClientRect();
+                const modalRect = modalContent.getBoundingClientRect();
+                const spaceRight = modalRect.right - tipRect.left;
+                const spaceLeft = tipRect.right - modalRect.left;
+                tip.classList.toggle('flip-right', spaceLeft > spaceRight);
+            }
+
+            document.getElementById('statsModal').addEventListener('mouseenter', function (e) {
+                const tip = e.target.closest('.stat-tooltip');
+                if (tip) positionTooltip(tip);
+            }, true);
+
+            document.getElementById('statsModal').addEventListener('touchstart', function (e) {
+                const tip = e.target.closest('.stat-tooltip');
+                if (tip) positionTooltip(tip);
+            }, { capture: true, passive: true });
+        })();
     </script>
 </body>
 </html>
