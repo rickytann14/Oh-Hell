@@ -2657,6 +2657,7 @@
             const tableImpact = pickLowLeader(p => p.avgFinish, p => p.games >= 3);
             const chaosFactor = pickLeader(p => p.chaosRate, p => p.chaosOpportunities >= 5);
             const mostSetsInGame = pickLeader(p => p.maxSetsInGame, p => p.maxSetsInGame > 0);
+            const mostBlockedDealer = pickLeader(p => p.exactBlockRate, p => p.dealerRounds >= 3);
 
             const topRivalry = rivalries.length ? rivalries[0] : null;
             const topRivalryText = topRivalry
@@ -2740,6 +2741,7 @@
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Table Impact (Avg Finish)', 'tableImpact')}</div><div class="stats-mini-value">${tableImpact ? `${escapeHtml(tableImpact.name)} - ${formatStatNumber(tableImpact.avgFinish, 2)}` : 'n/a'}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Chaos Factor', 'chaosFactor')}</div><div class="stats-mini-value">${formatLeader(chaosFactor, chaosFactor ? `${formatStatNumber(chaosFactor.chaosRate)}%` : 'n/a')}</div></div>
                     <div class="stats-mini-card"><div class="stats-mini-label">${tip('Player Max Sets/Game', 'maxSetsInGame')}</div><div class="stats-mini-value">${formatLeader(mostSetsInGame, mostSetsInGame ? `${mostSetsInGame.maxSetsInGame}` : 'n/a')}</div></div>
+                    <div class="stats-mini-card"><div class="stats-mini-label">${tip('Most Blocked Dealer', 'bidDiscipline')}</div><div class="stats-mini-value">${mostBlockedDealer ? `${escapeHtml(mostBlockedDealer.name)} - ${formatStatNumber(mostBlockedDealer.exactBlockRate)}% rounds` : 'n/a'}</div></div>
                 </div>
 
                 <h3 class="stats-section-title">Rivalries</h3>
@@ -2807,7 +2809,7 @@
                                 <th>${tip('Avg Finish', 'avgFinish')}</th>
                                 <th>${tip('Finish by Table Size', 'finishByTableSize')}</th>
                                 <th>${tip('Chaos %', 'chaosRate')}</th>
-                                <th>${tip('Exact Block %', 'exactBlockRate')}</th>
+                                <th>${tip('Dealer Block %', 'exactBlockRate')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -4174,9 +4176,8 @@
                 if (!modalContent) return;
                 const tipRect = tip.getBoundingClientRect();
                 const modalRect = modalContent.getBoundingClientRect();
-                const spaceRight = modalRect.right - tipRect.left;
-                const spaceLeft = tipRect.right - modalRect.left;
-                tip.classList.toggle('flip-right', spaceLeft > spaceRight);
+                const tooltipMaxWidth = 260;
+                tip.classList.toggle('flip-right', tipRect.left + tooltipMaxWidth > modalRect.right);
             }
 
             document.getElementById('statsModal').addEventListener('mouseenter', function (e) {
