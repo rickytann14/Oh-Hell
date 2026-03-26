@@ -14,7 +14,6 @@ const TRUMP_SUITS = ['♠', '♥', '♦', '♣'];
 const REVERSE_VALUE = ['R', 'N']; // R for Reverse, N for Normal
 const MANUAL_HISTORY_STORAGE_KEY = 'ohHellManualHistoryGames';
 const HISTORY_SOURCE_URL_STORAGE_KEY = 'ohHellHistorySourceUrl';
-const LOCAL_HISTORY_FOLDER_PATH = '/home/ragarza/Github/Oh-Hell/history';
 const README_URL = 'https://github.com/rickytann14/Oh-Hell?tab=readme-ov-file#oh-hell-scorekeeper';
 
 let manualHistoryGames = [];

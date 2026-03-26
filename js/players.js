@@ -48,8 +48,8 @@ function loadSavedPlayers() {
     } else {
         container.innerHTML = players.map(player => `
             <div class="player-tag">
-                ${player}
-                <button onclick="removePlayer('${player.replace(/'/g, "\\'")}')">✕</button>
+                ${escapeHtml(player)}
+                <button onclick="removePlayer(${JSON.stringify(player)})">✕</button>
             </div>
         `).join('');
     }
@@ -260,18 +260,10 @@ function updatePlayerInputs() {
             <label>Player ${i + 1}</label>
             <select id="player${i}" required onchange="this.blur()">
                 <option value="">-- Select a player --</option>
-                ${savedPlayers.map(p => `<option value="${p}">${p}</option>`).join('')}
+                ${savedPlayers.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')}
             </select>
         `;
         container.appendChild(row);
     }
 }
 
-function handlePlayerSelect(playerIndex) {
-    const select = document.getElementById(`playerSelect${playerIndex}`);
-    const input = document.getElementById(`player${playerIndex}`);
-    if (select.value) {
-        input.value = select.value;
-        select.value = '';
-    }
-}

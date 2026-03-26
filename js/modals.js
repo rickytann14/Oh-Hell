@@ -16,10 +16,10 @@ function renderGamePlayersModal() {
                 ${activePlayers.map(player => `
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; background: rgba(51, 65, 85, 0.7); padding: 0.75rem 0.9rem; border-radius: 10px;">
                         <div>
-                            <div style="font-weight: 700; color: #f8fafc;">${player.name}</div>
+                            <div style="font-weight: 700; color: #f8fafc;">${escapeHtml(player.name)}</div>
                             <div style="font-size: 0.82rem; color: #94a3b8;">Score: ${player.score}</div>
                         </div>
-                        <button class="btn btn-danger btn-small" onclick="disablePlayerMidGame('${player.name.replace(/'/g, "\\'")}')">Disable</button>
+                        <button class="btn btn-danger btn-small" onclick="disablePlayerMidGame(${JSON.stringify(player.name)})">Disable</button>
                     </div>
                 `).join('')}
             </div>
@@ -31,7 +31,7 @@ function renderGamePlayersModal() {
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                     ${inactivePlayers.map(player => `
                         <div style="padding: 0.5rem 0.85rem; border-radius: 999px; background: rgba(71, 85, 105, 0.65); color: #cbd5e1; font-size: 0.9rem;">
-                            ${player.name} • ${player.score}
+                            ${escapeHtml(player.name)} • ${player.score}
                         </div>
                     `).join('')}
                 </div>
@@ -45,7 +45,7 @@ function renderGamePlayersModal() {
             </p>
             <select id="midGamePlayerSelect" style="margin-bottom: 0.5rem;">
                 <option value="">-- Choose saved player --</option>
-                ${availableSavedPlayers.map(player => `<option value="${player}">${player}</option>`).join('')}
+                ${availableSavedPlayers.map(player => `<option value="${escapeHtml(player)}">${escapeHtml(player)}</option>`).join('')}
             </select>
             <input type="text" id="midGamePlayerName" placeholder="Or type a new player name" style="margin-bottom: 0.75rem;">
             <button class="btn btn-success" onclick="addPlayerMidGame()" style="width: 100%;">➕ Add To Current Game</button>
@@ -437,25 +437,17 @@ function editRound(roundIndex) {
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
                 <div>
-                    <label style="font-size: 0.85rem; color: #cbd5e1;">Hand Size</label>
-                    <div style="display: flex; gap: 0.25rem; align-items: center;">
-                        <button onclick="adjustEditHandSize(-1)"
-                                class="bid-adjust-btn"
-                                style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
-                            −
-                        </button>
-                        <div style="flex: 1; text-align: center; font-weight: 700; font-size: 1.3rem; color: #fbbf24; min-width: 40px;">
+                    <label class="field-label">Hand Size</label>
+                    <div class="field-row">
+                        <button onclick="adjustEditHandSize(-1)" class="btn-adjust btn-adjust--dec">−</button>
+                        <div class="value-display value-display--hand">
                             ${round.handSize}
                         </div>
-                        <button onclick="adjustEditHandSize(1)"
-                                class="bid-adjust-btn"
-                                style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
-                            +
-                        </button>
+                        <button onclick="adjustEditHandSize(1)" class="btn-adjust btn-adjust--inc">+</button>
                     </div>
                 </div>
                 <div>
-                    <label style="font-size: 0.85rem; color: #cbd5e1;">Round Number</label>
+                    <label class="field-label">Round Number</label>
                     <input type="text" value="${roundIndex + 1}" disabled>
                 </div>
             </div>
@@ -471,7 +463,7 @@ function editRound(roundIndex) {
 
                     return `
                         <div class="player-card" style="border-style: dashed; opacity: 0.78;">
-                            <div class="player-name">${player.name}</div>
+                            <div class="player-name">${escapeHtml(player.name)}</div>
                             <div style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.5;">${label}</div>
                         </div>
                     `;
@@ -486,14 +478,14 @@ function editRound(roundIndex) {
                 return `
                 <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''}">
                     <div class="player-name">
-                        ${player.name}
+                        ${escapeHtml(player.name)}
                         ${idx === round.dealerIndex ? '<span>🎴 Dealer</span>' : ''}
                     </div>
                     
                     <div class="player-inputs-grid">
                         <div>
-                            <label style="font-size: 0.8rem; color: #cbd5e1;">Bid</label>
-                            <input type="number" min="0" max="${round.handSize}" value="${round.playerData[idx].bid}" 
+                            <label class="field-label">Bid</label>
+                            <input type="number" min="0" max="${round.handSize}" value="${round.playerData[idx].bid}"
                                    onchange="updateEditBid(${idx}, this.value)">
                             <div class="quick-value-row">
                                 ${[5, 10].map(value => `
@@ -502,21 +494,13 @@ function editRound(roundIndex) {
                             </div>
                         </div>
                         <div>
-                            <label style="font-size: 0.8rem; color: #cbd5e1;">Tax</label>
-                            <div style="display: flex; gap: 0.25rem; align-items: center;">
-                                <button onclick="adjustEditTax(${idx}, -1)"
-                                        class="bid-adjust-btn"
-                                        style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
-                                    −
-                                </button>
-                                <div style="flex: 1; text-align: center; font-weight: 700; font-size: 1.3rem; color: #f59e0b; min-width: 40px;">
+                            <label class="field-label">Tax</label>
+                            <div class="field-row">
+                                <button onclick="adjustEditTax(${idx}, -1)" class="btn-adjust btn-adjust--dec">−</button>
+                                <div class="value-display value-display--tax">
                                     ${round.playerData[idx].tax}
                                 </div>
-                                <button onclick="adjustEditTax(${idx}, 1)"
-                                        class="bid-adjust-btn"
-                                        style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; border-radius: 6px; font-weight: 700; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;">
-                                    +
-                                </button>
+                                <button onclick="adjustEditTax(${idx}, 1)" class="btn-adjust btn-adjust--inc">+</button>
                             </div>
                             <div class="quick-value-row">
                                 ${[5, 10, 15, 25].map(value => `
@@ -524,8 +508,8 @@ function editRound(roundIndex) {
                                 `).join('')}
                             </div>
                         </div>
-                        <div style="grid-column: span 2;">
-                            <label style="font-size: 0.8rem; color: #cbd5e1;">Confidence</label>
+                        <div class="col-span-2">
+                            <label class="field-label">Confidence</label>
                             <select onchange="updateEditConfidence(${idx}, this.value)">
                                 <option value="MAX" ${round.playerData[idx].confidence === 'MAX' ? 'selected' : ''}>MAX</option>
                                 ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n => 

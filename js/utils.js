@@ -146,6 +146,15 @@ function formatSignedValue(value) {
     return value >= 0 ? `+${value}` : `${value}`;
 }
 
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function parseTrumpCard(trumpValue) {
     if (!trumpValue || typeof trumpValue !== 'string') {
         return { rank: '', suit: '' };

@@ -816,3 +816,75 @@
             padding: 0.16rem 0.32rem;
         }
     }
+
+/* ── Adjustment buttons (+/−) ─────────────────────────────────────────────── */
+.btn-adjust {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    border-width: 1px;
+    border-style: solid;
+    background: none;
+}
+.btn-adjust--sm { width: 32px; height: 32px; font-size: 1.1rem; }
+.btn-adjust--dec { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+.btn-adjust--inc { background: rgba(34,197,94,0.2);  border-color: rgba(34,197,94,0.4);  color: #86efac; }
+.btn-adjust:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-adjust:not(:disabled):hover { opacity: 0.85; }
+
+/* ── Value displays (bid / tax / hand-size numbers) ───────────────────────── */
+.value-display {
+    flex: 1;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.3rem;
+    min-width: 40px;
+}
+.value-display--bid  { color: #3b82f6; }
+.value-display--tax  { color: #f59e0b; }
+.value-display--hand { color: #fbbf24; font-size: 1rem; min-width: 34px; }
+
+/* ── Trump card section ───────────────────────────────────────────────────── */
+.trump-section {
+    background: rgba(251,191,36,0.15);
+    border: 2px solid rgba(251,191,36,0.35);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+.trump-section__row    { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.trump-section__label  { color: #fbbf24; font-weight: 600; font-size: 1rem; }
+.trump-section__selects { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap; }
+.trump-select {
+    flex: 1;
+    min-width: 110px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    background: rgba(15,23,42,0.8);
+    border: 2px solid #fbbf24;
+    color: #f1f5f9;
+    border-radius: 8px;
+}
+.trump-badge {
+    font-size: 1.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(251,191,36,0.2);
+    border-radius: 8px;
+}
+
+/* ── Misc utility classes ─────────────────────────────────────────────────── */
+.field-label  { font-size: 0.8rem; color: #cbd5e1; }
+.field-row    { display: flex; gap: 0.25rem; align-items: center; }
+.position-up   { color: #10b981; }
+.position-down { color: #ef4444; }
+.col-span-2    { grid-column: span 2; }
+.post-round-actions     { display: flex; gap: 0.5rem; margin-top: 1rem; flex-direction: column; }
+.post-round-actions__row { display: flex; gap: 0.5rem; }

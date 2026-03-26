@@ -22,9 +22,19 @@ For quick iteration on stats or scoring logic, use browser DevTools console — 
 
 `index.html` is structured as:
 - **Lines 1–9**: `<head>` / meta
-- **Lines 10–823**: `<style>` — all CSS (mobile-first, responsive)
-- **Lines 824–956**: `<body>` HTML — two top-level screens (`#setupScreen`, `#gameScreen`) plus six modals (`settingsModal`, `managePlayersModal`, `gamePlayersModal`, `editRoundModal`, `rulesModal`, `statsModal`)
-- **Lines 957–4166**: `<script>` — all JavaScript
+- `styles.css` — all CSS (mobile-first, responsive)
+- `index.html` — HTML skeleton: two top-level screens (`#setupScreen`, `#gameScreen`) plus six modals (`settingsModal`, `managePlayersModal`, `gamePlayersModal`, `editRoundModal`, `rulesModal`, `statsModal`), plus `<script>` tags loading JS modules in order
+- `js/state.js` — global `gameState`, constants, module-level variables
+- `js/utils.js` — pure helpers: `normalizeGameState`, `escapeHtml`, `parseTrumpCard`, URL normalizers, etc.
+- `js/storage.js` — `autoSave`, `loadAutoSave`, history game caching
+- `js/players.js` — saved-player CRUD, sync from URL, `updatePlayerInputs`
+- `js/scoring.js` — `calculatePlayerRoundScore`, `calculateProjectedTotal`
+- `js/rounds.js` — round lifecycle (`startNewRound`, `nextRound`, `undoLastRound`), all gameState mutation functions for bids/tax/confidence/gotSet/trump
+- `js/history.js` — history file discovery/loading, `analyzeHistoryGames`, `renderStatsContent`
+- `js/rendering.js` — all DOM rendering: `renderGame`, `renderScoreboard`, `renderHistory`, `renderRoundSetup`, `endGame`, `setActiveView`
+- `js/modals.js` — modal open/close, `editRound` and its mutation helpers, settings, save/load
+- `js/lifecycle.js` — `startGame`, `saveGame`, `newGame`, `exportToExcel`
+- `js/init.js` — `DOMContentLoaded` bootstrap, tooltip positioning
 
 ### State Model
 
