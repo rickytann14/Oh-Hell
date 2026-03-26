@@ -587,14 +587,17 @@ function setEditTax(playerIdx, value) {
 
 function updateEditConfidence(playerIdx, value) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].confidence = value;
+    editRound(editingRoundIndex);
 }
 
 function updateEditDeferred(playerIdx, checked) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].deferred = checked;
+    editRound(editingRoundIndex);
 }
 
 function updateEditGotSet(playerIdx, checked) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].gotSet = checked;
+    editRound(editingRoundIndex);
 }
 
 function saveEditedRound() {

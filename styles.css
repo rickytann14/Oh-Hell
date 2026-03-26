@@ -883,8 +883,23 @@
 /* ── Misc utility classes ─────────────────────────────────────────────────── */
 .field-label  { font-size: 0.8rem; color: #cbd5e1; }
 .field-row    { display: flex; gap: 0.25rem; align-items: center; }
+.field-row--spaced { gap: 0.5rem; margin-top: 0.25rem; }
 .position-up   { color: #10b981; }
 .position-down { color: #ef4444; }
 .col-span-2    { grid-column: span 2; }
-.post-round-actions     { display: flex; gap: 0.5rem; margin-top: 1rem; flex-direction: column; }
+.post-round-actions      { display: flex; gap: 0.5rem; margin-top: 1rem; flex-direction: column; }
 .post-round-actions__row { display: flex; gap: 0.5rem; }
+.post-round-actions__row .btn--flex-1 { flex: 1; }
+.post-round-actions__row .btn--flex-2 { flex: 2; }
+.post-round-actions > .btn { padding: 0.75rem; }
+.btn-full { width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem; }
+
+/* ── Score history ─────────────────────────────────────────────────────────── */
+.history-round-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.history-player-entry { line-height: 1.4; }
+.score-positive { color: #10b981; font-weight: 600; }
+.score-negative { color: #ef4444; font-weight: 600; }

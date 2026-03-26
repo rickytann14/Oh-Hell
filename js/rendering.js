@@ -89,9 +89,9 @@ function renderHistory() {
                     const roundNum = idx + 1;
                     return `
                         <div class="history-round">
-                            <div class="history-round-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="history-round-header">
                                 <span>Round ${roundNum} - Hand Size: ${round.handSize}${round.trump ? ` • 🃏 ${round.trump}` : ''}</span>
-                                <button class="btn btn-secondary btn-small" onclick="editRound(${idx})" style="padding: 0.4rem 0.8rem;">
+                                <button class="btn btn-secondary btn-small" onclick="editRound(${idx})">
                                     ✏️ Edit
                                 </button>
                             </div>
@@ -104,27 +104,25 @@ function renderHistory() {
 
                                     if (!pdata.participating && pdata.absentReason === 'joined-late') {
                                         return `
-                                            <div style="line-height: 1.4;">
+                                            <div class="history-player-entry">
                                                 <strong>${escapeHtml(player.name)}:</strong>
                                                 ⏱️ Joined later
                                                 <br>
-                                                <span style="color: #10b981; font-weight: 600;">
-                                                    +${pdata.score}
-                                                </span>
+                                                <span class="score-positive">+${pdata.score}</span>
                                             </div>
                                         `;
                                     }
 
                                     return `
-                                        <div style="line-height: 1.4;">
+                                        <div class="history-player-entry">
                                             <strong>${escapeHtml(player.name)}:</strong>
-                                            ${pdata.gotSet ? '❌' : '✅'} 
+                                            ${pdata.gotSet ? '❌' : '✅'}
                                             Bid: ${pdata.bid}
                                             ${pdata.tax > 0 ? ` | Tax: ${pdata.tax}` : ''}
                                             ${pdata.deferred ? ' | Def: ✓' : ''}
                                             | Conf: ${pdata.confidence}
                                             <br>
-                                            <span style="color: ${pdata.score > 0 ? '#10b981' : '#ef4444'}; font-weight: 600;">
+                                            <span class="${pdata.score > 0 ? 'score-positive' : 'score-negative'}">
                                                 ${pdata.score > 0 ? '+' : ''}${pdata.score}
                                             </span>
                                         </div>
@@ -220,7 +218,7 @@ function renderRoundSetup() {
             <div class="round-header">
                 <div>
                     <h3>Round ${gameState.currentRound + 1}</h3>
-                    <div class="field-row" style="gap: 0.5rem; margin-top: 0.25rem;">
+                    <div class="field-row field-row--spaced">
                         <label class="field-label">Hand Size</label>
                         <div class="field-row">
                             <button onclick="adjustCurrentRoundHandSize(-1)"
@@ -368,21 +366,20 @@ function renderRoundSetup() {
             </div>
 
             ${!round.scored ? `
-                <button class="btn btn-success" onclick="scoreRound()"
-                        style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem;">
+                <button class="btn btn-success btn-full" onclick="scoreRound()">
                     ✅ Score Round
                 </button>
             ` : `
                 <div class="post-round-actions">
                     <div class="post-round-actions__row">
-                        <button class="btn btn-danger" onclick="undoLastRound()" style="flex: 1;">
+                        <button class="btn btn-danger btn--flex-1" onclick="undoLastRound()">
                             ↩️ Undo Round
                         </button>
-                        <button class="btn btn-success" onclick="nextRound()" style="flex: 2;">
+                        <button class="btn btn-success btn--flex-2" onclick="nextRound()">
                             ➡️ Next Round
                         </button>
                     </div>
-                    <button class="btn btn-secondary" onclick="endGame()" style="padding: 0.75rem;">
+                    <button class="btn btn-secondary" onclick="endGame()">
                         🏁 End Game
                     </button>
                 </div>
