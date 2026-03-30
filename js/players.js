@@ -240,6 +240,20 @@ function manualSync() {
     syncPlayersFromUrl(syncUrl, true);
 }
 
+function changeNumPlayers(delta) {
+    const input = document.getElementById('numPlayers');
+    const next = Math.min(11, Math.max(3, parseInt(input.value) + delta));
+    input.value = next;
+    document.getElementById('numPlayersDisplay').textContent = next;
+    updatePlayerInputs();
+}
+
+function setNumPlayers(n) {
+    document.getElementById('numPlayers').value = n;
+    document.getElementById('numPlayersDisplay').textContent = n;
+    updatePlayerInputs();
+}
+
 function updatePlayerInputs() {
     const num = parseInt(document.getElementById('numPlayers').value);
     const container = document.getElementById('playerInputs');

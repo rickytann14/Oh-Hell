@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAutoSave(); // Try to load auto-saved game on startup
     loadManualHistoryGames();
     
-    document.getElementById('numPlayers').addEventListener('change', updatePlayerInputs);
-    document.getElementById('newPlayerName').addEventListener('keypress', (e) => {
+document.getElementById('newPlayerName').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addPlayer();
     });
     document.getElementById('savedPlayersList').addEventListener('click', (e) => {
