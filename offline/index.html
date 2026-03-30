@@ -223,6 +223,74 @@
             font-weight: 600;
         }
 
+        .trump-custom-select {
+            position: relative;
+            flex: 1;
+            min-width: 110px;
+        }
+
+        .trump-select-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+            background: rgba(15,23,42,0.8);
+            border: 2px solid #fbbf24;
+            color: #f1f5f9;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 0.2s;
+        }
+
+        .trump-select-btn:hover {
+            border-color: #fde68a;
+        }
+
+        .trump-select-arrow {
+            color: #fbbf24;
+            font-size: 0.8em;
+            flex-shrink: 0;
+        }
+
+        .trump-select-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            min-width: 100%;
+            background: #1e293b;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            z-index: 200;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .trump-select-panel.open {
+            display: block;
+        }
+
+        .trump-select-option {
+            padding: 0.5rem 0.75rem;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .trump-select-option:hover {
+            background: #273449;
+        }
+
+        .trump-select-option.selected {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
         .player-input-row {
             display: flex;
             gap: 0.5rem;
@@ -1223,6 +1291,9 @@
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.player-custom-select')) {
                 document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+            }
+            if (!e.target.closest('.trump-custom-select')) {
+                document.querySelectorAll('.trump-select-panel.open').forEach(p => p.classList.remove('open'));
             }
         });
 
@@ -3209,20 +3280,35 @@
                         <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                             <label style="color: #fbbf24; font-weight: 600; font-size: 1rem;">🃏 Big Boss (Trump):</label>
                             <div style="display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap;">
-                                <select onchange="updateTrumpRank(this.value)"
-                                        style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
-                                    <option value="">-- Rank --</option>
-                                    ${TRUMP_RANKS.map(rank => `<option value="${rank}" ${round.trumpRank === rank ? 'selected' : ''}>${rank}</option>`).join('')}
-                                </select>
-                                <select onchange="updateTrumpSuit(this.value)"
-                                        style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
-                                    <option value="">-- Suit --</option>
-                                    ${TRUMP_SUITS.map(suit => `<option value="${suit}" ${round.trumpSuit === suit ? 'selected' : ''}>${suit}</option>`).join('')}
-                                </select>
-                                <select onchange="updateReverseValue(this.value)"
-                                        style="flex: 1; min-width: 110px; padding: 0.5rem 0.75rem; font-size: 1rem; background: rgba(15, 23, 42, 0.8); border: 2px solid #fbbf24; color: #f1f5f9; border-radius: 8px;">
-                                    ${REVERSE_VALUE.map(value => `<option value="${value}" ${round.reverseValue === value ? 'selected' : ''}>${value === 'R' ? 'R - Reverse' : 'N - Normal'}</option>`).join('')}
-                                </select>
+                                <div class="trump-custom-select" id="trump-rank-wrap">
+                                    <button type="button" class="trump-select-btn" onclick="toggleTrumpDropdown('trump-rank-wrap')">
+                                        <span>${round.trumpRank || '-- Rank --'}</span>
+                                        <span class="trump-select-arrow">▾</span>
+                                    </button>
+                                    <div class="trump-select-panel" id="trump-rank-panel">
+                                        <div class="trump-select-option${!round.trumpRank ? ' selected' : ''}" onclick="updateTrumpRank('')">-- Rank --</div>
+                                        ${TRUMP_RANKS.map(rank => `<div class="trump-select-option${round.trumpRank === rank ? ' selected' : ''}" onclick="updateTrumpRank('${rank}')">${rank}</div>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="trump-custom-select" id="trump-suit-wrap">
+                                    <button type="button" class="trump-select-btn" onclick="toggleTrumpDropdown('trump-suit-wrap')">
+                                        <span>${round.trumpSuit || '-- Suit --'}</span>
+                                        <span class="trump-select-arrow">▾</span>
+                                    </button>
+                                    <div class="trump-select-panel" id="trump-suit-panel">
+                                        <div class="trump-select-option${!round.trumpSuit ? ' selected' : ''}" onclick="updateTrumpSuit('')">-- Suit --</div>
+                                        ${TRUMP_SUITS.map(suit => `<div class="trump-select-option${round.trumpSuit === suit ? ' selected' : ''}" onclick="updateTrumpSuit('${suit}')">${suit}</div>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="trump-custom-select" id="trump-reverse-wrap">
+                                    <button type="button" class="trump-select-btn" onclick="toggleTrumpDropdown('trump-reverse-wrap')">
+                                        <span>${round.reverseValue === 'R' ? 'R - Reverse' : 'N - Normal'}</span>
+                                        <span class="trump-select-arrow">▾</span>
+                                    </button>
+                                    <div class="trump-select-panel" id="trump-reverse-panel">
+                                        ${REVERSE_VALUE.map(value => `<div class="trump-select-option${round.reverseValue === value ? ' selected' : ''}" onclick="updateReverseValue('${value}')">${value === 'R' ? 'R - Reverse' : 'N - Normal'}</div>`).join('')}
+                                    </div>
+                                </div>
                             </div>
                             ${round.trump ? `<div style="font-size: 1.5rem; padding: 0.25rem 0.75rem; background: rgba(251, 191, 36, 0.2); border-radius: 8px;">${round.trump}</div>` : ''}
                         </div>
@@ -3516,6 +3602,13 @@
             } else {
                 round.trump = '';
             }
+        }
+
+        function toggleTrumpDropdown(wrapId) {
+            const panel = document.querySelector(`#${wrapId} .trump-select-panel`);
+            const isOpen = panel.classList.contains('open');
+            document.querySelectorAll('.trump-select-panel.open').forEach(p => p.classList.remove('open'));
+            if (!isOpen) panel.classList.add('open');
         }
 
         function updateTrumpRank(value) {
