@@ -157,6 +157,72 @@
             gap: 0.75rem;
         }
 
+        .player-custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .player-select-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            background: #1e293b;
+            color: #f1f5f9;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 0.2s;
+        }
+
+        .player-select-btn:hover {
+            border-color: #3b82f6;
+        }
+
+        .player-select-arrow {
+            color: #94a3b8;
+            font-size: 0.8em;
+            flex-shrink: 0;
+        }
+
+        .player-select-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 100%;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            z-index: 200;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .player-select-panel.open {
+            display: block;
+        }
+
+        .player-select-option {
+            padding: 0.65rem 0.75rem;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .player-select-option:hover {
+            background: #273449;
+        }
+
+        .player-select-option.selected {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
         .player-input-row {
             display: flex;
             gap: 0.5rem;
@@ -1154,6 +1220,12 @@
             });
         });
 
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.player-custom-select')) {
+                document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+            }
+        });
+
         // Auto-save functionality
         function autoSave() {
             if (gameState.players.length === 0) return; // Don't save empty state
@@ -1456,15 +1528,41 @@
             for (let i = 0; i < num; i++) {
                 const row = document.createElement('div');
                 row.className = 'input-group';
+                const options = savedPlayers.map(p =>
+                    `<div class="player-select-option" onclick="selectPlayerOption(${i}, ${JSON.stringify(p).replace(/"/g, '&quot;')})">${escapeHtml(p)}</div>`
+                ).join('');
                 row.innerHTML = `
                     <label>Player ${i + 1}</label>
-                    <select id="player${i}" required onchange="this.blur()">
-                        <option value="">-- Select a player --</option>
-                        ${savedPlayers.map(p => `<option value="${p}">${p}</option>`).join('')}
-                    </select>
+                    <input type="hidden" id="player${i}" value="">
+                    <div class="player-custom-select" id="player-select-wrap-${i}">
+                        <button type="button" class="player-select-btn" onclick="togglePlayerDropdown(${i})">
+                            <span id="player-select-label-${i}">-- Select a player --</span>
+                            <span class="player-select-arrow">▾</span>
+                        </button>
+                        <div class="player-select-panel" id="player-select-panel-${i}">
+                            ${options}
+                        </div>
+                    </div>
                 `;
                 container.appendChild(row);
             }
+        }
+
+        function togglePlayerDropdown(index) {
+            const panel = document.getElementById(`player-select-panel-${index}`);
+            const isOpen = panel.classList.contains('open');
+            document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+            if (!isOpen) panel.classList.add('open');
+        }
+
+        function selectPlayerOption(index, name) {
+            document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+            document.getElementById(`player${index}`).value = name;
+            document.getElementById(`player-select-label-${index}`).textContent = name;
+            const panel = document.getElementById(`player-select-panel-${index}`);
+            panel.querySelectorAll('.player-select-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.textContent === name);
+            });
         }
 
         function handlePlayerSelect(playerIndex) {

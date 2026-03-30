@@ -147,6 +147,72 @@
         gap: 0.75rem;
     }
 
+    .player-custom-select {
+        position: relative;
+        width: 100%;
+    }
+
+    .player-select-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #475569;
+        border-radius: 8px;
+        background: #1e293b;
+        color: #f1f5f9;
+        font-size: 1rem;
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 0.2s;
+    }
+
+    .player-select-btn:hover {
+        border-color: #3b82f6;
+    }
+
+    .player-select-arrow {
+        color: #94a3b8;
+        font-size: 0.8em;
+        flex-shrink: 0;
+    }
+
+    .player-select-panel {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        width: 100%;
+        background: #1e293b;
+        border: 1px solid #475569;
+        border-radius: 8px;
+        z-index: 200;
+        max-height: 220px;
+        overflow-y: auto;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .player-select-panel.open {
+        display: block;
+    }
+
+    .player-select-option {
+        padding: 0.65rem 0.75rem;
+        color: #e2e8f0;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .player-select-option:hover {
+        background: #273449;
+    }
+
+    .player-select-option.selected {
+        color: #60a5fa;
+        font-weight: 600;
+    }
+
     .player-input-row {
         display: flex;
         gap: 0.5rem;

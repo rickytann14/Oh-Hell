@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.player-custom-select')) {
+        document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+    }
+});
+
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {

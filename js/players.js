@@ -256,14 +256,41 @@ function updatePlayerInputs() {
     for (let i = 0; i < num; i++) {
         const row = document.createElement('div');
         row.className = 'input-group';
+        const options = savedPlayers.map(p =>
+            `<div class="player-select-option" onclick="selectPlayerOption(${i}, ${JSON.stringify(p).replace(/"/g, '&quot;')})">${escapeHtml(p)}</div>`
+        ).join('');
         row.innerHTML = `
             <label>Player ${i + 1}</label>
-            <select id="player${i}" required onchange="this.blur()">
-                <option value="">-- Select a player --</option>
-                ${savedPlayers.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')}
-            </select>
+            <input type="hidden" id="player${i}" value="">
+            <div class="player-custom-select" id="player-select-wrap-${i}">
+                <button type="button" class="player-select-btn" onclick="togglePlayerDropdown(${i})">
+                    <span id="player-select-label-${i}">-- Select a player --</span>
+                    <span class="player-select-arrow">▾</span>
+                </button>
+                <div class="player-select-panel" id="player-select-panel-${i}">
+                    ${options}
+                </div>
+            </div>
         `;
         container.appendChild(row);
     }
+}
+
+function togglePlayerDropdown(index) {
+    const panel = document.getElementById(`player-select-panel-${index}`);
+    const isOpen = panel.classList.contains('open');
+    document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+    if (!isOpen) panel.classList.add('open');
+}
+
+function selectPlayerOption(index, name) {
+    document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+    document.getElementById(`player${index}`).value = name;
+    document.getElementById(`player-select-label-${index}`).textContent = name;
+    // Mark selected state in panel
+    const panel = document.getElementById(`player-select-panel-${index}`);
+    panel.querySelectorAll('.player-select-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.textContent === name);
+    });
 }
 
