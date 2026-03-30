@@ -246,17 +246,35 @@ function renderRoundSetup() {
                 <div class="trump-section__row">
                     <label class="trump-section__label">🃏 Big Boss (Trump):</label>
                     <div class="trump-section__selects">
-                        <select onchange="updateTrumpRank(this.value)" class="trump-select">
-                            <option value="">-- Rank --</option>
-                            ${TRUMP_RANKS.map(rank => `<option value="${rank}" ${round.trumpRank === rank ? 'selected' : ''}>${rank}</option>`).join('')}
-                        </select>
-                        <select onchange="updateTrumpSuit(this.value)" class="trump-select">
-                            <option value="">-- Suit --</option>
-                            ${TRUMP_SUITS.map(suit => `<option value="${suit}" ${round.trumpSuit === suit ? 'selected' : ''}>${suit}</option>`).join('')}
-                        </select>
-                        <select onchange="updateReverseValue(this.value)" class="trump-select">
-                            ${REVERSE_VALUE.map(value => `<option value="${value}" ${round.reverseValue === value ? 'selected' : ''}>${value === 'R' ? 'R - Reverse' : 'N - Normal'}</option>`).join('')}
-                        </select>
+                        <div class="trump-custom-select" id="trump-rank-wrap">
+                            <button type="button" class="trump-select-btn" onclick="toggleTrumpDropdown('trump-rank-wrap')">
+                                <span>${round.trumpRank || '-- Rank --'}</span>
+                                <span class="trump-select-arrow">▾</span>
+                            </button>
+                            <div class="trump-select-panel" id="trump-rank-panel">
+                                <div class="trump-select-option${!round.trumpRank ? ' selected' : ''}" onclick="updateTrumpRank('')">-- Rank --</div>
+                                ${TRUMP_RANKS.map(rank => `<div class="trump-select-option${round.trumpRank === rank ? ' selected' : ''}" onclick="updateTrumpRank('${rank}')">${rank}</div>`).join('')}
+                            </div>
+                        </div>
+                        <div class="trump-custom-select" id="trump-suit-wrap">
+                            <button type="button" class="trump-select-btn" onclick="toggleTrumpDropdown('trump-suit-wrap')">
+                                <span>${round.trumpSuit || '-- Suit --'}</span>
+                                <span class="trump-select-arrow">▾</span>
+                            </button>
+                            <div class="trump-select-panel" id="trump-suit-panel">
+                                <div class="trump-select-option${!round.trumpSuit ? ' selected' : ''}" onclick="updateTrumpSuit('')">-- Suit --</div>
+                                ${TRUMP_SUITS.map(suit => `<div class="trump-select-option${round.trumpSuit === suit ? ' selected' : ''}" onclick="updateTrumpSuit('${suit}')">${suit}</div>`).join('')}
+                            </div>
+                        </div>
+                        <div class="trump-custom-select" id="trump-reverse-wrap">
+                            <button type="button" class="trump-select-btn" onclick="toggleTrumpDropdown('trump-reverse-wrap')">
+                                <span>${round.reverseValue === 'R' ? 'R - Reverse' : 'N - Normal'}</span>
+                                <span class="trump-select-arrow">▾</span>
+                            </button>
+                            <div class="trump-select-panel" id="trump-reverse-panel">
+                                ${REVERSE_VALUE.map(value => `<div class="trump-select-option${round.reverseValue === value ? ' selected' : ''}" onclick="updateReverseValue('${value}')">${value === 'R' ? 'R - Reverse' : 'N - Normal'}</div>`).join('')}
+                            </div>
+                        </div>
                     </div>
                     ${round.trump ? `<div class="trump-badge">${round.trump}</div>` : ''}
                 </div>

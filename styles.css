@@ -929,15 +929,72 @@
 .trump-section__row    { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .trump-section__label  { color: #fbbf24; font-weight: 600; font-size: 1rem; }
 .trump-section__selects { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap; }
-.trump-select {
+.trump-custom-select {
+    position: relative;
     flex: 1;
     min-width: 110px;
+}
+
+.trump-select-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
     background: rgba(15,23,42,0.8);
     border: 2px solid #fbbf24;
     color: #f1f5f9;
     border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s;
+}
+
+.trump-select-btn:hover {
+    border-color: #fde68a;
+}
+
+.trump-select-arrow {
+    color: #fbbf24;
+    font-size: 0.8em;
+    flex-shrink: 0;
+}
+
+.trump-select-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
+    background: #1e293b;
+    border: 1px solid #fbbf24;
+    border-radius: 8px;
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.trump-select-panel.open {
+    display: block;
+}
+
+.trump-select-option {
+    padding: 0.5rem 0.75rem;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.trump-select-option:hover {
+    background: #273449;
+}
+
+.trump-select-option.selected {
+    color: #fbbf24;
+    font-weight: 600;
 }
 .trump-badge {
     font-size: 1.5rem;

@@ -121,6 +121,13 @@ function syncTrumpParts(round) {
     }
 }
 
+function toggleTrumpDropdown(wrapId) {
+    const panel = document.querySelector(`#${wrapId} .trump-select-panel`);
+    const isOpen = panel.classList.contains('open');
+    document.querySelectorAll('.trump-select-panel.open').forEach(p => p.classList.remove('open'));
+    if (!isOpen) panel.classList.add('open');
+}
+
 function updateTrumpRank(value) {
     const round = gameState.rounds[gameState.currentRound];
     round.trumpRank = value;

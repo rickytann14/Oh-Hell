@@ -16,6 +16,9 @@ document.addEventListener('click', (e) => {
     if (!e.target.closest('.player-custom-select')) {
         document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
     }
+    if (!e.target.closest('.trump-custom-select')) {
+        document.querySelectorAll('.trump-select-panel.open').forEach(p => p.classList.remove('open'));
+    }
 });
 
 document.querySelectorAll('.modal').forEach(modal => {
