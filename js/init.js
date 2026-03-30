@@ -10,6 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('newPlayerName').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addPlayer();
     });
+    document.getElementById('savedPlayersList').addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-player-btn');
+        if (!btn) return;
+        removePlayer(btn.dataset.player);
+    });
 });
 
 document.addEventListener('click', (e) => {

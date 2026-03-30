@@ -30,8 +30,6 @@ function addPlayer() {
 }
 
 function removePlayer(name) {
-    if (!confirm(`Remove ${name} from saved players?`)) return;
-    
     let players = getSavedPlayers();
     players = players.filter(p => p !== name);
     savePlayers(players);
@@ -49,7 +47,7 @@ function loadSavedPlayers() {
         container.innerHTML = players.map(player => `
             <div class="player-tag">
                 ${escapeHtml(player)}
-                <button onclick="removePlayer(${JSON.stringify(player)})">✕</button>
+                <button class="remove-player-btn" data-player="${escapeHtml(player)}">✕</button>
             </div>
         `).join('');
     }
