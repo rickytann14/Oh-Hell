@@ -19,6 +19,9 @@ document.addEventListener('click', (e) => {
     if (!e.target.closest('.trump-custom-select')) {
         document.querySelectorAll('.trump-select-panel.open').forEach(p => p.classList.remove('open'));
     }
+    if (!e.target.closest('.conf-custom-select')) {
+        document.querySelectorAll('.conf-select-panel.open').forEach(p => p.classList.remove('open'));
+    }
 });
 
 document.querySelectorAll('.modal').forEach(modal => {

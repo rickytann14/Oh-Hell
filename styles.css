@@ -929,6 +929,71 @@
 .trump-section__row    { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .trump-section__label  { color: #fbbf24; font-weight: 600; font-size: 1rem; }
 .trump-section__selects { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap; }
+.conf-custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.conf-select-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+    background: #1e293b;
+    border: 2px solid #475569;
+    color: #f1f5f9;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s;
+}
+
+.conf-select-btn:hover {
+    border-color: #3b82f6;
+}
+
+.conf-select-arrow {
+    color: #94a3b8;
+    font-size: 0.75em;
+    flex-shrink: 0;
+}
+
+.conf-select-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.conf-select-panel.open {
+    display: block;
+}
+
+.conf-select-option {
+    padding: 0.4rem 0.6rem;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.conf-select-option:hover {
+    background: #273449;
+}
+
+.conf-select-option.selected {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
 .trump-custom-select {
     position: relative;
     flex: 1;

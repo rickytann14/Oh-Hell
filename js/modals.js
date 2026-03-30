@@ -43,14 +43,38 @@ function renderGamePlayersModal() {
             <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 0.75rem; line-height: 1.5;">
                 Missed-round credit uses Math.round(((players - 2) * 20) / players) for each scored round they missed.
             </p>
-            <select id="midGamePlayerSelect" style="margin-bottom: 0.5rem;">
-                <option value="">-- Choose saved player --</option>
-                ${availableSavedPlayers.map(player => `<option value="${escapeHtml(player)}">${escapeHtml(player)}</option>`).join('')}
-            </select>
+            <input type="hidden" id="midGamePlayerSelect" value="">
+            <div class="player-custom-select" id="midgame-select-wrap" style="margin-bottom: 0.5rem;">
+                <button type="button" class="player-select-btn" onclick="toggleMidGameDropdown()">
+                    <span id="midgame-select-label">-- Choose saved player --</span>
+                    <span class="player-select-arrow">▾</span>
+                </button>
+                <div class="player-select-panel" id="midgame-select-panel">
+                    ${availableSavedPlayers.map(player =>
+                        `<div class="player-select-option" onclick="selectMidGamePlayer(${JSON.stringify(player).replace(/"/g, '&quot;')})">${escapeHtml(player)}</div>`
+                    ).join('')}
+                </div>
+            </div>
             <input type="text" id="midGamePlayerName" placeholder="Or type a new player name" style="margin-bottom: 0.75rem;">
             <button class="btn btn-success" onclick="addPlayerMidGame()" style="width: 100%;">➕ Add To Current Game</button>
         </div>
     `;
+}
+
+function toggleMidGameDropdown() {
+    const panel = document.getElementById('midgame-select-panel');
+    const isOpen = panel.classList.contains('open');
+    document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+    if (!isOpen) panel.classList.add('open');
+}
+
+function selectMidGamePlayer(name) {
+    document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
+    document.getElementById('midGamePlayerSelect').value = name;
+    document.getElementById('midgame-select-label').textContent = name;
+    document.querySelectorAll('#midgame-select-panel .player-select-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.textContent === name);
+    });
 }
 
 function openGamePlayersModal() {
@@ -510,12 +534,18 @@ function editRound(roundIndex) {
                         </div>
                         <div class="col-span-2">
                             <label class="field-label">Confidence</label>
-                            <select onchange="updateEditConfidence(${idx}, this.value)">
-                                <option value="MAX" ${round.playerData[idx].confidence === 'MAX' ? 'selected' : ''}>MAX</option>
-                                ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n => 
-                                    `<option value="${n}" ${round.playerData[idx].confidence == n ? 'selected' : ''}>${n}</option>`
-                                ).join('')}
-                            </select>
+                            <div class="conf-custom-select" id="edit-conf-wrap-${idx}">
+                                <button type="button" class="conf-select-btn" onclick="toggleConfDropdown('edit-conf-wrap-${idx}')">
+                                    <span>${round.playerData[idx].confidence}</span>
+                                    <span class="conf-select-arrow">▾</span>
+                                </button>
+                                <div class="conf-select-panel">
+                                    <div class="conf-select-option${round.playerData[idx].confidence === 'MAX' ? ' selected' : ''}" onclick="updateEditConfidence(${idx}, 'MAX')">MAX</div>
+                                    ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n =>
+                                        `<div class="conf-select-option${round.playerData[idx].confidence == n ? ' selected' : ''}" onclick="updateEditConfidence(${idx}, ${n})">${n}</div>`
+                                    ).join('')}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     

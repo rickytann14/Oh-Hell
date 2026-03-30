@@ -121,6 +121,13 @@ function syncTrumpParts(round) {
     }
 }
 
+function toggleConfDropdown(wrapId) {
+    const panel = document.querySelector(`#${wrapId} .conf-select-panel`);
+    const isOpen = panel.classList.contains('open');
+    document.querySelectorAll('.conf-select-panel.open').forEach(p => p.classList.remove('open'));
+    if (!isOpen) panel.classList.add('open');
+}
+
 function toggleTrumpDropdown(wrapId) {
     const panel = document.querySelector(`#${wrapId} .trump-select-panel`);
     const isOpen = panel.classList.contains('open');

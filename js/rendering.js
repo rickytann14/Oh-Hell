@@ -353,12 +353,18 @@ function renderRoundSetup() {
                             </div>
                             <div class="col-span-2">
                                 <label class="field-label">Confidence</label>
-                                <select onchange="updateConfidence(${idx}, this.value)">
-                                    <option value="MAX" ${round.playerData[idx].confidence === 'MAX' ? 'selected' : ''}>MAX</option>
-                                    ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n =>
-                                        `<option value="${n}" ${round.playerData[idx].confidence == n ? 'selected' : ''}>${n}</option>`
-                                    ).join('')}
-                                </select>
+                                <div class="conf-custom-select" id="conf-wrap-${idx}">
+                                    <button type="button" class="conf-select-btn" onclick="toggleConfDropdown('conf-wrap-${idx}')">
+                                        <span>${round.playerData[idx].confidence}</span>
+                                        <span class="conf-select-arrow">▾</span>
+                                    </button>
+                                    <div class="conf-select-panel">
+                                        <div class="conf-select-option${round.playerData[idx].confidence === 'MAX' ? ' selected' : ''}" onclick="updateConfidence(${idx}, 'MAX')">MAX</div>
+                                        ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n =>
+                                            `<div class="conf-select-option${round.playerData[idx].confidence == n ? ' selected' : ''}" onclick="updateConfidence(${idx}, ${n})">${n}</div>`
+                                        ).join('')}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
