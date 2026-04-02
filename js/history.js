@@ -158,7 +158,6 @@ function analyzeHistoryGames(inputGames) {
             finishByTableSize: {},
             chaosRounds: 0,
             chaosOpportunities: 0,
-            dealerRounds: 0,
             exactBlockRounds: 0
         };
     }
