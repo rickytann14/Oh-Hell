@@ -39,7 +39,7 @@ function _clampedTax(value) { return Math.max(0, Math.min(25, parseInt(value) ||
 
 // Current-round mutation functions
 function updateBid(playerIdx, value) {
-    gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = parseInt(value) || 0;
+    gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = _clampedBid(gameState.currentRound, playerIdx, value);
     renderRoundSetup();
     autoSave();
 }
@@ -170,7 +170,7 @@ function scoreRound() {
     // Check if at least one player got set
     const anyoneSet = round.playerData.some(p => p && p.participating && p.gotSet);
     if (!anyoneSet) {
-        alert('Please mark at least one player as "Got Set" to score the round!');
+        alert('Please mark at least one player as "Got Set" to score the round!\n\nGot Set means a player failed to make their bid.');
         return;
     }
 
