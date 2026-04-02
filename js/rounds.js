@@ -127,18 +127,19 @@ function syncTrumpParts(round) {
     }
 }
 
+// Shared helper: close all open panels of the given CSS class, then toggle the target panel.
+function toggleDropdownPanel(panelClass, targetPanel) {
+    const isOpen = targetPanel.classList.contains('open');
+    document.querySelectorAll(`.${panelClass}.open`).forEach(p => p.classList.remove('open'));
+    if (!isOpen) targetPanel.classList.add('open');
+}
+
 function toggleConfDropdown(wrapId) {
-    const panel = document.querySelector(`#${wrapId} .conf-select-panel`);
-    const isOpen = panel.classList.contains('open');
-    document.querySelectorAll('.conf-select-panel.open').forEach(p => p.classList.remove('open'));
-    if (!isOpen) panel.classList.add('open');
+    toggleDropdownPanel('conf-select-panel', document.querySelector(`#${wrapId} .conf-select-panel`));
 }
 
 function toggleTrumpDropdown(wrapId) {
-    const panel = document.querySelector(`#${wrapId} .trump-select-panel`);
-    const isOpen = panel.classList.contains('open');
-    document.querySelectorAll('.trump-select-panel.open').forEach(p => p.classList.remove('open'));
-    if (!isOpen) panel.classList.add('open');
+    toggleDropdownPanel('trump-select-panel', document.querySelector(`#${wrapId} .trump-select-panel`));
 }
 
 function updateTrumpRank(value) {
