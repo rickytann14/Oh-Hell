@@ -464,8 +464,7 @@ function editRound(roundIndex) {
                     <label class="field-label">Hand Size</label>
                     <div class="field-row">
                         <button onclick="adjustEditHandSize(-1)" class="btn-adjust btn-adjust--dec">−</button>
-                        <input type="number" min="1" max="20" value="${round.handSize}"
-                               onchange="updateEditHandSize(this.value)" style="width: 4rem; text-align: center;">
+                        <div class="value-display">${round.handSize}</div>
                         <button onclick="adjustEditHandSize(1)" class="btn-adjust btn-adjust--inc">+</button>
                     </div>
                 </div>
@@ -508,8 +507,13 @@ function editRound(roundIndex) {
                     <div class="player-inputs-grid">
                         <div>
                             <label class="field-label">Bid</label>
-                            <input type="number" min="0" max="${round.handSize}" value="${round.playerData[idx].bid}"
-                                   onchange="updateEditBid(${idx}, this.value)">
+                            <div class="field-row">
+                                <button onclick="adjustEditBid(${idx}, -1)" class="btn-adjust btn-adjust--dec">−</button>
+                                <div class="value-display value-display--bid">
+                                    ${round.playerData[idx].bid}
+                                </div>
+                                <button onclick="adjustEditBid(${idx}, 1)" class="btn-adjust btn-adjust--inc">+</button>
+                            </div>
                             <div class="quick-value-row">
                                 ${[5, 10].map(value => `
                                     <button class="quick-value-btn" onclick="setEditBid(${idx}, ${value})">${value}</button>
@@ -588,6 +592,12 @@ function updateEditBid(playerIdx, value) {
 
 function setEditBid(playerIdx, value) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].bid = _clampedBid(editingRoundIndex, playerIdx, value);
+    editRound(editingRoundIndex);
+}
+
+function adjustEditBid(playerIdx, delta) {
+    const round = gameState.rounds[editingRoundIndex];
+    round.playerData[playerIdx].bid = Math.max(0, Math.min(round.handSize, round.playerData[playerIdx].bid + delta));
     editRound(editingRoundIndex);
 }
 
