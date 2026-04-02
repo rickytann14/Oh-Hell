@@ -1,3 +1,6 @@
+let _statsCache = null;
+let _statsCacheKey = null;
+
 async function discoverHistoryJsonPaths(sourceUrl = getHistorySourceUrl()) {
     const fallbackPaths = ['history/metric.json'];
     const normalizedSourceUrl = normalizeHistorySourceUrl(sourceUrl || '');
@@ -65,9 +68,16 @@ async function openStatsModal() {
     document.getElementById('statsModal').classList.add('active');
 
     const folderGames = await loadHistoryGamesFromFolder();
-    const mergedGames = [...folderGames, ...manualHistoryGames].filter(isValidHistoryGame);
+    const allGames = [...folderGames, ...manualHistoryGames].filter(isValidHistoryGame);
 
-    renderStatsContent(mergedGames);
+    const cacheKey = allGames.map(g => g.gameId).join(',');
+    if (_statsCache && _statsCacheKey === cacheKey) {
+        renderStatsContent(_statsCache);
+        return;
+    }
+    _statsCache = allGames;
+    _statsCacheKey = cacheKey;
+    renderStatsContent(_statsCache);
 }
 
 async function refreshStats() {

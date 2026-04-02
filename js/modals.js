@@ -1,3 +1,6 @@
+let _editBidDebounceTimer = null;
+let _editTaxDebounceTimer = null;
+
 function openManagePlayersModal() {
     loadSavedPlayers();
     document.getElementById('managePlayersModal').classList.add('active');
@@ -583,7 +586,8 @@ function editRound(roundIndex) {
 // Edit-round mutation functions (mirror current-round but target editingRoundIndex)
 function updateEditBid(playerIdx, value) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].bid = parseInt(value) || 0;
-    editRound(editingRoundIndex);
+    clearTimeout(_editBidDebounceTimer);
+    _editBidDebounceTimer = setTimeout(() => editRound(editingRoundIndex), 150);
 }
 
 function setEditBid(playerIdx, value) {
@@ -602,7 +606,8 @@ function adjustEditHandSize(delta) {
 
 function updateEditTax(playerIdx, value) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = parseInt(value) || 0;
-    editRound(editingRoundIndex);
+    clearTimeout(_editTaxDebounceTimer);
+    _editTaxDebounceTimer = setTimeout(() => editRound(editingRoundIndex), 150);
 }
 
 function adjustEditTax(playerIdx, delta) {
