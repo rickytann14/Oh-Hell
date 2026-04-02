@@ -631,6 +631,7 @@ function updateEditGotSet(playerIdx, checked) {
 }
 
 function saveEditedRound() {
+    if (!confirm('Save changes to this round?')) return;
     const round = gameState.rounds[editingRoundIndex];
 
     // Keep exact bids invalid in edit mode too.

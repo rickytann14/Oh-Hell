@@ -951,6 +951,16 @@
         }
     }
 
+    @media (max-width: 400px) {
+        .trump-section__selects {
+            flex-direction: column;
+        }
+        .trump-custom-select {
+            min-width: 0;
+            width: 100%;
+        }
+    }
+
 /* ── Adjustment buttons (+/−) ─────────────────────────────────────────────── */
 .btn-adjust {
     width: 36px;
