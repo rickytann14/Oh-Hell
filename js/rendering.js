@@ -361,7 +361,7 @@ function renderRoundSetup() {
                                     <div class="conf-select-panel">
                                         <div class="conf-select-option${round.playerData[idx].confidence === 'MAX' ? ' selected' : ''}" onclick="updateConfidence(${idx}, 'MAX')">MAX</div>
                                         ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n =>
-                                            `<div class="conf-select-option${round.playerData[idx].confidence == n ? ' selected' : ''}" onclick="updateConfidence(${idx}, ${n})">${n}</div>`
+                                            `<div class="conf-select-option${round.playerData[idx].confidence === n ? ' selected' : ''}" onclick="updateConfidence(${idx}, ${n})">${n}</div>`
                                         ).join('')}
                                     </div>
                                 </div>

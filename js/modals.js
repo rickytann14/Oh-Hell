@@ -62,10 +62,7 @@ function renderGamePlayersModal() {
 }
 
 function toggleMidGameDropdown() {
-    const panel = document.getElementById('midgame-select-panel');
-    const isOpen = panel.classList.contains('open');
-    document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
-    if (!isOpen) panel.classList.add('open');
+    toggleDropdownPanel('player-select-panel', document.getElementById('midgame-select-panel'));
 }
 
 function selectMidGamePlayer(name) {
@@ -464,9 +461,8 @@ function editRound(roundIndex) {
                     <label class="field-label">Hand Size</label>
                     <div class="field-row">
                         <button onclick="adjustEditHandSize(-1)" class="btn-adjust btn-adjust--dec">−</button>
-                        <div class="value-display value-display--hand">
-                            ${round.handSize}
-                        </div>
+                        <input type="number" min="1" max="20" value="${round.handSize}"
+                               onchange="updateEditHandSize(this.value)" style="width: 4rem; text-align: center;">
                         <button onclick="adjustEditHandSize(1)" class="btn-adjust btn-adjust--inc">+</button>
                     </div>
                 </div>
@@ -542,7 +538,7 @@ function editRound(roundIndex) {
                                 <div class="conf-select-panel">
                                     <div class="conf-select-option${round.playerData[idx].confidence === 'MAX' ? ' selected' : ''}" onclick="updateEditConfidence(${idx}, 'MAX')">MAX</div>
                                     ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n =>
-                                        `<div class="conf-select-option${round.playerData[idx].confidence == n ? ' selected' : ''}" onclick="updateEditConfidence(${idx}, ${n})">${n}</div>`
+                                        `<div class="conf-select-option${round.playerData[idx].confidence === n ? ' selected' : ''}" onclick="updateEditConfidence(${idx}, ${n})">${n}</div>`
                                     ).join('')}
                                 </div>
                             </div>
