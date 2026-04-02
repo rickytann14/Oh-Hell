@@ -602,6 +602,7 @@ function adjustEditHandSize(delta) {
 
 function updateEditTax(playerIdx, value) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = parseInt(value) || 0;
+    editRound(editingRoundIndex);
 }
 
 function adjustEditTax(playerIdx, delta) {

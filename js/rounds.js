@@ -39,7 +39,10 @@ function _clampedTax(value) { return Math.max(0, Math.min(25, parseInt(value) ||
 
 // Current-round mutation functions
 function updateBid(playerIdx, value) {
-    gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = parseInt(value) || 0;
+    const newBid = parseInt(value) || 0;
+    const pdata = gameState.rounds[gameState.currentRound].playerData[playerIdx];
+    pdata.bid = newBid;
+    if (newBid === 0 && pdata.confidence > 5) pdata.confidence = 5;
     renderRoundSetup();
     autoSave();
 }
@@ -52,8 +55,11 @@ function adjustBid(playerIdx, delta) {
 }
 
 function setBid(playerIdx, value) {
-    gameState.rounds[gameState.currentRound].playerData[playerIdx].bid = _clampedBid(gameState.currentRound, playerIdx, value);
+    const pdata = gameState.rounds[gameState.currentRound].playerData[playerIdx];
+    pdata.bid = _clampedBid(gameState.currentRound, playerIdx, value);
+    if (pdata.bid === 0 && pdata.confidence > 5) pdata.confidence = 5;
     renderRoundSetup();
+    autoSave();
 }
 
 function adjustTax(playerIdx, delta) {
@@ -65,6 +71,7 @@ function adjustTax(playerIdx, delta) {
 function setTax(playerIdx, value) {
     gameState.rounds[gameState.currentRound].playerData[playerIdx].tax = _clampedTax(value);
     renderRoundSetup();
+    autoSave();
 }
 
 function updateCurrentRoundHandSize(value) {
