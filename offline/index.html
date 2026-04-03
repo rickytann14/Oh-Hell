@@ -515,10 +515,64 @@
         .bid-tracker.over { background: rgba(239, 68, 68, 0.2); }
         .bid-tracker.exact { background: rgba(251, 191, 36, 0.2); }
 
+        .players-nav {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            margin-bottom: 1rem;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+
+        .players-nav::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .players-nav::-webkit-scrollbar-track {
+            background: rgba(51, 65, 85, 0.2);
+            border-radius: 2px;
+        }
+
+        .players-nav::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 2px;
+        }
+
+        .players-nav::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.6);
+        }
+
+        .players-nav-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(51, 65, 85, 0.6);
+            border: 2px solid rgba(100, 116, 139, 0.4);
+            color: #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .players-nav-btn:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: rgba(100, 116, 139, 0.6);
+            color: #f1f5f9;
+        }
+
+        .players-nav-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+
         .players-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
+            display: block;
         }
 
         .player-card {
@@ -526,9 +580,17 @@
             border-radius: 12px;
             padding: 1rem;
             border: 2px solid #475569;
+            transition: all 0.2s;
+            display: none;
         }
 
-        .player-card.dealer {
+        .player-card.selected {
+            display: block;
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .player-card.dealer.selected {
             border-color: #fbbf24;
             box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
         }
@@ -965,10 +1027,6 @@
         }
 
         @media (max-width: 640px) {
-            .players-grid {
-                grid-template-columns: 1fr;
-            }
-
             .sticky-round-info {
                 margin-top: 0.45rem;
                 padding: 0 0.5rem;
@@ -1182,6 +1240,7 @@
         let manualHistoryGames = [];
         let selectedHistoryFolderLabel = 'Not selected';
         let currentView = 'setup';
+        let selectedPlayerIndex = null;
 
         function createRoundPlayerData(participating = true, overrides = {}) {
             return {
@@ -1332,6 +1391,20 @@
             document.getElementById('setupScreen').classList.toggle('hidden', view !== 'setup');
             document.getElementById('gameScreen').classList.toggle('hidden', view !== 'game');
             loadHeaderActions(view);
+        }
+
+        function selectPlayer(playerIdx) {
+            selectedPlayerIndex = playerIdx;
+
+            document.querySelectorAll('.players-nav-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.playerIdx) === playerIdx);
+            });
+
+            document.querySelectorAll('.player-card').forEach(card => {
+                const isSelected = parseInt(card.dataset.playerIdx) === playerIdx;
+                card.classList.toggle('hidden', !isSelected);
+                card.classList.toggle('selected', isSelected);
+            });
         }
 
         function openReadmeLink() {
@@ -3241,7 +3314,7 @@
             };
 
             setActiveView('game');
-            
+            selectedPlayerIndex = null; // Reset selection for first round
             startNewRound();
             autoSave(); // Auto-save after starting game
         }
@@ -3390,6 +3463,16 @@
                         </div>
                     </div>
                     
+                    <div class="players-nav">
+                        ${gameState.players.map((player, idx) => {
+                            const pdata = round.playerData[idx];
+                            if (!pdata || !pdata.participating) {
+                                return '';
+                            }
+                            return `<button class="players-nav-btn" data-player-idx="${idx}" onclick="selectPlayer(${idx})">${escapeHtml(player.name)}</button>`;
+                        }).join('')}
+                    </div>
+
                     <div class="players-grid">
                         ${gameState.players.map((player, idx) => {
                             const pdata = round.playerData[idx];
@@ -3421,7 +3504,7 @@
                             const leaderCrown = isLeader ? '👑 ' : '';
                             
                             return `
-                            <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''}">
+                            <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''}" data-player-idx="${idx}">
                                 <div class="player-name">
                                     ${leaderCrown}${player.name} ${positionIndicator}
                                     ${idx === round.dealerIndex ? '<span>🎴 Dealer</span>' : ''}
@@ -3537,6 +3620,30 @@
                     `}
                 </div>
             `;
+
+            if (selectedPlayerIndex === null) {
+                const dealerIdx = round.dealerIndex;
+
+                for (let i = 0; i < gameState.players.length; i++) {
+                    const idx = (dealerIdx + 1 + i) % gameState.players.length;
+                    const pdata = round.playerData[idx];
+                    if (pdata && pdata.participating) {
+                        selectedPlayerIndex = idx;
+                        break;
+                    }
+                }
+            }
+
+            setTimeout(() => {
+                document.querySelectorAll('.players-nav-btn').forEach(btn => {
+                    btn.classList.toggle('active', parseInt(btn.dataset.playerIdx) === selectedPlayerIndex);
+                });
+                document.querySelectorAll('.player-card').forEach(card => {
+                    const isSelected = parseInt(card.dataset.playerIdx) === selectedPlayerIndex;
+                    card.classList.toggle('hidden', !isSelected);
+                    card.classList.toggle('selected', isSelected);
+                });
+            }, 0);
         }
 
         // Shared helpers used by both current-round and edit-round functions
@@ -3795,6 +3902,7 @@
 
         function nextRound() {
             gameState.currentRound++;
+            selectedPlayerIndex = null; // Reset selection for new round
             startNewRound();
         }
 

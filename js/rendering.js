@@ -5,6 +5,22 @@ function setActiveView(view) {
     loadHeaderActions(view);
 }
 
+function selectPlayer(playerIdx) {
+    selectedPlayerIndex = playerIdx;
+
+    // Update nav button active states
+    document.querySelectorAll('.players-nav-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.playerIdx) === playerIdx);
+    });
+
+    // Show only selected player card
+    document.querySelectorAll('.player-card').forEach(card => {
+        const isSelected = parseInt(card.dataset.playerIdx) === playerIdx;
+        card.classList.toggle('hidden', !isSelected);
+        card.classList.toggle('selected', isSelected);
+    });
+}
+
 function openReadmeLink() {
     window.open(README_URL, '_blank', 'noopener,noreferrer');
 }
@@ -197,6 +213,12 @@ function renderRoundSetup() {
     const playersWithLowScore = gameState.players.filter(p => p.score === lowScore);
     const hasUniqueLow = playersWithLowScore.length === 1;
 
+    // Pre-compute position for each player (O(n) instead of O(n²))
+    const positionMap = {};
+    sortedPlayers.forEach((p, idx) => {
+        positionMap[p.originalIndex] = idx + 1;
+    });
+
     stickyInfo.innerHTML = `
         <div class="round-summary">
             <div class="round-summary-top">
@@ -280,6 +302,17 @@ function renderRoundSetup() {
                 </div>
             </div>
 
+            <div class="players-nav">
+                ${gameState.players.map((player, idx) => {
+                    const pdata = round.playerData[idx];
+                    if (!pdata || !pdata.participating) {
+                        return '';
+                    }
+                    const isActive = selectedPlayerIndex === idx;
+                    return `<button class="players-nav-btn ${isActive ? 'active' : ''}" data-player-idx="${idx}" onclick="selectPlayer(${idx})">${escapeHtml(player.name)}</button>`;
+                }).join('')}
+            </div>
+
             <div class="players-grid">
                 ${gameState.players.map((player, idx) => {
                     const pdata = round.playerData[idx];
@@ -293,11 +326,8 @@ function renderRoundSetup() {
                     const madeTotal = calculateProjectedTotal(player.score, madePrediction, existingRoundScore);
                     const setTotal = calculateProjectedTotal(player.score, setPrediction, existingRoundScore);
 
-                    // Calculate current position
-                    const sorted = [...gameState.players]
-                        .map((p, i) => ({...p, originalIndex: i}))
-                        .sort((a, b) => b.score - a.score);
-                    const currentPosition = sorted.findIndex(p => p.originalIndex === idx) + 1;
+                    // Get position from pre-computed map
+                    const currentPosition = positionMap[idx];
                     const previousPosition = player.previousPosition || currentPosition;
 
                     let positionIndicator = '';
@@ -310,8 +340,22 @@ function renderRoundSetup() {
                     const isLeader = currentPosition === 1;
                     const leaderCrown = isLeader ? '👑 ' : '';
 
+                    // Set default player on first render
+                    if (selectedPlayerIndex === null && idx === (function() {
+                        const dealerIdx = round.dealerIndex;
+                        for (let i = 0; i < gameState.players.length; i++) {
+                            const checkIdx = (dealerIdx + 1 + i) % gameState.players.length;
+                            if (round.playerData[checkIdx]?.participating) return checkIdx;
+                        }
+                        return dealerIdx;
+                    })()) {
+                        selectedPlayerIndex = idx;
+                    }
+
+                    const isSelectedCard = selectedPlayerIndex === idx;
+
                     return `
-                    <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''}">
+                    <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''} ${isSelectedCard ? 'selected' : 'hidden'}" data-player-idx="${idx}">
                         <div class="player-name">
                             ${leaderCrown}${escapeHtml(player.name)} ${positionIndicator}
                             ${idx === round.dealerIndex ? '<span>🎴 Dealer</span>' : ''}

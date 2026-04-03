@@ -1,3 +1,12 @@
+// Debounce rapid render calls to avoid visual flashing
+let _renderDebounceTimer = null;
+function _debounceRender() {
+    clearTimeout(_renderDebounceTimer);
+    _renderDebounceTimer = setTimeout(() => {
+        renderRoundSetup();
+    }, 80);
+}
+
 function startNewRound() {
     const previousRound = gameState.rounds[gameState.currentRound - 1];
     const handSize = gameState.currentRound === 0
@@ -42,14 +51,14 @@ function updateBid(playerIdx, value) {
     const pdata = gameState.rounds[gameState.currentRound].playerData[playerIdx];
     pdata.bid = _clampedBid(gameState.currentRound, playerIdx, value);
     if (pdata.bid === 0 && pdata.confidence > 5) pdata.confidence = 5;
-    renderRoundSetup();
+    _debounceRender();
     autoSave();
 }
 
 function adjustBid(playerIdx, delta) {
     const round = gameState.rounds[gameState.currentRound];
     round.playerData[playerIdx].bid = Math.max(0, Math.min(round.handSize, round.playerData[playerIdx].bid + delta));
-    renderRoundSetup();
+    _debounceRender();
     autoSave();
 }
 
@@ -57,25 +66,27 @@ function setBid(playerIdx, value) {
     const pdata = gameState.rounds[gameState.currentRound].playerData[playerIdx];
     pdata.bid = _clampedBid(gameState.currentRound, playerIdx, value);
     if (pdata.bid === 0 && pdata.confidence > 5) pdata.confidence = 5;
-    renderRoundSetup();
+    _debounceRender();
     autoSave();
 }
 
 function adjustTax(playerIdx, delta) {
     const round = gameState.rounds[gameState.currentRound];
     round.playerData[playerIdx].tax = _clampedTax(round.playerData[playerIdx].tax + delta);
-    renderRoundSetup();
+    _debounceRender();
+    autoSave();
 }
 
 function setTax(playerIdx, value) {
     gameState.rounds[gameState.currentRound].playerData[playerIdx].tax = _clampedTax(value);
-    renderRoundSetup();
+    _debounceRender();
     autoSave();
 }
 
 function updateCurrentRoundHandSize(value) {
     _applyHandSize(gameState.currentRound, value);
-    renderRoundSetup();
+    _debounceRender();
+    autoSave();
 }
 
 function adjustCurrentRoundHandSize(delta) {
@@ -91,19 +102,19 @@ function updateTax(playerIdx, value) {
 
 function updateConfidence(playerIdx, value) {
     gameState.rounds[gameState.currentRound].playerData[playerIdx].confidence = value;
-    renderRoundSetup();
+    _debounceRender();
     autoSave();
 }
 
 function updateDeferred(playerIdx, checked) {
     gameState.rounds[gameState.currentRound].playerData[playerIdx].deferred = checked;
-    renderRoundSetup();
+    _debounceRender();
     autoSave();
 }
 
 function updateGotSet(playerIdx, checked) {
     gameState.rounds[gameState.currentRound].playerData[playerIdx].gotSet = checked;
-    renderRoundSetup();
+    _debounceRender();
     autoSave();
 }
 
@@ -221,6 +232,7 @@ function updatePlayerPositions() {
 
 function nextRound() {
     gameState.currentRound++;
+    selectedPlayerIndex = null; // Reset selection for new round
     startNewRound();
 }
 

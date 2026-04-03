@@ -27,7 +27,7 @@ function startGame() {
     };
 
     setActiveView('game');
-    
+    selectedPlayerIndex = null; // Reset selection for first round
     startNewRound();
     autoSave(); // Auto-save after starting game
 }
