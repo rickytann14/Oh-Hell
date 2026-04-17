@@ -39,6 +39,34 @@ Save the file and open it directly in your browser — no installation required.
 4. Set **Starting Hand Size**.
 5. Click **Start Game**.
 
+## Local Network Testing (Phone/Tablet/Desktop)
+
+Use the helper script to run a separate local server for this repo:
+
+```bash
+./local-serve.sh start
+```
+
+Then check status and URLs:
+
+```bash
+./local-serve.sh status
+```
+
+Open the printed LAN URL on devices connected to the same network.
+
+Stop the server when finished:
+
+```bash
+./local-serve.sh stop
+```
+
+Notes:
+
+- Default port is `8090`.
+- If the port is in use, the script exits safely without touching existing services.
+- Use a custom port if needed: `PORT=9000 ./local-serve.sh start`.
+
 ## Player List Management
 
 ### Local Storage (default)

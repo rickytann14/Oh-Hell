@@ -13,12 +13,48 @@ function selectPlayer(playerIdx) {
         btn.classList.toggle('active', parseInt(btn.dataset.playerIdx) === playerIdx);
     });
 
+    // Uncheck the "View All" checkbox
+    const viewAllCheckbox = document.getElementById('viewAllCheckbox');
+    if (viewAllCheckbox) {
+        viewAllCheckbox.checked = false;
+    }
+
     // Show only selected player card
     document.querySelectorAll('.player-card').forEach(card => {
         const isSelected = parseInt(card.dataset.playerIdx) === playerIdx;
         card.classList.toggle('hidden', !isSelected);
         card.classList.toggle('selected', isSelected);
     });
+}
+
+function viewAllPlayers() {
+    selectedPlayerIndex = null;
+
+    // Remove active state from all nav buttons
+    document.querySelectorAll('.players-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show all player cards
+    document.querySelectorAll('.player-card').forEach(card => {
+        card.classList.remove('hidden');
+        card.classList.remove('selected');
+    });
+}
+
+function handleViewAllToggle(isChecked) {
+    if (isChecked) {
+        viewAllPlayers();
+    } else {
+        // Select the first participating player
+        const round = gameState.rounds[gameState.currentRound];
+        for (let i = 0; i < gameState.players.length; i++) {
+            if (round.playerData[i]?.participating) {
+                selectPlayer(i);
+                break;
+            }
+        }
+    }
 }
 
 function openReadmeLink() {
@@ -84,7 +120,7 @@ function renderScoreboard() {
 
 function renderHistory() {
     const container = document.getElementById('historySection');
-    const completedRounds = gameState.rounds.filter((r, idx) => r.scored);
+    const completedRounds = gameState.rounds.filter((r) => r.scored);
 
     if (completedRounds.length === 0) {
         container.innerHTML = '';
@@ -303,6 +339,10 @@ function renderRoundSetup() {
             </div>
 
             <div class="players-nav">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="viewAllCheckbox" onchange="handleViewAllToggle(this.checked)">
+                    📋 View All
+                </label>
                 ${gameState.players.map((player, idx) => {
                     const pdata = round.playerData[idx];
                     if (!pdata || !pdata.participating) {
@@ -353,9 +393,10 @@ function renderRoundSetup() {
                     }
 
                     const isSelectedCard = selectedPlayerIndex === idx;
+                    const isViewAll = selectedPlayerIndex === null;
 
                     return `
-                    <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''} ${isSelectedCard ? 'selected' : 'hidden'}" data-player-idx="${idx}">
+                    <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''} ${isSelectedCard ? 'selected' : ''} ${!isViewAll && !isSelectedCard ? 'hidden' : ''}" data-player-idx="${idx}">
                         <div class="player-name">
                             ${leaderCrown}${escapeHtml(player.name)} ${positionIndicator}
                             ${idx === round.dealerIndex ? '<span>🎴 Dealer</span>' : ''}
