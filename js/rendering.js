@@ -354,6 +354,23 @@ function renderRoundSetup() {
             </div>
 
             <div class="players-grid">
+                ${(() => {
+                    // Resolve default selected player BEFORE rendering any cards,
+                    // so every card sees the correct selectedPlayerIndex from the start.
+                    if (selectedPlayerIndex === null) {
+                        const dealerIdx = round.dealerIndex;
+                        for (let i = 0; i < gameState.players.length; i++) {
+                            const checkIdx = (dealerIdx + 1 + i) % gameState.players.length;
+                            if (round.playerData[checkIdx]?.participating) {
+                                selectedPlayerIndex = checkIdx;
+                                break;
+                            }
+                        }
+                        // Fallback: dealer themselves
+                        if (selectedPlayerIndex === null) selectedPlayerIndex = dealerIdx;
+                    }
+                    return '';
+                })()}
                 ${gameState.players.map((player, idx) => {
                     const pdata = round.playerData[idx];
                     if (!pdata || !pdata.participating) {
@@ -379,18 +396,6 @@ function renderRoundSetup() {
 
                     const isLeader = currentPosition === 1;
                     const leaderCrown = isLeader ? '👑 ' : '';
-
-                    // Set default player on first render
-                    if (selectedPlayerIndex === null && idx === (function() {
-                        const dealerIdx = round.dealerIndex;
-                        for (let i = 0; i < gameState.players.length; i++) {
-                            const checkIdx = (dealerIdx + 1 + i) % gameState.players.length;
-                            if (round.playerData[checkIdx]?.participating) return checkIdx;
-                        }
-                        return dealerIdx;
-                    })()) {
-                        selectedPlayerIndex = idx;
-                    }
 
                     const isSelectedCard = selectedPlayerIndex === idx;
                     const isViewAll = selectedPlayerIndex === null;
