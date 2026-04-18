@@ -21,7 +21,7 @@
         top: 0;
         z-index: 100;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        transition: padding 0.3s ease;
+        transition: padding 0.15s ease;
     }
 
     .header.scrolled {
@@ -29,7 +29,7 @@
     }
 
     .header-actions .btn {
-        transition: padding 0.3s ease, font-size 0.3s ease, min-height 0.3s ease;
+        transition: padding 0.15s ease, font-size 0.15s ease, min-height 0.15s ease;
     }
 
     .header.scrolled .header-actions .btn {
@@ -39,7 +39,7 @@
     }
 
     .header h1 {
-        transition: font-size 0.3s ease;
+        transition: font-size 0.15s ease;
     }
 
     .header.scrolled h1 {
