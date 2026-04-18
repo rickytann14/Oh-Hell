@@ -28,11 +28,11 @@
         padding: 0.4rem 1rem;
     }
 
-    .header-action-buttons .btn {
+    .header-actions .btn {
         transition: padding 0.3s ease, font-size 0.3s ease, min-height 0.3s ease;
     }
 
-    .header.scrolled .header-action-buttons .btn {
+    .header.scrolled .header-actions .btn {
         padding: 0.3rem 0.6rem;
         font-size: 0.75rem;
         min-height: 30px;
