@@ -166,6 +166,7 @@
         justify-content: center;
         flex-shrink: 0;
         transition: opacity 0.15s;
+        touch-action: manipulation;
     }
 
     .num-players-step:hover {
@@ -234,6 +235,7 @@
         cursor: pointer;
         text-align: left;
         transition: border-color 0.2s;
+        touch-action: manipulation;
     }
 
     .player-select-btn:hover {
@@ -327,6 +329,7 @@
         font-size: 0.8rem;
         padding: 0;
         transition: background 0.2s;
+        touch-action: manipulation;
     }
 
     .player-tag button:hover {
@@ -481,6 +484,7 @@
         white-space: nowrap;
         flex-shrink: 0;
         transition: all 0.2s;
+        touch-action: manipulation;
     }
 
     .players-nav-btn:hover {
@@ -1086,9 +1090,10 @@
     padding: 1rem;
     margin-bottom: 1rem;
 }
-.trump-section__row    { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.trump-section__label  { color: #fbbf24; font-weight: 600; font-size: 1rem; }
-.trump-section__selects { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap; }
+.trump-section__row       { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.trump-section__label-col { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; flex-shrink: 0; }
+.trump-section__label     { color: #fbbf24; font-weight: 600; font-size: 1rem; white-space: nowrap; }
+.trump-section__selects   { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap; }
 .conf-custom-select {
     position: relative;
     width: 100%;
@@ -1108,6 +1113,7 @@
     cursor: pointer;
     text-align: left;
     transition: border-color 0.2s;
+    touch-action: manipulation;
 }
 
 .conf-select-btn:hover {
@@ -1174,6 +1180,7 @@
     cursor: pointer;
     text-align: left;
     transition: border-color 0.2s;
+    touch-action: manipulation;
 }
 
 .trump-select-btn:hover {
@@ -1251,3 +1258,139 @@
 .history-player-entry { line-height: 1.4; }
 .score-positive { color: #10b981; font-weight: 600; }
 .score-negative { color: #ef4444; font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — Samsung Galaxy S22 Ultra & Tab S10 FE
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤ 820px — Tab S10 FE portrait) ───────────────────── */
+@media (max-width: 820px) {
+    .modal-content {
+        max-width: 100%;
+    }
+    .stats-mini-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    /* Ensure interactive elements are comfortably tappable */
+    .players-nav-btn {
+        min-height: 44px;
+    }
+    .btn-adjust {
+        width: 40px;
+        height: 40px;
+    }
+    .quick-value-btn {
+        min-width: 40px;
+        padding: 0.4rem 0.55rem;
+    }
+}
+
+/* ── Phone (≤ 500px — S22 Ultra) ──────────────────────────────── */
+@media (max-width: 500px) {
+    body {
+        padding-bottom: 40px;
+    }
+
+    /* Header — tighter on phone */
+    .header {
+        padding: 0.6rem 0.75rem;
+    }
+    .header h1 {
+        font-size: 1.15rem;
+    }
+
+    /* Screens — less outer padding */
+    .setup-screen, .game-screen {
+        padding: 0.75rem;
+    }
+
+    /* Cards */
+    .card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    /* ── Tap targets: 44×44px minimum ───────────────────────────── */
+    .btn-adjust        { width: 44px; height: 44px; font-size: 1.3rem; }
+    .btn-adjust--sm    { width: 40px; height: 40px; font-size: 1.2rem; }
+    .num-players-step  { width: 44px; height: 44px; }
+    .quick-value-btn   { min-width: 44px; padding: 0.5rem 0.6rem; font-size: 0.9rem; }
+    .players-nav-btn   { padding: 0.65rem 1rem; min-height: 44px; font-size: 0.95rem; }
+    .player-tag button { width: 28px; height: 28px; font-size: 0.9rem; }
+    .btn               { min-height: 44px; padding: 0.75rem 1rem; }
+    .btn-small         { min-height: 44px; }
+    .trump-select-btn  { padding: 0.65rem 0.75rem; min-height: 44px; }
+    .conf-select-btn   { padding: 0.6rem 0.75rem; min-height: 44px; }
+    .player-select-btn { min-height: 44px; }
+    .player-select-option { padding: 0.8rem 0.75rem; }
+    .trump-select-option  { padding: 0.7rem 0.75rem; }
+    .conf-select-option   { padding: 0.55rem 0.75rem; }
+
+    /* Player inputs: single column (2-col is too cramped on ~390px) */
+    .player-inputs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Trump section: rank+suit side-by-side, reverse full-width below */
+    .trump-section__selects {
+        flex-direction: row;
+        flex-wrap: wrap;
+        min-width: 0;
+        flex: 1;
+        gap: 0.4rem;
+    }
+    .trump-custom-select {
+        flex: 1 1 calc(50% - 0.4rem);
+        min-width: 0;
+    }
+    #trump-reverse-wrap {
+        flex: 1 1 100%;
+    }
+
+    /* Modals: slide-up sheet from bottom of screen */
+    .modal {
+        padding: 0;
+        align-items: flex-end;
+    }
+    .modal-content {
+        border-radius: 20px 20px 0 0;
+        max-height: 88vh;
+        padding: 1.25rem 1rem;
+        max-width: 100%;
+        width: 100%;
+    }
+    .modal-header {
+        margin-bottom: 1rem;
+    }
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+
+    /* Stats layout */
+    .stats-summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    }
+    .stats-mini-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* History grid: 2-column is fine */
+    .history-players {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Value display — larger hit area feel */
+    .value-display {
+        font-size: 1.5rem;
+    }
+
+    /* Post-round action buttons — taller touch target */
+    .post-round-actions > .btn {
+        padding: 0.9rem;
+    }
+
+    /* Scoreboard rank items */
+    .rank-item {
+        padding: 0.9rem 0.75rem;
+    }
+}

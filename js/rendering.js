@@ -302,7 +302,10 @@ function renderRoundSetup() {
 
             <div class="trump-section">
                 <div class="trump-section__row">
-                    <label class="trump-section__label">🃏 Big Boss (Trump):</label>
+                    <div class="trump-section__label-col">
+                        <label class="trump-section__label">🃏 Big Boss (Trump):</label>
+                        ${round.trump ? `<div class="trump-badge">${round.trump}</div>` : ''}
+                    </div>
                     <div class="trump-section__selects">
                         <div class="trump-custom-select" id="trump-rank-wrap">
                             <button type="button" class="trump-select-btn" onclick="toggleTrumpDropdown('trump-rank-wrap')">
@@ -334,7 +337,6 @@ function renderRoundSetup() {
                             </div>
                         </div>
                     </div>
-                    ${round.trump ? `<div class="trump-badge">${round.trump}</div>` : ''}
                 </div>
             </div>
 
