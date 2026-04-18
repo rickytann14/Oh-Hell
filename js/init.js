@@ -16,6 +16,11 @@ document.getElementById('newPlayerName').addEventListener('keypress', (e) => {
     });
 });
 
+// Shrink header action buttons when scrolled past 60px
+window.addEventListener('scroll', () => {
+    document.querySelector('.header').classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.player-custom-select')) {
         document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
