@@ -79,9 +79,7 @@ function loadHeaderActions(mode) {
         actions.innerHTML = `
             <div class="header-action-buttons">
                 <button class="btn btn-secondary btn-small" onclick="openGamePlayersModal()">👥 Table</button>
-                <button class="btn btn-secondary btn-small" onclick="openReadmeLink()">📘 README</button>
                 <button class="btn btn-secondary btn-small" onclick="saveGame()">💾 Save</button>
-                <button class="btn btn-secondary btn-small" onclick="showSaveLoadModal()">📁 Load</button>
                 <button class="btn btn-primary btn-small" onclick="exportToExcel()">📤 Export</button>
                 <button class="btn btn-danger btn-small" onclick="newGame()">🆕 New</button>
             </div>
