@@ -1092,7 +1092,7 @@
 }
 .trump-section__row       { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
 .trump-section__label-col { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; flex-shrink: 0; }
-.trump-section__label     { color: #fbbf24; font-weight: 600; font-size: 1rem; white-space: nowrap; }
+.trump-section__label     { color: #fbbf24; font-weight: 600; font-size: 1rem; white-space: nowrap; line-height: 1.2; }
 .trump-section__selects   { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap; }
 .conf-custom-select {
     position: relative;
@@ -1319,7 +1319,7 @@
     .player-tag button { width: 28px; height: 28px; font-size: 0.9rem; }
     .btn               { min-height: 44px; padding: 0.75rem 1rem; }
     .btn-small         { min-height: 44px; }
-    .trump-select-btn  { padding: 0.65rem 0.75rem; min-height: 44px; }
+    .trump-select-btn  { padding: 0.5rem 0.5rem; min-height: 44px; font-size: 0.85rem; white-space: nowrap; overflow: hidden; }
     .conf-select-btn   { padding: 0.6rem 0.75rem; min-height: 44px; }
     .player-select-btn { min-height: 44px; }
     .player-select-option { padding: 0.8rem 0.75rem; }
