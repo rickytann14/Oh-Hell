@@ -254,6 +254,13 @@ function setNumPlayers(n) {
     updatePlayerInputs();
 }
 
+function changeStartingHandSize(delta) {
+    const input = document.getElementById('startingHandSize');
+    const next = Math.min(15, Math.max(1, parseInt(input.value) + delta));
+    input.value = next;
+    document.getElementById('startingHandSizeDisplay').textContent = next;
+}
+
 function updatePlayerInputs() {
     const num = parseInt(document.getElementById('numPlayers').value);
     const container = document.getElementById('playerInputs');

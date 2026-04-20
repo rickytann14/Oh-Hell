@@ -21,31 +21,38 @@
         <div class="card">
             <h2>New Game Setup</h2>
 
-            <div class="input-group">
-                <label>Number of Players</label>
-                <div class="num-players-control">
-                    <button type="button" class="num-players-step" onclick="changeNumPlayers(-1)">−</button>
-                    <span id="numPlayersDisplay">5</span>
-                    <button type="button" class="num-players-step" onclick="changeNumPlayers(1)">+</button>
-                    <input type="hidden" id="numPlayers" value="5">
+            <div style="display: flex; gap: 2rem; align-items: flex-start;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Number of Players</label>
+                    <div class="num-players-control">
+                        <button type="button" class="num-players-step" onclick="changeNumPlayers(-1)">−</button>
+                        <span id="numPlayersDisplay">5</span>
+                        <button type="button" class="num-players-step" onclick="changeNumPlayers(1)">+</button>
+                        <input type="hidden" id="numPlayers" value="5">
+                    </div>
+                    <div class="num-players-quick-row">
+                        <button type="button" class="num-players-quick" onclick="setNumPlayers(5)">5 players</button>
+                        <button type="button" class="num-players-quick" onclick="setNumPlayers(10)">10 players</button>
+                    </div>
                 </div>
-                <div class="num-players-quick-row">
-                    <button type="button" class="num-players-quick" onclick="setNumPlayers(5)">5 players</button>
-                    <button type="button" class="num-players-quick" onclick="setNumPlayers(10)">10 players</button>
+
+                <div class="input-group" style="flex: 1;">
+                    <label>Starting Hand Size</label>
+                    <div class="num-players-control">
+                        <button type="button" class="num-players-step" onclick="changeStartingHandSize(-1)">−</button>
+                        <span id="startingHandSizeDisplay">10</span>
+                        <button type="button" class="num-players-step" onclick="changeStartingHandSize(1)">+</button>
+                        <input type="hidden" id="startingHandSize" value="10">
+                    </div>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
+                        Game starts at this hand size. You can set hand size manually for each round.
+                    </p>
                 </div>
             </div>
 
             <div class="input-group">
                 <label>Select Players</label>
                 <div class="player-inputs" id="playerInputs"></div>
-            </div>
-
-            <div class="input-group">
-                <label>Starting Hand Size</label>
-                <input type="number" id="startingHandSize" min="1" max="15" value="10">
-                <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
-                    Game starts at this hand size. You can set hand size manually for each round.
-                </p>
             </div>
 
             <button class="btn btn-success" onclick="startGame()" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
