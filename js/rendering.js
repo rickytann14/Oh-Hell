@@ -253,6 +253,8 @@ function renderRoundSetup() {
         positionMap[p.originalIndex] = idx + 1;
     });
 
+    const prevNavScroll = document.querySelector('.players-nav')?.scrollLeft ?? 0;
+
     stickyInfo.innerHTML = `
         <div class="round-summary">
             <div class="round-summary-top">
@@ -500,4 +502,11 @@ function renderRoundSetup() {
             `}
         </div>
     `;
+
+    const nav = document.querySelector('.players-nav');
+    if (nav && prevNavScroll) {
+        nav.style.scrollBehavior = 'auto';
+        nav.scrollLeft = prevNavScroll;
+        nav.style.scrollBehavior = '';
+    }
 }
