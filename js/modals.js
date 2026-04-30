@@ -22,7 +22,7 @@ function renderGamePlayersModal() {
                             <div style="font-weight: 700; color: #f8fafc;">${escapeHtml(player.name)}</div>
                             <div style="font-size: 0.82rem; color: #94a3b8;">Score: ${player.score}</div>
                         </div>
-                        <button class="btn btn-danger btn-small" onclick="disablePlayerMidGame(${JSON.stringify(player.name)})">Disable</button>
+                        <button class="btn btn-danger btn-small" onclick="disablePlayerMidGame('${player.name.replace(/'/g, "\\'")}')">Disable</button>
                     </div>
                 `).join('')}
             </div>
