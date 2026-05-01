@@ -31,10 +31,14 @@ function renderGamePlayersModal() {
         ${inactivePlayers.length > 0 ? `
             <div class="input-group">
                 <label>Disabled Players</label>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                     ${inactivePlayers.map(player => `
-                        <div style="padding: 0.5rem 0.85rem; border-radius: 999px; background: rgba(71, 85, 105, 0.65); color: #cbd5e1; font-size: 0.9rem;">
-                            ${escapeHtml(player.name)} • ${player.score}
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; background: rgba(71, 85, 105, 0.45); padding: 0.75rem 0.9rem; border-radius: 10px;">
+                            <div>
+                                <div style="font-weight: 700; color: #cbd5e1;">${escapeHtml(player.name)}</div>
+                                <div style="font-size: 0.82rem; color: #94a3b8;">Score: ${player.score}</div>
+                            </div>
+                            <button class="btn btn-success btn-small" onclick="reEnablePlayerMidGame('${player.name.replace(/'/g, "\\'")}')">Re-enable</button>
                         </div>
                     `).join('')}
                 </div>
@@ -174,6 +178,47 @@ function disablePlayerMidGame(playerName) {
             currentRound.dealerIndex = remainingActive[0] ?? currentRound.dealerIndex;
         }
     }
+
+    renderGame();
+    updatePlayerPositions();
+    autoSave();
+    renderGamePlayersModal();
+}
+
+function reEnablePlayerMidGame(playerName) {
+    const playerIndex = gameState.players.findIndex(player => player.name === playerName);
+    if (playerIndex < 0) return;
+
+    if (!confirm(`Re-enable ${playerName}? They will receive credit for scored rounds missed.`)) {
+        return;
+    }
+
+    const player = gameState.players[playerIndex];
+    player.active = true;
+
+    gameState.rounds.forEach((round, roundIndex) => {
+        const roundData = round.playerData[playerIndex];
+        const wasDisabled = roundData?.absentReason === 'disabled';
+
+        if (round.scored && wasDisabled) {
+            const credit = calculateMissedRoundCredit(getRoundParticipatingCount(round));
+            round.playerData[playerIndex] = createRoundPlayerData(false, {
+                score: credit,
+                absentReason: 'rejoined'
+            });
+            player.score += credit;
+            if (!player.rounds) player.rounds = [];
+            player.rounds[roundIndex] = {
+                round: roundIndex + 1,
+                bid: null,
+                gotSet: false,
+                score: credit,
+                rejoined: true
+            };
+        } else if (!round.scored && wasDisabled) {
+            round.playerData[playerIndex] = createRoundPlayerData(true);
+        }
+    });
 
     renderGame();
     updatePlayerPositions();
