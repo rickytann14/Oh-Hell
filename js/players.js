@@ -270,10 +270,7 @@ function updatePlayerInputs() {
 }
 
 function togglePlayerDropdown(index) {
-    const panel = document.getElementById(`player-select-panel-${index}`);
-    const isOpen = panel.classList.contains('open');
-    document.querySelectorAll('.player-select-panel.open').forEach(p => p.classList.remove('open'));
-    if (!isOpen) panel.classList.add('open');
+    toggleDropdownPanel('player-select-panel', document.getElementById(`player-select-panel-${index}`));
 }
 
 function selectPlayerOption(index, name) {

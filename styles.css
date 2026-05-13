@@ -1,3 +1,9 @@
+    :root {
+        --color-gold: #fbbf24;
+        --color-surface: #1e293b;
+        --surface-rgb: 51, 65, 85;
+    }
+
     * {
         margin: 0;
         padding: 0;
@@ -7,7 +13,7 @@
 
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        background: linear-gradient(135deg, var(--color-surface) 0%, #334155 100%);
         color: #f1f5f9;
         min-height: 100vh;
         padding-bottom: 80px;
@@ -49,7 +55,7 @@
     .header h1 {
         font-size: 1.5rem;
         text-align: center;
-        color: #fbbf24;
+        color: var(--color-gold);
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 
@@ -135,7 +141,7 @@
     .card h2 {
         font-size: 1.25rem;
         margin-bottom: 1rem;
-        color: #fbbf24;
+        color: var(--color-gold);
     }
 
     .input-group {
@@ -154,7 +160,7 @@
         padding: 0.75rem;
         border: 2px solid #475569;
         border-radius: 8px;
-        background: #1e293b;
+        background: var(--color-surface);
         color: #f1f5f9;
         font-size: 1rem;
     }
@@ -218,7 +224,7 @@
         padding: 0.4rem 0.9rem;
         border: 2px solid #475569;
         border-radius: 8px;
-        background: #1e293b;
+        background: var(--color-surface);
         color: #94a3b8;
         font-size: 0.9rem;
         font-weight: 600;
@@ -252,7 +258,7 @@
         padding: 0.75rem;
         border: 2px solid #475569;
         border-radius: 8px;
-        background: #1e293b;
+        background: var(--color-surface);
         color: #f1f5f9;
         font-size: 1rem;
         cursor: pointer;
@@ -277,7 +283,7 @@
         top: calc(100% + 4px);
         left: 0;
         width: 100%;
-        background: #1e293b;
+        background: var(--color-surface);
         border: 1px solid #475569;
         border-radius: 8px;
         z-index: 200;
@@ -374,7 +380,7 @@
     }
 
     .round-header h3 {
-        color: #fbbf24;
+        color: var(--color-gold);
         font-size: 1.1rem;
     }
 
@@ -413,7 +419,7 @@
     .round-summary .leader-pill {
         background: rgba(251, 191, 36, 0.15);
         border: 1px solid rgba(251, 191, 36, 0.35);
-        color: #fbbf24;
+        color: var(--color-gold);
         padding: 0.36rem 0.62rem;
         border-radius: 999px;
         font-weight: 700;
@@ -432,7 +438,7 @@
         color: #cbd5e1;
         font-size: 0.84rem;
         font-weight: 600;
-        background: rgba(51, 65, 85, 0.5);
+        background: rgba(var(--surface-rgb), 0.5);
         border: 1px solid rgba(100, 116, 139, 0.35);
         border-radius: 999px;
         padding: 0.22rem 0.5rem;
@@ -441,7 +447,7 @@
     }
 
     .round-summary .meta-chip.trump {
-        color: #fbbf24;
+        color: var(--color-gold);
         border-color: rgba(251, 191, 36, 0.35);
         background: rgba(251, 191, 36, 0.12);
     }
@@ -482,7 +488,7 @@
     }
 
     .players-nav::-webkit-scrollbar-track {
-        background: rgba(51, 65, 85, 0.2);
+        background: rgba(var(--surface-rgb), 0.2);
         border-radius: 2px;
     }
 
@@ -497,7 +503,7 @@
 
     .players-nav-btn {
         padding: 0.5rem 1rem;
-        background: rgba(51, 65, 85, 0.6);
+        background: rgba(var(--surface-rgb), 0.6);
         border: 2px solid rgba(100, 116, 139, 0.4);
         color: #cbd5e1;
         border-radius: 8px;
@@ -511,7 +517,7 @@
     }
 
     .players-nav-btn:hover {
-        background: rgba(51, 65, 85, 0.9);
+        background: rgba(var(--surface-rgb), 0.9);
         border-color: rgba(100, 116, 139, 0.6);
         color: #f1f5f9;
     }
@@ -525,7 +531,7 @@
 
     .players-nav .checkbox-label {
         padding: 0.5rem 1rem;
-        background: rgba(51, 65, 85, 0.6);
+        background: rgba(var(--surface-rgb), 0.6);
         border: 2px solid rgba(100, 116, 139, 0.4);
         border-radius: 8px;
         font-size: 0.95rem;
@@ -535,7 +541,7 @@
     }
 
     .players-nav .checkbox-label:hover {
-        background: rgba(51, 65, 85, 0.9);
+        background: rgba(var(--surface-rgb), 0.9);
         border-color: rgba(100, 116, 139, 0.6);
         color: #f1f5f9;
     }
@@ -549,7 +555,7 @@
     }
 
     .player-card {
-        background: linear-gradient(135deg, #334155, #1e293b);
+        background: linear-gradient(135deg, #334155, var(--color-surface));
         border-radius: 12px;
         padding: 1rem;
         border: 2px solid #475569;
@@ -566,14 +572,14 @@
     }
 
     .player-card.dealer.selected {
-        border-color: #fbbf24;
+        border-color: var(--color-gold);
         box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
     }
 
     .player-name {
         font-size: 1.1rem;
         font-weight: 700;
-        color: #fbbf24;
+        color: var(--color-gold);
         margin-bottom: 0.75rem;
         display: flex;
         justify-content: space-between;
@@ -680,7 +686,7 @@
     }
 
     .history-round {
-        background: rgba(51, 65, 85, 0.5);
+        background: rgba(var(--surface-rgb), 0.5);
         padding: 0.75rem;
         border-radius: 8px;
         margin-bottom: 0.5rem;
@@ -688,7 +694,7 @@
 
     .history-round-header {
         font-weight: 600;
-        color: #fbbf24;
+        color: var(--color-gold);
         margin-bottom: 0.5rem;
     }
 
@@ -719,7 +725,7 @@
     }
 
     .modal-content {
-        background: #1e293b;
+        background: var(--color-surface);
         border-radius: 16px;
         padding: 2rem;
         max-width: 500px;
@@ -736,7 +742,7 @@
     }
 
     .modal-header h2 {
-        color: #fbbf24;
+        color: var(--color-gold);
         font-size: 1.5rem;
     }
 
@@ -756,7 +762,7 @@
     }
 
     .game-item {
-        background: rgba(51, 65, 85, 0.8);
+        background: rgba(var(--surface-rgb), 0.8);
         padding: 1rem;
         border-radius: 8px;
         display: flex;
@@ -772,7 +778,7 @@
     }
 
     .stats-tile {
-        background: rgba(51, 65, 85, 0.55);
+        background: rgba(var(--surface-rgb), 0.55);
         border: 1px solid rgba(100, 116, 139, 0.45);
         border-radius: 10px;
         padding: 0.75rem;
@@ -813,7 +819,7 @@
     }
 
     .stats-table th {
-        color: #fbbf24;
+        color: var(--color-gold);
         background: rgba(15, 23, 42, 0.8);
         position: sticky;
         top: 0;
@@ -847,7 +853,7 @@
     }
 
     .stats-section-title {
-        color: #fbbf24;
+        color: var(--color-gold);
         margin: 1rem 0 0.75rem;
         font-size: 1.05rem;
     }
@@ -860,7 +866,7 @@
     }
 
     .stats-mini-card {
-        background: rgba(51, 65, 85, 0.4);
+        background: rgba(var(--surface-rgb), 0.4);
         border: 1px solid rgba(100, 116, 139, 0.4);
         border-radius: 10px;
         padding: 0.65rem 0.75rem;
@@ -928,7 +934,7 @@
     }
 
     .game-info h3 {
-        color: #fbbf24;
+        color: var(--color-gold);
         margin-bottom: 0.25rem;
     }
 
@@ -959,7 +965,7 @@
     }
 
     .final-scores h3 {
-        color: #fbbf24;
+        color: var(--color-gold);
         margin-bottom: 1rem;
         text-align: center;
     }
@@ -980,7 +986,7 @@
     }
 
     .rank-item.first {
-        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        background: linear-gradient(135deg, var(--color-gold), #f59e0b);
         color: #0f172a;
     }
 
@@ -1103,7 +1109,7 @@
 }
 .value-display--bid  { color: #3b82f6; }
 .value-display--tax  { color: #f59e0b; }
-.value-display--hand { color: #fbbf24; font-size: 1rem; min-width: 34px; }
+.value-display--hand { color: var(--color-gold); font-size: 1rem; min-width: 34px; }
 
 /* ── Trump card section ───────────────────────────────────────────────────── */
 .trump-section {
@@ -1115,7 +1121,7 @@
 }
 .trump-section__row       { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
 .trump-section__label-col { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; flex-shrink: 0; }
-.trump-section__label     { color: #fbbf24; font-weight: 600; font-size: 1rem; white-space: nowrap; line-height: 1.2; }
+.trump-section__label     { color: var(--color-gold); font-weight: 600; font-size: 1rem; white-space: nowrap; line-height: 1.2; }
 .trump-section__selects   { display: flex; gap: 0.5rem; flex: 1; min-width: 220px; flex-wrap: wrap; }
 .conf-custom-select {
     position: relative;
@@ -1129,7 +1135,7 @@
     width: 100%;
     padding: 0.4rem 0.6rem;
     font-size: 0.9rem;
-    background: #1e293b;
+    background: var(--color-surface);
     border: 2px solid #475569;
     color: #f1f5f9;
     border-radius: 8px;
@@ -1155,7 +1161,7 @@
     top: calc(100% + 4px);
     left: 0;
     min-width: 100%;
-    background: #1e293b;
+    background: var(--color-surface);
     border: 1px solid #475569;
     border-radius: 8px;
     z-index: 200;
@@ -1197,7 +1203,7 @@
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
     background: rgba(15,23,42,0.8);
-    border: 2px solid #fbbf24;
+    border: 2px solid var(--color-gold);
     color: #f1f5f9;
     border-radius: 8px;
     cursor: pointer;
@@ -1211,7 +1217,7 @@
 }
 
 .trump-select-arrow {
-    color: #fbbf24;
+    color: var(--color-gold);
     font-size: 0.8em;
     flex-shrink: 0;
 }
@@ -1222,8 +1228,8 @@
     top: calc(100% + 4px);
     left: 0;
     min-width: 100%;
-    background: #1e293b;
-    border: 1px solid #fbbf24;
+    background: var(--color-surface);
+    border: 1px solid var(--color-gold);
     border-radius: 8px;
     z-index: 200;
     max-height: 220px;
@@ -1248,7 +1254,7 @@
 }
 
 .trump-select-option.selected {
-    color: #fbbf24;
+    color: var(--color-gold);
     font-weight: 600;
 }
 .trump-badge {

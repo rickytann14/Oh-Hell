@@ -113,13 +113,6 @@ function syncTrumpParts(round) {
     }
 }
 
-// Shared helper: close all open panels of the given CSS class, then toggle the target panel.
-function toggleDropdownPanel(panelClass, targetPanel) {
-    const isOpen = targetPanel.classList.contains('open');
-    document.querySelectorAll(`.${panelClass}.open`).forEach(p => p.classList.remove('open'));
-    if (!isOpen) targetPanel.classList.add('open');
-}
-
 function toggleConfDropdown(wrapId) {
     toggleDropdownPanel('conf-select-panel', document.querySelector(`#${wrapId} .conf-select-panel`));
 }

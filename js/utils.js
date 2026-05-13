@@ -186,6 +186,12 @@ function readJsonFile(file, onSuccess) {
     reader.readAsText(file);
 }
 
+function toggleDropdownPanel(panelClass, targetPanel) {
+    const isOpen = targetPanel.classList.contains('open');
+    document.querySelectorAll(`.${panelClass}.open`).forEach(p => p.classList.remove('open'));
+    if (!isOpen) targetPanel.classList.add('open');
+}
+
 function renderConfidenceOptions(pdata, playerIdx, updateFn) {
     const nums = pdata.bid > 0 ? [0, 5, 10] : [0, 5];
     return `<div class="conf-select-option${pdata.confidence === 'MAX' ? ' selected' : ''}" onclick="${updateFn}(${playerIdx}, 'MAX')">MAX</div>
