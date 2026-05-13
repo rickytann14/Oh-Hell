@@ -35,7 +35,7 @@ function startGame() {
 function saveGame() {
     const now = new Date();
     const date = now.toISOString().split('T')[0];
-    const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+    const time = now.toTimeString().slice(0, 8).replace(/:/g, '');
     const fileName = `oh-hell-${date}-${time}.json`;
     downloadJSON({ ...gameState, savedAt: now.toISOString() }, fileName);
     alert('✅ Game saved successfully!\n\nFile: ' + fileName);
