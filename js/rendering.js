@@ -7,6 +7,7 @@ function setActiveView(view) {
 
 function selectPlayer(playerIdx) {
     selectedPlayerIndex = playerIdx;
+    viewAllActive = false;
 
     // Update nav button active states
     document.querySelectorAll('.players-nav-btn').forEach(btn => {
@@ -29,6 +30,7 @@ function selectPlayer(playerIdx) {
 
 function viewAllPlayers() {
     selectedPlayerIndex = null;
+    viewAllActive = true;
 
     // Remove active state from all nav buttons
     document.querySelectorAll('.players-nav-btn').forEach(btn => {
@@ -342,7 +344,7 @@ function renderRoundSetup() {
 
             <div class="players-nav">
                 <label class="checkbox-label">
-                    <input type="checkbox" id="viewAllCheckbox" onchange="handleViewAllToggle(this.checked)">
+                    <input type="checkbox" id="viewAllCheckbox" ${viewAllActive ? 'checked' : ''} onchange="handleViewAllToggle(this.checked)">
                     📋 View All
                 </label>
                 ${gameState.players.map((player, idx) => {
@@ -357,9 +359,8 @@ function renderRoundSetup() {
 
             <div class="players-grid">
                 ${(() => {
-                    // Resolve default selected player BEFORE rendering any cards,
-                    // so every card sees the correct selectedPlayerIndex from the start.
-                    if (selectedPlayerIndex === null) {
+                    // Only pick a default player on first render (not View All mode).
+                    if (!viewAllActive && selectedPlayerIndex === null) {
                         const dealerIdx = round.dealerIndex;
                         for (let i = 0; i < gameState.players.length; i++) {
                             const checkIdx = (dealerIdx + 1 + i) % gameState.players.length;
@@ -400,10 +401,9 @@ function renderRoundSetup() {
                     const leaderCrown = isLeader ? '👑 ' : '';
 
                     const isSelectedCard = selectedPlayerIndex === idx;
-                    const isViewAll = selectedPlayerIndex === null;
 
                     return `
-                    <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''} ${isSelectedCard ? 'selected' : ''} ${!isViewAll && !isSelectedCard ? 'hidden' : ''}" data-player-idx="${idx}">
+                    <div class="player-card ${idx === round.dealerIndex ? 'dealer' : ''} ${isSelectedCard ? 'selected' : ''} ${!viewAllActive && !isSelectedCard ? 'hidden' : ''}" data-player-idx="${idx}">
                         <div class="player-name">
                             ${leaderCrown}${escapeHtml(player.name)} ${positionIndicator}
                             ${idx === round.dealerIndex ? '<span>🎴 Dealer</span>' : ''}

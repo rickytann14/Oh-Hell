@@ -232,7 +232,8 @@ function updatePlayerPositions() {
 
 function nextRound() {
     gameState.currentRound++;
-    selectedPlayerIndex = null; // Reset selection for new round
+    selectedPlayerIndex = null;
+    viewAllActive = false;
     startNewRound();
 }
 

@@ -22,3 +22,4 @@ let currentView = 'setup';
 
 let editingRoundIndex = null;
 let selectedPlayerIndex = null;
+let viewAllActive = false;
