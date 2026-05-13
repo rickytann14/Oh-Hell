@@ -628,64 +628,28 @@ function editRound(roundIndex) {
     document.getElementById('editRoundModal').classList.add('active');
 }
 
-// Edit-round mutation functions (mirror current-round but target editingRoundIndex)
+// Edit-round mutation functions — delegate to shared helpers in rounds.js, then re-render modal
 function updateEditBid(playerIdx, value) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].bid = parseInt(value) || 0;
     clearTimeout(_editBidDebounceTimer);
     _editBidDebounceTimer = setTimeout(() => editRound(editingRoundIndex), 150);
 }
+function setEditBid(playerIdx, value)           { _applyBid(editingRoundIndex, playerIdx, value);        editRound(editingRoundIndex); }
+function adjustEditBid(playerIdx, delta)        { _applyBidDelta(editingRoundIndex, playerIdx, delta);   editRound(editingRoundIndex); }
 
-function setEditBid(playerIdx, value) {
-    gameState.rounds[editingRoundIndex].playerData[playerIdx].bid = _clampedBid(editingRoundIndex, playerIdx, value);
-    editRound(editingRoundIndex);
-}
-
-function adjustEditBid(playerIdx, delta) {
-    const round = gameState.rounds[editingRoundIndex];
-    round.playerData[playerIdx].bid = Math.max(0, Math.min(round.handSize, round.playerData[playerIdx].bid + delta));
-    editRound(editingRoundIndex);
-}
-
-function updateEditHandSize(value) {
-    _applyHandSize(editingRoundIndex, value);
-    editRound(editingRoundIndex);
-}
-
-function adjustEditHandSize(delta) {
-    updateEditHandSize(Math.max(1, Math.min(20, gameState.rounds[editingRoundIndex].handSize + delta)));
-}
+function updateEditHandSize(value)  { _applyHandSize(editingRoundIndex, value); editRound(editingRoundIndex); }
+function adjustEditHandSize(delta)  { updateEditHandSize(Math.max(1, Math.min(20, gameState.rounds[editingRoundIndex].handSize + delta))); }
 
 function updateEditTax(playerIdx, value) {
     gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = parseInt(value) || 0;
     clearTimeout(_editTaxDebounceTimer);
     _editTaxDebounceTimer = setTimeout(() => editRound(editingRoundIndex), 150);
 }
-
-function adjustEditTax(playerIdx, delta) {
-    const round = gameState.rounds[editingRoundIndex];
-    round.playerData[playerIdx].tax = _clampedTax(round.playerData[playerIdx].tax + delta);
-    editRound(editingRoundIndex);
-}
-
-function setEditTax(playerIdx, value) {
-    gameState.rounds[editingRoundIndex].playerData[playerIdx].tax = _clampedTax(value);
-    editRound(editingRoundIndex);
-}
-
-function updateEditConfidence(playerIdx, value) {
-    gameState.rounds[editingRoundIndex].playerData[playerIdx].confidence = value;
-    editRound(editingRoundIndex);
-}
-
-function updateEditDeferred(playerIdx, checked) {
-    gameState.rounds[editingRoundIndex].playerData[playerIdx].deferred = checked;
-    editRound(editingRoundIndex);
-}
-
-function updateEditGotSet(playerIdx, checked) {
-    gameState.rounds[editingRoundIndex].playerData[playerIdx].gotSet = checked;
-    editRound(editingRoundIndex);
-}
+function adjustEditTax(playerIdx, delta)        { _applyTaxDelta(editingRoundIndex, playerIdx, delta);   editRound(editingRoundIndex); }
+function setEditTax(playerIdx, value)           { _applyTax(editingRoundIndex, playerIdx, value);        editRound(editingRoundIndex); }
+function updateEditConfidence(playerIdx, value) { _applyConfidence(editingRoundIndex, playerIdx, value); editRound(editingRoundIndex); }
+function updateEditDeferred(playerIdx, checked) { _applyDeferred(editingRoundIndex, playerIdx, checked); editRound(editingRoundIndex); }
+function updateEditGotSet(playerIdx, checked)   { _applyGotSet(editingRoundIndex, playerIdx, checked);   editRound(editingRoundIndex); }
 
 function saveEditedRound() {
     if (!confirm('Save changes to this round?')) return;

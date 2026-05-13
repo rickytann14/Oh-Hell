@@ -693,15 +693,6 @@ function formatStatNumber(value, digits = 1) {
     return Number(value).toFixed(digits);
 }
 
-function escapeHtml(text) {
-    return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
 function renderTooltipLabel(label, description) {
     return `<span class="stat-tooltip" tabindex="0" data-tooltip="${escapeHtml(description)}">${escapeHtml(label)}</span>`;
 }
