@@ -429,38 +429,21 @@ function loadGameFromFile(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const game = JSON.parse(e.target.result);
-            
-            // Validate it's a valid game file
-            if (!game.players || !game.rounds || !Array.isArray(game.players)) {
-                throw new Error('Invalid game file format');
-            }
-
-            // Handle backward compatibility
-            if (!game.startingHandSize) {
-                game.startingHandSize = game.handProgression?.[0]
-                    || game.rounds?.[0]?.handSize
-                    || game.currentHandSize
-                    || 10;
-            }
-            
-            // Initialize previousPosition if not present
-            gameState = normalizeGameState(game);
-            setActiveView('game');
-            renderGame();
-            closeModal('saveLoadModal');
-            
-            alert('✅ Game loaded successfully!');
-        } catch (error) {
-            alert('❌ Error loading game file: ' + error.message);
+    readJsonFile(file, (game) => {
+        if (!game.players || !game.rounds || !Array.isArray(game.players)) {
+            alert('❌ Invalid game file format');
+            return;
         }
-    };
-    reader.readAsText(file);
-    
-    // Reset file input
+        if (!game.startingHandSize) {
+            game.startingHandSize = game.handProgression?.[0] || game.rounds?.[0]?.handSize || game.currentHandSize || 10;
+        }
+        gameState = normalizeGameState(game);
+        setActiveView('game');
+        renderGame();
+        closeModal('saveLoadModal');
+        alert('✅ Game loaded successfully!');
+    });
+
     event.target.value = '';
 }
 
@@ -480,20 +463,8 @@ function editRound(roundIndex) {
     
     document.getElementById('editRoundNumber').textContent = roundIndex + 1;
     
-    const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
-    let bidStatus = '';
-    let bidClass = '';
-    
-    if (totalBids < round.handSize) {
-        bidStatus = '🦆 Under';
-        bidClass = 'under';
-    } else if (totalBids > round.handSize) {
-        bidStatus = '🦢 Over';
-        bidClass = 'over';
-    } else {
-        bidStatus = '❌ Exact';
-        bidClass = 'exact';
-    }
+    const totalBids = getTotalBids(round);
+    const { label: bidStatus, cssClass: bidClass } = getBidStatus(totalBids, round.handSize);
 
     const content = document.getElementById('editRoundContent');
     content.innerHTML = `
@@ -588,10 +559,7 @@ function editRound(roundIndex) {
                                     <span class="conf-select-arrow">▾</span>
                                 </button>
                                 <div class="conf-select-panel">
-                                    <div class="conf-select-option${round.playerData[idx].confidence === 'MAX' ? ' selected' : ''}" onclick="updateEditConfidence(${idx}, 'MAX')">MAX</div>
-                                    ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n =>
-                                        `<div class="conf-select-option${round.playerData[idx].confidence === n ? ' selected' : ''}" onclick="updateEditConfidence(${idx}, ${n})">${n}</div>`
-                                    ).join('')}
+                                    ${renderConfidenceOptions(round.playerData[idx], idx, 'updateEditConfidence')}
                                 </div>
                             </div>
                         </div>
@@ -656,10 +624,7 @@ function saveEditedRound() {
     const round = gameState.rounds[editingRoundIndex];
 
     // Keep exact bids invalid in edit mode too.
-    const totalBids = round.playerData.reduce((sum, pdata) => {
-        if (!pdata || pdata.participating === false) return sum;
-        return sum + (Number(pdata.bid) || 0);
-    }, 0);
+    const totalBids = getTotalBids(round);
     if (totalBids === round.handSize) {
         round.exactBidBlocks = (Number(round.exactBidBlocks) || 0) + 1;
         autoSave();

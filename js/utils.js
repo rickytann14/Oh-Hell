@@ -146,6 +146,52 @@ function formatSignedValue(value) {
     return value >= 0 ? `+${value}` : `${value}`;
 }
 
+function getTotalBids(round) {
+    return (round.playerData || []).reduce((sum, p) => sum + (p && p.participating ? p.bid : 0), 0);
+}
+
+function getBidStatus(totalBids, handSize) {
+    if (totalBids < handSize) return { label: '🦆 Under', cssClass: 'under' };
+    if (totalBids > handSize) return { label: '🦢 Over',  cssClass: 'over'  };
+    return                          { label: '❌ Exact',  cssClass: 'exact' };
+}
+
+function getSortedPlayers() {
+    return [...gameState.players]
+        .map((p, idx) => ({ ...p, originalIndex: idx }))
+        .sort((a, b) => b.score - a.score);
+}
+
+function downloadJSON(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function readJsonFile(file, onSuccess) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            onSuccess(JSON.parse(e.target.result));
+        } catch (error) {
+            alert('Error reading file: ' + error.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function renderConfidenceOptions(pdata, playerIdx, updateFn) {
+    const nums = pdata.bid > 0 ? [0, 5, 10] : [0, 5];
+    return `<div class="conf-select-option${pdata.confidence === 'MAX' ? ' selected' : ''}" onclick="${updateFn}(${playerIdx}, 'MAX')">MAX</div>
+        ${nums.map(n => `<div class="conf-select-option${pdata.confidence === n ? ' selected' : ''}" onclick="${updateFn}(${playerIdx}, ${n})">${n}</div>`).join('')}`;
+}
+
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')

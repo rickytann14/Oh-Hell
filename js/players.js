@@ -55,22 +55,8 @@ function loadSavedPlayers() {
 
 function exportPlayers() {
     const players = getSavedPlayers();
-    const data = {
-        exportDate: new Date().toISOString(),
-        players: players
-    };
-    
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `oh-hell-players-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
+    const date = new Date().toISOString().split('T')[0];
+    downloadJSON({ exportDate: new Date().toISOString(), players }, `oh-hell-players-${date}.json`);
     alert('Player list exported successfully!');
 }
 
@@ -78,37 +64,25 @@ function importPlayers(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            const importedPlayers = data.players || data;
-            
-            if (!Array.isArray(importedPlayers)) {
-                throw new Error('Invalid file format');
-            }
-
-            const currentPlayers = getSavedPlayers();
-            const newPlayers = importedPlayers.filter(p => !currentPlayers.includes(p));
-            
-            if (newPlayers.length === 0) {
-                alert('All players from the file already exist!');
-                return;
-            }
-
-            const allPlayers = [...new Set([...currentPlayers, ...importedPlayers])];
-            savePlayers(allPlayers);
-            loadSavedPlayers();
-            updatePlayerInputs();
-            
-            alert(`Imported ${newPlayers.length} new player(s)!`);
-        } catch (error) {
-            alert('Error importing file: ' + error.message);
+    readJsonFile(file, (data) => {
+        const importedPlayers = data.players || data;
+        if (!Array.isArray(importedPlayers)) {
+            alert('Invalid file format');
+            return;
         }
-    };
-    reader.readAsText(file);
-    
-    // Reset file input
+        const currentPlayers = getSavedPlayers();
+        const newPlayers = importedPlayers.filter(p => !currentPlayers.includes(p));
+        if (newPlayers.length === 0) {
+            alert('All players from the file already exist!');
+            return;
+        }
+        const allPlayers = [...new Set([...currentPlayers, ...importedPlayers])];
+        savePlayers(allPlayers);
+        loadSavedPlayers();
+        updatePlayerInputs();
+        alert(`Imported ${newPlayers.length} new player(s)!`);
+    });
+
     event.target.value = '';
 }
 

@@ -152,7 +152,7 @@ function scoreRound() {
     const round = gameState.rounds[gameState.currentRound];
     
     // Check if bids are exact (cannot score an exact round)
-    const totalBids = round.playerData.reduce((sum, p) => sum + (p && p.participating ? p.bid : 0), 0);
+    const totalBids = getTotalBids(round);
     if (totalBids === round.handSize) {
         round.exactBidBlocks = (Number(round.exactBidBlocks) || 0) + 1;
         autoSave();

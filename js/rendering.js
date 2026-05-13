@@ -98,9 +98,7 @@ function renderGame() {
 
 function renderScoreboard() {
     const container = document.getElementById('scoreboard');
-    const sortedPlayers = [...gameState.players]
-        .map((p, idx) => ({...p, originalIndex: idx}))
-        .sort((a, b) => b.score - a.score);
+    const sortedPlayers = getSortedPlayers();
 
     container.innerHTML = `
         <div class="card">
@@ -192,7 +190,7 @@ function renderHistory() {
 function endGame() {
     const container = document.getElementById('currentRoundSetup');
     const stickyInfo = document.getElementById('stickyRoundInfo');
-    const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+    const sortedPlayers = getSortedPlayers();
 
     stickyInfo.innerHTML = '';
 
@@ -222,24 +220,10 @@ function renderRoundSetup() {
 
     syncTrumpParts(round);
 
-    const totalBids = round.playerData.reduce((sum, p) => sum + (p && p.participating ? p.bid : 0), 0);
-    let bidStatus = '';
-    let bidClass = '';
+    const totalBids = getTotalBids(round);
+    const { label: bidStatus, cssClass: bidClass } = getBidStatus(totalBids, round.handSize);
 
-    if (totalBids < round.handSize) {
-        bidStatus = '🦆 Under';
-        bidClass = 'under';
-    } else if (totalBids > round.handSize) {
-        bidStatus = '🦢 Over';
-        bidClass = 'over';
-    } else {
-        bidStatus = '❌ Exact';
-        bidClass = 'exact';
-    }
-
-    const sortedPlayers = [...gameState.players]
-        .map((p, idx) => ({...p, originalIndex: idx}))
-        .sort((a, b) => b.score - a.score);
+    const sortedPlayers = getSortedPlayers();
     const leader = sortedPlayers[0];
     const lowPlayer = sortedPlayers[sortedPlayers.length - 1];
     const dealer = gameState.players[round.dealerIndex] || leader;
@@ -451,10 +435,7 @@ function renderRoundSetup() {
                                         <span class="conf-select-arrow">▾</span>
                                     </button>
                                     <div class="conf-select-panel">
-                                        <div class="conf-select-option${round.playerData[idx].confidence === 'MAX' ? ' selected' : ''}" onclick="updateConfidence(${idx}, 'MAX')">MAX</div>
-                                        ${(round.playerData[idx].bid > 0 ? [0, 5, 10] : [0, 5]).map(n =>
-                                            `<div class="conf-select-option${round.playerData[idx].confidence === n ? ' selected' : ''}" onclick="updateConfidence(${idx}, ${n})">${n}</div>`
-                                        ).join('')}
+                                        ${renderConfidenceOptions(round.playerData[idx], idx, 'updateConfidence')}
                                     </div>
                                 </div>
                             </div>

@@ -33,28 +33,11 @@ function startGame() {
 }
 
 function saveGame() {
-    const gameToSave = {
-        ...gameState,
-        savedAt: new Date().toISOString()
-    };
-    
-    const jsonString = JSON.stringify(gameToSave, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    
-    // Generate shorter filename with just date and round
-    const date = new Date().toISOString().split('T')[0];
-    const round = gameState.currentRound + 1;
-    const fileName = `oh-hell-${date}-r${round}.json`;
-    
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];
+    const time = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+    const fileName = `oh-hell-${date}-${time}.json`;
+    downloadJSON({ ...gameState, savedAt: now.toISOString() }, fileName);
     alert('✅ Game saved successfully!\n\nFile: ' + fileName);
 }
 
@@ -124,8 +107,8 @@ function exportToExcel() {
         data.push(r1);
         
         // Row 2 of round: Bid Count (we'll show total/handSize)
-        const totalBids = round.playerData.reduce((sum, p) => sum + p.bid, 0);
-        let bidStatus = totalBids < round.handSize ? '🦆' : (totalBids > round.handSize ? '🦢' : '❌');
+        const totalBids = getTotalBids(round);
+        const bidStatus = getBidStatus(totalBids, round.handSize).label;
         let r2 = ['Bid Count', `${totalBids}/${round.handSize} ${bidStatus}`, 'Bid'];
         round.playerData.forEach(pdata => {
             r2.push(pdata.bid);
