@@ -16,9 +16,16 @@ document.getElementById('newPlayerName').addEventListener('keypress', (e) => {
     });
 });
 
-// Shrink header action buttons when scrolled past 60px
+// Shrink header when scrolled down, expand when scrolled back up.
+// Hysteresis (different add/remove thresholds) prevents jitter at the boundary.
 window.addEventListener('scroll', () => {
-    document.querySelector('.header').classList.toggle('scrolled', window.scrollY > 60);
+    const header = document.querySelector('.header');
+    const y = window.scrollY;
+    if (!header.classList.contains('scrolled') && y > 80) {
+        header.classList.add('scrolled');
+    } else if (header.classList.contains('scrolled') && y < 40) {
+        header.classList.remove('scrolled');
+    }
 }, { passive: true });
 
 document.addEventListener('click', (e) => {
