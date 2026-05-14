@@ -209,15 +209,18 @@ function undoLastRound() {
     if (!confirm('Are you sure you want to undo this round?')) return;
 
     const round = gameState.rounds[gameState.currentRound];
+    const roundNumber = gameState.currentRound + 1;
     
     // Reverse the scores
     round.playerData.forEach((pdata, idx) => {
-        if (!pdata || !pdata.participating) {
+        if (!pdata) {
             return;
         }
 
         gameState.players[idx].score -= pdata.score;
-        gameState.players[idx].rounds.pop();
+        gameState.players[idx].rounds = gameState.players[idx].rounds.filter(
+            entry => entry.round !== roundNumber
+        );
     });
 
     round.scored = false;

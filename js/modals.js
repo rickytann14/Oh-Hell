@@ -15,6 +15,9 @@ function renderGamePlayersModal() {
     container.innerHTML = `
         <div class="input-group">
             <label>Active Players</label>
+            <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 0.75rem; line-height: 1.5;">
+                Disable removes a player from this unscored round (if active) and keeps them out until re-enabled.
+            </p>
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 ${activePlayers.map(player => `
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; background: rgba(51, 65, 85, 0.7); padding: 0.75rem 0.9rem; border-radius: 10px;">
@@ -31,6 +34,9 @@ function renderGamePlayersModal() {
         ${inactivePlayers.length > 0 ? `
             <div class="input-group">
                 <label>Disabled Players</label>
+                <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 0.75rem; line-height: 1.5;">
+                    Re-enable brings a player back and gives missed-round credit for scored rounds they sat out.
+                </p>
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                     ${inactivePlayers.map(player => `
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; background: rgba(71, 85, 105, 0.45); padding: 0.75rem 0.9rem; border-radius: 10px;">
@@ -48,7 +54,10 @@ function renderGamePlayersModal() {
         <div class="input-group">
             <label>Add Player Mid-Game</label>
             <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 0.75rem; line-height: 1.5;">
-                Missed-round credit uses Math.round(((players - 2) * 20) / players) for each scored round they missed.
+                Add anytime: they join the current unscored round and receive missed-round credit for already scored rounds.
+            </p>
+            <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 0.75rem; line-height: 1.5;">
+                Credit formula: Math.round(((players - 2) * 20) / players) per scored round missed.
             </p>
             <input type="hidden" id="midGamePlayerSelect" value="">
             <div class="player-custom-select" id="midgame-select-wrap" style="margin-bottom: 0.5rem;">
@@ -175,7 +184,11 @@ function disablePlayerMidGame(playerName) {
             const remainingActive = gameState.players
                 .map((player, idx) => (currentRound.playerData[idx]?.participating ? idx : null))
                 .filter(idx => idx !== null);
-            currentRound.dealerIndex = remainingActive[0] ?? currentRound.dealerIndex;
+
+            const nextDealer = remainingActive.find(idx => idx > playerIndex);
+            currentRound.dealerIndex = nextDealer !== undefined
+                ? nextDealer
+                : (remainingActive[0] ?? currentRound.dealerIndex);
         }
     }
 
@@ -198,24 +211,39 @@ function reEnablePlayerMidGame(playerName) {
 
     gameState.rounds.forEach((round, roundIndex) => {
         const roundData = round.playerData[playerIndex];
-        const wasDisabled = roundData?.absentReason === 'disabled';
+        const missedWhileDisabled = round.scored
+            && roundData
+            && !roundData.participating
+            && (roundData.absentReason === 'disabled' || roundData.absentReason === 'inactive');
+        const shouldRejoinUnscored = !round.scored
+            && roundData
+            && !roundData.participating
+            && (roundData.absentReason === 'disabled' || roundData.absentReason === 'inactive');
 
-        if (round.scored && wasDisabled) {
+        if (missedWhileDisabled) {
             const credit = calculateMissedRoundCredit(getRoundParticipatingCount(round));
             round.playerData[playerIndex] = createRoundPlayerData(false, {
                 score: credit,
                 absentReason: 'rejoined'
             });
+
             player.score += credit;
             if (!player.rounds) player.rounds = [];
-            player.rounds[roundIndex] = {
+
+            const existingIdx = player.rounds.findIndex(entry => entry.round === roundIndex + 1);
+            if (existingIdx >= 0) {
+                player.rounds.splice(existingIdx, 1);
+            }
+
+            player.rounds.push({
                 round: roundIndex + 1,
                 bid: null,
                 gotSet: false,
                 score: credit,
                 rejoined: true
-            };
-        } else if (!round.scored && wasDisabled) {
+            });
+            player.rounds.sort((a, b) => a.round - b.round);
+        } else if (shouldRejoinUnscored) {
             round.playerData[playerIndex] = createRoundPlayerData(true);
         }
     });
@@ -646,14 +674,10 @@ function saveEditedRound() {
         }
 
         gameState.players[idx].score -= pdata.score;
-        
-        // Find and remove the old round data from player history
-        const roundHistoryIdx = gameState.players[idx].rounds.findIndex(
-            r => r.round === editingRoundIndex + 1
+
+        gameState.players[idx].rounds = gameState.players[idx].rounds.filter(
+            entry => entry.round !== editingRoundIndex + 1
         );
-        if (roundHistoryIdx >= 0) {
-            gameState.players[idx].rounds.splice(roundHistoryIdx, 1);
-        }
     });
 
     // Now recalculate scores with new data
@@ -665,13 +689,14 @@ function saveEditedRound() {
         if (!pdata.participating) {
             gameState.players[idx].score += pdata.score;
 
-            if (pdata.absentReason === 'joined-late' && pdata.score) {
+            if ((pdata.absentReason === 'joined-late' || pdata.absentReason === 'rejoined') && pdata.score) {
                 gameState.players[idx].rounds.push({
                     round: editingRoundIndex + 1,
                     bid: null,
                     gotSet: false,
                     score: pdata.score,
-                    joinedLate: true
+                    joinedLate: pdata.absentReason === 'joined-late',
+                    rejoined: pdata.absentReason === 'rejoined'
                 });
                 gameState.players[idx].rounds.sort((a, b) => a.round - b.round);
             }

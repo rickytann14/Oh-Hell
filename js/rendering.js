@@ -148,15 +148,19 @@ function renderHistory() {
                             <div class="history-players">
                                 ${gameState.players.map((player, pIdx) => {
                                     const pdata = round.playerData[pIdx];
-                                    if (!pdata || (!pdata.participating && pdata.absentReason !== 'joined-late')) {
+                                    const isCreditEntry = !pdata?.participating
+                                        && (pdata.absentReason === 'joined-late' || pdata.absentReason === 'rejoined');
+
+                                    if (!pdata || (!pdata.participating && !isCreditEntry)) {
                                         return '';
                                     }
 
-                                    if (!pdata.participating && pdata.absentReason === 'joined-late') {
+                                    if (isCreditEntry) {
+                                        const label = pdata.absentReason === 'rejoined' ? '↩️ Rejoined' : '⏱️ Joined later';
                                         return `
                                             <div class="history-player-entry">
                                                 <strong>${escapeHtml(player.name)}:</strong>
-                                                ⏱️ Joined later
+                                                ${label}
                                                 <br>
                                                 <span class="score-positive">+${pdata.score}</span>
                                             </div>
