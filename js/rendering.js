@@ -284,6 +284,9 @@ function renderRoundSetup() {
                             </button>
                         </div>
                     </div>
+                    <p style="margin-top: 0.4rem; color: #94a3b8; font-size: 0.78rem;">
+                        Auto-decrements each round. Use +/- to override.
+                    </p>
                 </div>
                 <div class="bid-tracker ${bidClass}">
                     ${totalBids}/${round.handSize} ${bidStatus}

@@ -17,7 +17,7 @@ function startNewRound() {
     const previousRound = gameState.rounds[gameState.currentRound - 1];
     const handSize = gameState.currentRound === 0
         ? gameState.startingHandSize
-        : (previousRound?.handSize || gameState.startingHandSize);
+        : Math.max(1, (previousRound?.handSize || gameState.startingHandSize) - 1);
     const dealerIndex = getNextDealerIndex(previousRound);
 
     const round = {
