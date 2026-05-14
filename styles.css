@@ -218,6 +218,7 @@
         display: flex;
         gap: 0.5rem;
         margin-top: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .num-players-quick {
@@ -612,8 +613,8 @@
         display: flex;
         gap: 0.25rem;
         margin-top: 0.35rem;
-        flex-wrap: nowrap;
-        justify-content: center;
+        flex-wrap: wrap;
+        justify-content: stretch;
     }
 
     .quick-value-btn {
@@ -628,6 +629,8 @@
         line-height: 1.2;
         touch-action: manipulation;
         min-width: 38px;
+        flex: 1 1 44px;
+        max-width: 100%;
     }
 
     .quick-value-btn:active {
@@ -1126,6 +1129,7 @@
 .conf-custom-select {
     position: relative;
     width: 100%;
+    min-width: 0;
 }
 
 .conf-select-btn {
@@ -1160,11 +1164,14 @@
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
-    min-width: 100%;
+    right: 0;
+    min-width: 0;
+    max-width: 100%;
     background: var(--color-surface);
     border: 1px solid #475569;
     border-radius: 8px;
     z-index: 200;
+    overflow-x: hidden;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
@@ -1227,13 +1234,16 @@
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
-    min-width: 100%;
+    right: 0;
+    min-width: 0;
+    max-width: 100%;
     background: var(--color-surface);
     border: 1px solid var(--color-gold);
     border-radius: 8px;
     z-index: 200;
     max-height: 220px;
     overflow-y: auto;
+    overflow-x: hidden;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
