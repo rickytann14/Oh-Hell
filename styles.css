@@ -829,6 +829,21 @@
         z-index: 1;
     }
 
+    .stats-table th.stats-sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .stats-table th.stats-sortable:hover {
+        background: rgba(30, 41, 59, 0.95);
+    }
+
+    .stats-sort-indicator {
+        color: #cbd5e1;
+        font-size: 0.7rem;
+        margin-left: 0.25rem;
+    }
+
     .stats-table tr:last-child td {
         border-bottom: none;
     }

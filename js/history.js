@@ -1,5 +1,21 @@
 let _statsCache = null;
 let _statsCacheKey = null;
+let _playerStatsSort = { key: 'wins', direction: 'desc' };
+
+function setPlayerStatsSort(sortKey) {
+    if (!sortKey) return;
+
+    if (_playerStatsSort.key === sortKey) {
+        _playerStatsSort.direction = _playerStatsSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        _playerStatsSort.key = sortKey;
+        _playerStatsSort.direction = sortKey === 'name' ? 'asc' : 'desc';
+    }
+
+    if (_statsCache) {
+        renderStatsContent(_statsCache);
+    }
+}
 
 async function discoverHistoryJsonPaths(sourceUrl = getHistorySourceUrl()) {
     const fallbackPaths = ['history/metric.json'];
@@ -882,6 +898,66 @@ function renderStatsContent(allGames) {
         { label: 'Best Reverse Mode',       key: 'bestGlobalReverse',       value: bestGlobalReverse ? `${bestGlobalReverse.value} (${formatStatNumber(bestGlobalReverse.avg)})` : 'n/a' },
     ];
 
+    const playerTableColumns = [
+        { label: 'Player', key: 'player', sortKey: 'name', sort: p => p.name.toLowerCase(), cell: p => escapeHtml(p.name) },
+        { label: 'Games', key: 'games', sortKey: 'games', sort: p => p.games, cell: p => p.games },
+        { label: 'Wins', key: 'wins', sortKey: 'wins', sort: p => p.wins, cell: p => p.wins },
+        { label: 'Max Sets/Game', key: 'maxSetsInGame', sortKey: 'maxSetsInGame', sort: p => p.maxSetsInGame, cell: p => p.maxSetsInGame },
+        { label: '2nd', key: 'second', sortKey: 'second', sort: p => p.second, cell: p => p.second },
+        { label: '3rd', key: 'third', sortKey: 'third', sort: p => p.third, cell: p => p.third },
+        { label: 'Win %', key: 'winRate', sortKey: 'winRate', sort: p => p.winRate, cell: p => `${formatStatNumber(p.winRate)}%` },
+        { label: 'Top 3 %', key: 'top3Rate', sortKey: 'top3Rate', sort: p => p.top3Rate, cell: p => `${formatStatNumber(p.top3Rate)}%` },
+        { label: 'Avg Final', key: 'avgFinal', sortKey: 'avgGame', sort: p => p.avgGame, cell: p => formatStatNumber(p.avgGame) },
+        { label: 'Best/Worst Game', key: 'bestWorstGame', sortKey: 'bestGame', sort: p => p.bestGame, cell: p => `${p.bestGame}/${p.worstGame}` },
+        { label: 'Bid Accuracy %', key: 'bidAccuracy', sortKey: 'madeRate', sort: p => p.madeRate, cell: p => `${formatStatNumber(p.madeRate)}%` },
+        { label: 'Set Rate', key: 'setRate', sortKey: 'setRate', sort: p => p.setRate, cell: p => `${formatStatNumber(p.setRate)}%` },
+        { label: 'Clutch %', key: 'clutchRate', sortKey: 'clutchRate', sort: p => (p.clutchAttempts > 0 ? p.clutchRate : Number.NEGATIVE_INFINITY), cell: p => (p.clutchAttempts > 0 ? `${formatStatNumber(p.clutchRate)}%` : 'n/a') },
+        { label: 'Greed', key: 'greedIndex', sortKey: 'greedIndex', sort: p => (p.positiveBidCount > 0 ? p.greedIndex : Number.NEGATIVE_INFINITY), cell: p => (p.positiveBidCount > 0 ? formatStatNumber(p.greedIndex, 2) : 'n/a') },
+        { label: 'Tax Total', key: 'taxTotal', sortKey: 'totalTax', sort: p => p.totalTax, cell: p => p.totalTax },
+        { label: 'Tax/Round', key: 'taxPerRound', sortKey: 'avgTaxPerRound', sort: p => p.avgTaxPerRound, cell: p => formatStatNumber(p.avgTaxPerRound, 2) },
+        { label: 'Def Made %', key: 'deferredMadeRate', sortKey: 'deferredMadeRate', sort: p => (p.deferredAttempts > 0 ? p.deferredMadeRate : Number.NEGATIVE_INFINITY), cell: p => (p.deferredAttempts > 0 ? `${formatStatNumber(p.deferredMadeRate)}%` : 'n/a') },
+        { label: 'Non-Def Made %', key: 'nonDeferredMadeRate', sortKey: 'nonDeferredMadeRate', sort: p => (p.nonDeferredAttempts > 0 ? p.nonDeferredMadeRate : Number.NEGATIVE_INFINITY), cell: p => (p.nonDeferredAttempts > 0 ? `${formatStatNumber(p.nonDeferredMadeRate)}%` : 'n/a') },
+        { label: 'Dealer Edge', key: 'dealerEdge', sortKey: 'dealerEdge', sort: p => p.dealerEdge, cell: p => formatStatNumber(p.dealerEdge) },
+        { label: 'Set Hunter %', key: 'setHunterRate', sortKey: 'setHunterRate', sort: p => (p.highBidOppTotal > 0 ? p.setHunterRate : Number.NEGATIVE_INFINITY), cell: p => (p.highBidOppTotal > 0 ? `${formatStatNumber(p.setHunterRate)}%` : 'n/a') },
+        { label: 'Set Magnet %', key: 'setMagnetRate', sortKey: 'setMagnetRate', sort: p => p.setRate, cell: p => `${formatStatNumber(p.setRate)}%` },
+        { label: 'Comeback Wins', key: 'comebackWins', sortKey: 'comebackWins', sort: p => p.comebackWins, cell: p => p.comebackWins },
+        { label: 'Choke %', key: 'chokeRate', sortKey: 'chokeRate', sort: p => (p.chokeOpportunities > 0 ? (p.chokeCount / p.chokeOpportunities) * 100 : Number.NEGATIVE_INFINITY), cell: p => (p.chokeOpportunities > 0 ? `${formatStatNumber((p.chokeCount / p.chokeOpportunities) * 100)}%` : 'n/a') },
+        { label: 'Hot Hand', key: 'hotHand', sortKey: 'bestMadeStreak', sort: p => p.bestMadeStreak, cell: p => p.bestMadeStreak },
+        { label: 'Disaster', key: 'disasterStreak', sortKey: 'worstSetStreak', sort: p => p.worstSetStreak, cell: p => p.worstSetStreak },
+        { label: 'Boom/Bust', key: 'boomBust', sortKey: 'boomBustStdDev', sort: p => p.boomBustStdDev, cell: p => formatStatNumber(p.boomBustStdDev) },
+        { label: 'Peak/Floor Round', key: 'peakRound', sortKey: 'highestRoundScore', sort: p => p.highestRoundScore, cell: p => `${p.highestRoundScore}/${p.lowestRoundScore}` },
+        { label: '20+ / <=-10', key: 'twentyPlusNegTen', sortKey: 'rounds20Plus', sort: p => p.rounds20Plus, cell: p => `${p.rounds20Plus}/${p.roundsNeg10}` },
+        { label: 'Zero Bid Try %', key: 'zeroBidTryRate', sortKey: 'zeroBidAttemptRate', sort: p => p.zeroBidAttemptRate, cell: p => `${formatStatNumber(p.zeroBidAttemptRate)}%` },
+        { label: 'Zero Bid Success %', key: 'zeroBidSuccessRate', sortKey: 'zeroBidMakeRate', sort: p => (p.zeroBids > 0 ? p.zeroBidMakeRate : Number.NEGATIVE_INFINITY), cell: p => (p.zeroBids > 0 ? `${formatStatNumber(p.zeroBidMakeRate)}%` : 'n/a') },
+        { label: 'Momentum', key: 'momentumFinish', sortKey: 'momentumDelta', sort: p => (p.momentumGames > 0 ? p.momentumDelta : Number.NEGATIVE_INFINITY), cell: p => (p.momentumGames > 0 ? formatStatNumber(p.momentumDelta) : 'n/a') },
+        { label: 'Best Suit', key: 'bestSuit', sortKey: 'bestSuitAvg', sort: p => (p.bestSuit ? p.bestSuit.avg : Number.NEGATIVE_INFINITY), cell: p => (p.bestSuit ? `${p.bestSuit.suit} ${formatStatNumber(p.bestSuit.avg)}` : 'n/a') },
+        { label: 'Best Reverse', key: 'bestReverse', sortKey: 'bestReverseAvg', sort: p => (p.bestReverse ? p.bestReverse.avg : Number.NEGATIVE_INFINITY), cell: p => (p.bestReverse ? `${p.bestReverse.value} ${formatStatNumber(p.bestReverse.avg)}` : 'n/a') },
+        { label: 'Avg Round', key: 'avgRound', sortKey: 'avgRound', sort: p => p.avgRound, cell: p => formatStatNumber(p.avgRound) },
+        { label: 'Avg Finish', key: 'avgFinish', sortKey: 'avgFinish', sort: p => p.avgFinish, cell: p => (p.games > 0 ? formatStatNumber(p.avgFinish, 2) : 'n/a') },
+        { label: 'Finish by Table Size', key: 'finishByTableSize', sortKey: 'finishBySizeLabel', sort: p => p.finishBySizeLabel.toLowerCase(), cell: p => escapeHtml(p.finishBySizeLabel) },
+        { label: 'Chaos %', key: 'chaosRate', sortKey: 'chaosRate', sort: p => p.chaosRate, cell: p => `${formatStatNumber(p.chaosRate)}%` },
+        { label: 'Dealer Block %', key: 'exactBlockRate', sortKey: 'exactBlockRate', sort: p => p.exactBlockRate, cell: p => `${formatStatNumber(p.exactBlockRate)}%` }
+    ];
+
+    const activePlayerSort = playerTableColumns.find(col => col.sortKey === _playerStatsSort.key) || playerTableColumns[2];
+    const sortedPlayers = [...players].sort((a, b) => {
+        const av = activePlayerSort.sort(a);
+        const bv = activePlayerSort.sort(b);
+
+        let cmp = 0;
+        if (typeof av === 'string' || typeof bv === 'string') {
+            cmp = String(av).localeCompare(String(bv));
+        } else {
+            cmp = (Number(av) || 0) - (Number(bv) || 0);
+        }
+
+        if (cmp === 0) {
+            cmp = a.name.localeCompare(b.name);
+        }
+
+        return _playerStatsSort.direction === 'asc' ? cmp : -cmp;
+    });
+
     content.innerHTML = `
         <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
             <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh</button>
@@ -949,87 +1025,17 @@ function renderStatsContent(allGames) {
             <table class="stats-table">
                 <thead>
                     <tr>
-                        <th>${tip('Player', 'player')}</th>
-                        <th>${tip('Games', 'games')}</th>
-                        <th>${tip('Wins', 'wins')}</th>
-                        <th>${tip('Max Sets/Game', 'maxSetsInGame')}</th>
-                        <th>${tip('2nd', 'second')}</th>
-                        <th>${tip('3rd', 'third')}</th>
-                        <th>${tip('Win %', 'winRate')}</th>
-                        <th>${tip('Top 3 %', 'top3Rate')}</th>
-                        <th>${tip('Avg Final', 'avgFinal')}</th>
-                        <th>${tip('Best/Worst Game', 'bestWorstGame')}</th>
-                        <th>${tip('Bid Accuracy %', 'bidAccuracy')}</th>
-                        <th>${tip('Set Rate', 'setRate')}</th>
-                        <th>${tip('Clutch %', 'clutchRate')}</th>
-                        <th>${tip('Greed', 'greedIndex')}</th>
-                        <th>${tip('Tax Total', 'taxTotal')}</th>
-                        <th>${tip('Tax/Round', 'taxPerRound')}</th>
-                        <th>${tip('Def Made %', 'deferredMadeRate')}</th>
-                        <th>${tip('Non-Def Made %', 'nonDeferredMadeRate')}</th>
-                        <th>${tip('Dealer Edge', 'dealerEdge')}</th>
-                        <th>${tip('Set Hunter %', 'setHunterRate')}</th>
-                        <th>${tip('Set Magnet %', 'setMagnetRate')}</th>
-                        <th>${tip('Comeback Wins', 'comebackWins')}</th>
-                        <th>${tip('Choke %', 'chokeRate')}</th>
-                        <th>${tip('Hot Hand', 'hotHand')}</th>
-                        <th>${tip('Disaster', 'disasterStreak')}</th>
-                        <th>${tip('Boom/Bust', 'boomBust')}</th>
-                        <th>${tip('Peak/Floor Round', 'peakRound')}</th>
-                        <th>${tip('20+ / <=-10', 'twentyPlusNegTen')}</th>
-                        <th>${tip('Zero Bid Try %', 'zeroBidTryRate')}</th>
-                        <th>${tip('Zero Bid Success %', 'zeroBidSuccessRate')}</th>
-                        <th>${tip('Momentum', 'momentumFinish')}</th>
-                        <th>${tip('Best Suit', 'bestSuit')}</th>
-                        <th>${tip('Best Reverse', 'bestReverse')}</th>
-                        <th>${tip('Avg Round', 'avgRound')}</th>
-                        <th>${tip('Avg Finish', 'avgFinish')}</th>
-                        <th>${tip('Finish by Table Size', 'finishByTableSize')}</th>
-                        <th>${tip('Chaos %', 'chaosRate')}</th>
-                        <th>${tip('Dealer Block %', 'exactBlockRate')}</th>
+                        ${playerTableColumns.map((col) => {
+                            const active = col.sortKey === _playerStatsSort.key;
+                            const arrow = active ? (_playerStatsSort.direction === 'asc' ? '▲' : '▼') : '↕';
+                            return `<th class="stats-sortable" onclick="setPlayerStatsSort('${col.sortKey}')">${tip(col.label, col.key)} <span class="stats-sort-indicator">${arrow}</span></th>`;
+                        }).join('')}
                     </tr>
                 </thead>
                 <tbody>
-                    ${players.map((player) => `
+                    ${sortedPlayers.map((player) => `
                         <tr>
-                            <td>${escapeHtml(player.name)}</td>
-                            <td>${player.games}</td>
-                            <td>${player.wins}</td>
-                            <td>${player.maxSetsInGame}</td>
-                            <td>${player.second}</td>
-                            <td>${player.third}</td>
-                            <td>${formatStatNumber(player.winRate)}%</td>
-                            <td>${formatStatNumber(player.top3Rate)}%</td>
-                            <td>${formatStatNumber(player.avgGame)}</td>
-                            <td>${player.bestGame}/${player.worstGame}</td>
-                            <td>${formatStatNumber(player.madeRate)}%</td>
-                            <td>${formatStatNumber(player.setRate)}%</td>
-                            <td>${player.clutchAttempts > 0 ? `${formatStatNumber(player.clutchRate)}%` : 'n/a'}</td>
-                            <td>${player.positiveBidCount > 0 ? formatStatNumber(player.greedIndex, 2) : 'n/a'}</td>
-                            <td>${player.totalTax}</td>
-                            <td>${formatStatNumber(player.avgTaxPerRound, 2)}</td>
-                            <td>${player.deferredAttempts > 0 ? `${formatStatNumber(player.deferredMadeRate)}%` : 'n/a'}</td>
-                            <td>${player.nonDeferredAttempts > 0 ? `${formatStatNumber(player.nonDeferredMadeRate)}%` : 'n/a'}</td>
-                            <td>${formatStatNumber(player.dealerEdge)}</td>
-                            <td>${player.highBidOppTotal > 0 ? `${formatStatNumber(player.setHunterRate)}%` : 'n/a'}</td>
-                            <td>${formatStatNumber(player.setRate)}%</td>
-                            <td>${player.comebackWins}</td>
-                            <td>${player.chokeOpportunities > 0 ? `${formatStatNumber((player.chokeCount / player.chokeOpportunities) * 100)}%` : 'n/a'}</td>
-                            <td>${player.bestMadeStreak}</td>
-                            <td>${player.worstSetStreak}</td>
-                            <td>${formatStatNumber(player.boomBustStdDev)}</td>
-                            <td>${player.highestRoundScore}/${player.lowestRoundScore}</td>
-                            <td>${player.rounds20Plus}/${player.roundsNeg10}</td>
-                            <td>${formatStatNumber(player.zeroBidAttemptRate)}%</td>
-                            <td>${player.zeroBids > 0 ? `${formatStatNumber(player.zeroBidMakeRate)}%` : 'n/a'}</td>
-                            <td>${player.momentumGames > 0 ? formatStatNumber(player.momentumDelta) : 'n/a'}</td>
-                            <td>${player.bestSuit ? `${player.bestSuit.suit} ${formatStatNumber(player.bestSuit.avg)}` : 'n/a'}</td>
-                            <td>${player.bestReverse ? `${player.bestReverse.value} ${formatStatNumber(player.bestReverse.avg)}` : 'n/a'}</td>
-                            <td>${formatStatNumber(player.avgRound)}</td>
-                            <td>${player.games > 0 ? formatStatNumber(player.avgFinish, 2) : 'n/a'}</td>
-                            <td>${escapeHtml(player.finishBySizeLabel)}</td>
-                            <td>${formatStatNumber(player.chaosRate)}%</td>
-                            <td>${formatStatNumber(player.exactBlockRate)}%</td>
+                            ${playerTableColumns.map((col) => `<td>${col.cell(player)}</td>`).join('')}
                         </tr>
                     `).join('')}
                 </tbody>
