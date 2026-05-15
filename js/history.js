@@ -294,13 +294,18 @@ function analyzeHistoryGames(inputGames) {
                 totalChaosRounds += 1;
             }
 
-            const exactBlocks = Number(round.exactBidBlocks) || 0;
-            totalExactBidBlocks += exactBlocks;
             const dealerName = game.players[round.dealerIndex]?.name;
             if (dealerName) {
-                getStats(dealerName).dealerRounds += 1;
-                if (exactBlocks > 0) {
+                // Dealer is blocked from bidding zero when the sum of all other
+                // active players' bids already equals the hand size.
+                const nonDealerBidSum = round.playerData.reduce((sum, pdata, idx) => {
+                    if (!pdata || pdata.participating === false) return sum;
+                    if (idx === round.dealerIndex) return sum;
+                    return sum + (Number(pdata.bid) || 0);
+                }, 0);
+                if (nonDealerBidSum === round.handSize) {
                     getStats(dealerName).exactBlockRounds += 1;
+                    totalExactBidBlocks += 1;
                 }
             }
 
@@ -711,7 +716,7 @@ function renderStatsContent(allGames) {
         avgSetPointsPerRound: 'Sum of all got-set scores in each round, averaged across scored rounds.',
         globalSetRate: 'Got-set outcomes divided by all scored player outcomes.',
         globalAvgPointsPerRound: 'Total player round points divided by all scored player outcomes.',
-        exactBlocksPerGame: 'Average number of rounds per game where the dealer was blocked from bidding zero.',
+        exactBlocksPerGame: "Average number of rounds per game where the dealer was forced to avoid zero — other players' bids summed to the hand size.",
         chaosRoundRate: 'Share of scored rounds where the round score spread is at least 25 points.',
         highestSetsInGame: 'Largest total number of got-set outcomes recorded across all rounds of a single game.',
         highestSetsInRound: 'Largest number of players who got set in the same scored round.',
@@ -736,7 +741,7 @@ function renderStatsContent(allGames) {
         momentumFinish: 'Average of last up to 3 round scores minus average of first up to 3 round scores, then averaged per game.',
         rivalrySplit: 'Head-to-head record for a pair of players across games they both played.',
         tableImpact: 'Average final finishing position overall. Lower is better.',
-        bidDiscipline: 'Share of rounds where the dealer was blocked from bidding zero.',
+        bidDiscipline: "Share of rounds where the dealer was forced to avoid zero \u2014 other players' bids already summed to the hand size.",
         chaosFactor: 'Share of rounds the player participated in that were chaos rounds.',
         rivalryPair: 'Two players who appeared in the same games.',
         rivalryGames: 'Number of games this pair played together.',
@@ -768,7 +773,7 @@ function renderStatsContent(allGames) {
         avgFinish: 'Average finishing position across games. Lower is better.',
         finishByTableSize: 'Average finishing position broken out by table size, such as 3p or 4p.',
         chaosRate: 'Share of rounds this player participated in that had a 25+ point spread.',
-        exactBlockRate: 'Share of rounds where the dealer was blocked from bidding zero.'
+        exactBlockRate: "Share of rounds as dealer where other players' bids already summed to the hand size, forcing the dealer to avoid zero."
     };
 
     function tip(label, key) {
