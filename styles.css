@@ -881,6 +881,86 @@
         margin-bottom: 0.35rem;
     }
 
+    .rivalry-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.6rem;
+    }
+
+    .rivalry-card {
+        background: rgba(var(--surface-rgb), 0.4);
+        border: 1px solid rgba(100, 116, 139, 0.4);
+        border-radius: 10px;
+        padding: 1rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .rivalry-players {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.4rem;
+    }
+
+    .rivalry-player {
+        color: #cbd5e1;
+        font-size: 0.95rem;
+        font-weight: 600;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .rivalry-player.rivalry-leader {
+        color: var(--color-gold);
+    }
+
+    .rivalry-player.rivalry-tied {
+        color: #94a3b8;
+    }
+
+    .rivalry-vs {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        flex-shrink: 0;
+    }
+
+    .rivalry-scores {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+
+    .rivalry-score {
+        color: #94a3b8;
+        font-size: 1.35rem;
+        font-weight: 700;
+        min-width: 1.5ch;
+        text-align: center;
+    }
+
+    .rivalry-score.rivalry-leader-score {
+        color: var(--color-gold);
+    }
+
+    .rivalry-score-sep {
+        color: #475569;
+        font-size: 1rem;
+    }
+
+    .rivalry-meta {
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+
     .stats-mini-value {
         color: #e2e8f0;
         font-size: 0.9rem;

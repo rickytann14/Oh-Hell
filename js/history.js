@@ -918,27 +918,26 @@ function renderStatsContent(allGames) {
         </div>
 
         <h3 class="stats-section-title">Rivalries</h3>
-        <div class="stats-table-wrap" style="margin-bottom: 1rem;">
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>${tip('Pair', 'rivalryPair')}</th>
-                        <th>${tip('Games', 'rivalryGames')}</th>
-                        <th>${tip('Record', 'rivalryRecord')}</th>
-                        <th>${tip('Leader', 'rivalryLeader')}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rivalries.slice(0, 12).map((rivalry) => `
-                        <tr>
-                            <td>${escapeHtml(rivalry.a)} vs ${escapeHtml(rivalry.b)}</td>
-                            <td>${rivalry.games}</td>
-                            <td>${rivalry.aWins}-${rivalry.bWins}-${rivalry.ties}</td>
-                            <td>${escapeHtml(rivalry.leader)}</td>
-                        </tr>
-                    `).join('') || '<tr><td colspan="4">No rivalry data yet.</td></tr>'}
-                </tbody>
-            </table>
+        <div class="rivalry-grid" style="margin-bottom: 1rem;">
+            ${rivalries.slice(0, 12).map((rivalry) => {
+                const aLeading = rivalry.aWins > rivalry.bWins;
+                const bLeading = rivalry.bWins > rivalry.aWins;
+                const tied = rivalry.aWins === rivalry.bWins;
+                return `
+                <div class="rivalry-card">
+                    <div class="rivalry-players">
+                        <span class="rivalry-player ${aLeading ? 'rivalry-leader' : (tied ? 'rivalry-tied' : '')}">${escapeHtml(rivalry.a)}</span>
+                        <span class="rivalry-vs">vs</span>
+                        <span class="rivalry-player ${bLeading ? 'rivalry-leader' : (tied ? 'rivalry-tied' : '')}">${escapeHtml(rivalry.b)}</span>
+                    </div>
+                    <div class="rivalry-scores">
+                        <span class="rivalry-score ${aLeading ? 'rivalry-leader-score' : ''}">${rivalry.aWins}</span>
+                        <span class="rivalry-score-sep">–</span>
+                        <span class="rivalry-score ${bLeading ? 'rivalry-leader-score' : ''}">${rivalry.bWins}</span>
+                    </div>
+                    <div class="rivalry-meta">${rivalry.games} game${rivalry.games !== 1 ? 's' : ''}${rivalry.ties ? ` · ${rivalry.ties} tie${rivalry.ties !== 1 ? 's' : ''}` : ''}</div>
+                </div>`;
+            }).join('') || '<p style="color:#94a3b8;font-size:0.9rem;">No rivalry data yet.</p>'}
         </div>
 
         <div class="stats-table-wrap">
