@@ -1516,7 +1516,10 @@
         grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     }
     .stats-mini-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .rivalry-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     /* History grid: 2-column is fine */
