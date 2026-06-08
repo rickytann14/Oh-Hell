@@ -16,12 +16,14 @@ function startGame() {
     }
 
     const startingHandSize = parseInt(document.getElementById('startingHandSize').value) || 10;
+    const turnAroundRound = parseInt(document.getElementById('turnAroundRound').value) || 0;
 
     gameState = {
         players: players.map((p, idx) => ({...p, previousPosition: idx + 1, active: true})),
         rounds: [],
         currentRound: 0,
         startingHandSize: startingHandSize,
+        turnAroundRound: turnAroundRound,
         gameId: Date.now().toString(),
         createdAt: new Date().toISOString()
     };
@@ -59,10 +61,11 @@ function newGame() {
         rounds: [],
         currentRound: 0,
         startingHandSize: 10,
+        turnAroundRound: 3,
         gameId: null,
         createdAt: null
     };
-    
+
     // Reset player inputs
     updatePlayerInputs();
     clearAutoSave(); // Clear auto-save when starting new game

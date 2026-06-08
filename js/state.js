@@ -3,6 +3,7 @@ let gameState = {
     rounds: [],
     currentRound: 0,
     startingHandSize: 10,
+    turnAroundRound: 3,
     gameId: null,
     createdAt: null
 };

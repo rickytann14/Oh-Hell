@@ -15,9 +15,13 @@ function _mutate(fn) {
 
 function startNewRound() {
     const previousRound = gameState.rounds[gameState.currentRound - 1];
+    const turnAround = gameState.turnAroundRound || 0;
+    const shouldIncrement = turnAround > 0 && gameState.currentRound >= turnAround;
     const handSize = gameState.currentRound === 0
         ? gameState.startingHandSize
-        : Math.max(1, (previousRound?.handSize || gameState.startingHandSize) - 1);
+        : shouldIncrement
+            ? (previousRound?.handSize || gameState.startingHandSize) + 1
+            : Math.max(1, (previousRound?.handSize || gameState.startingHandSize) - 1);
     const dealerIndex = getNextDealerIndex(previousRound);
 
     const round = {

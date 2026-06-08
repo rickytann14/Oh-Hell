@@ -76,6 +76,7 @@ function normalizeGameState(game) {
         rounds: normalizedRounds,
         currentRound: game.currentRound || 0,
         startingHandSize: game.startingHandSize || 10,
+        turnAroundRound: game.turnAroundRound || 0,
         gameId: game.gameId || null,
         createdAt: game.createdAt || null
     };

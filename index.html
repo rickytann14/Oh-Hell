@@ -48,6 +48,19 @@
                         Game starts at this hand size.
                     </p>
                 </div>
+
+                <div class="input-group" style="flex: 1;">
+                    <label>Turn-around Round</label>
+                    <div class="num-players-control">
+                        <button type="button" class="num-players-step" onclick="changeTurnAroundRound(-1)">−</button>
+                        <span id="turnAroundRoundDisplay">3</span>
+                        <button type="button" class="num-players-step" onclick="changeTurnAroundRound(1)">+</button>
+                        <input type="hidden" id="turnAroundRound" value="3">
+                    </div>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
+                        Hand size starts increasing after this round.
+                    </p>
+                </div>
             </div>
 
             <div class="input-group">

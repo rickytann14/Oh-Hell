@@ -235,6 +235,13 @@ function changeStartingHandSize(delta) {
     document.getElementById('startingHandSizeDisplay').textContent = next;
 }
 
+function changeTurnAroundRound(delta) {
+    const input = document.getElementById('turnAroundRound');
+    const next = Math.min(50, Math.max(0, parseInt(input.value) + delta));
+    input.value = next;
+    document.getElementById('turnAroundRoundDisplay').textContent = next === 0 ? 'Off' : next;
+}
+
 function updatePlayerInputs() {
     const num = parseInt(document.getElementById('numPlayers').value);
     const container = document.getElementById('playerInputs');
