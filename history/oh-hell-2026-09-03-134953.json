@@ -1,0 +1,961 @@
+{
+  "players": [
+    {
+      "name": "Mark",
+      "score": 83,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 2,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 3,
+          "bid": 1,
+          "gotSet": true,
+          "score": 0
+        },
+        {
+          "round": 4,
+          "bid": 0,
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "round": 5,
+          "bid": 0,
+          "gotSet": false,
+          "score": 21
+        }
+      ],
+      "previousPosition": 1,
+      "active": true
+    },
+    {
+      "name": "Adit",
+      "score": -23,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 0,
+          "gotSet": true,
+          "score": -5
+        },
+        {
+          "round": 2,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 3,
+          "bid": 5,
+          "gotSet": true,
+          "score": -23
+        },
+        {
+          "round": 4,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 5,
+          "bid": 8,
+          "gotSet": true,
+          "score": -37
+        }
+      ],
+      "previousPosition": 8,
+      "active": true
+    },
+    {
+      "name": "Ricardo",
+      "score": 55,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 0,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 2,
+          "bid": 0,
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "round": 3,
+          "bid": 3,
+          "gotSet": false,
+          "score": 29
+        },
+        {
+          "round": 4,
+          "bid": 2,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 5,
+          "bid": 0,
+          "gotSet": true,
+          "score": -5
+        }
+      ],
+      "previousPosition": 6,
+      "active": true
+    },
+    {
+      "name": "Eric",
+      "score": 59,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 3,
+          "gotSet": false,
+          "score": 29
+        },
+        {
+          "round": 2,
+          "bid": 0,
+          "gotSet": true,
+          "score": -5
+        },
+        {
+          "round": 3,
+          "bid": 0,
+          "gotSet": false,
+          "score": 19
+        },
+        {
+          "round": 4,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 5,
+          "bid": 0,
+          "gotSet": true,
+          "score": -5
+        }
+      ],
+      "previousPosition": 4,
+      "active": true
+    },
+    {
+      "name": "Peter",
+      "score": 19,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 1,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 2,
+          "bid": 2,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 3,
+          "bid": 0,
+          "gotSet": false,
+          "score": 19
+        },
+        {
+          "round": 4,
+          "bid": 0,
+          "gotSet": false,
+          "score": 20
+        }
+      ],
+      "previousPosition": 7,
+      "active": false
+    },
+    {
+      "name": "Andy",
+      "score": 59,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 4,
+          "gotSet": true,
+          "score": -24
+        },
+        {
+          "round": 2,
+          "bid": 0,
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "round": 3,
+          "bid": 0,
+          "gotSet": false,
+          "score": 19
+        },
+        {
+          "round": 4,
+          "bid": 0,
+          "gotSet": false,
+          "score": 20
+        },
+        {
+          "round": 5,
+          "bid": 2,
+          "gotSet": false,
+          "score": 24
+        }
+      ],
+      "previousPosition": 5,
+      "active": true
+    },
+    {
+      "name": "Beth",
+      "score": 74,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 0,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 2,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 3,
+          "bid": 1,
+          "gotSet": true,
+          "score": -10
+        },
+        {
+          "round": 4,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 5,
+          "bid": 0,
+          "gotSet": false,
+          "score": 21
+        }
+      ],
+      "previousPosition": 3,
+      "active": true
+    },
+    {
+      "name": "Josh",
+      "score": 82,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 2,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 3,
+          "bid": 1,
+          "gotSet": false,
+          "score": 21
+        },
+        {
+          "round": 4,
+          "bid": 3,
+          "gotSet": false,
+          "score": 29
+        },
+        {
+          "round": 5,
+          "bid": 1,
+          "gotSet": true,
+          "score": -10
+        }
+      ],
+      "previousPosition": 2,
+      "active": true
+    },
+    {
+      "name": "Sharon",
+      "score": -30,
+      "rounds": [
+        {
+          "round": 1,
+          "bid": null,
+          "gotSet": false,
+          "score": 15,
+          "joinedLate": true
+        },
+        {
+          "round": 2,
+          "bid": 5,
+          "gotSet": true,
+          "score": -24
+        },
+        {
+          "round": 3,
+          "bid": 0,
+          "gotSet": false,
+          "score": 19
+        },
+        {
+          "round": 4,
+          "bid": 5,
+          "gotSet": true,
+          "score": -28
+        },
+        {
+          "round": 5,
+          "bid": 2,
+          "gotSet": true,
+          "score": -12
+        }
+      ],
+      "active": true,
+      "previousPosition": 9
+    }
+  ],
+  "rounds": [
+    {
+      "handSize": 11,
+      "dealerIndex": 0,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "reverseValue": "N",
+      "exactBidBlocks": 0,
+      "playerData": [
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -5,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 3,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 29,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 4,
+          "tax": 14,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -24,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 15,
+          "participating": false,
+          "absentReason": "joined-late"
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 10,
+      "dealerIndex": 1,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "reverseValue": "N",
+      "exactBidBlocks": 0,
+      "playerData": [
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -5,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 2,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 5,
+          "tax": 14,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -24,
+          "participating": true,
+          "absentReason": ""
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 9,
+      "dealerIndex": 2,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "reverseValue": "N",
+      "exactBidBlocks": 0,
+      "playerData": [
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": 0,
+          "gotSet": true,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 5,
+          "tax": 18,
+          "deferred": false,
+          "confidence": 5,
+          "gotSet": true,
+          "score": -23,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 3,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 29,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 19,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 19,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 19,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 19,
+          "participating": true,
+          "absentReason": ""
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 10,
+      "dealerIndex": 3,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "reverseValue": "N",
+      "exactBidBlocks": 0,
+      "playerData": [
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 2,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 20,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 3,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 29,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 5,
+          "tax": 16,
+          "deferred": true,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -28,
+          "participating": true,
+          "absentReason": ""
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 11,
+      "dealerIndex": 5,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "reverseValue": "N",
+      "exactBidBlocks": 0,
+      "playerData": [
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 8,
+          "tax": 25,
+          "deferred": true,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -37,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -5,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -5,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": false,
+          "absentReason": "disabled"
+        },
+        {
+          "bid": 2,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 24,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 21,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 1,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -10,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 2,
+          "tax": 0,
+          "deferred": true,
+          "confidence": "MAX",
+          "gotSet": true,
+          "score": -12,
+          "participating": true,
+          "absentReason": ""
+        }
+      ],
+      "scored": true
+    },
+    {
+      "handSize": 12,
+      "dealerIndex": 6,
+      "trump": "",
+      "trumpRank": "",
+      "trumpSuit": "",
+      "reverseValue": "N",
+      "exactBidBlocks": 0,
+      "playerData": [
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": false,
+          "absentReason": "inactive"
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        },
+        {
+          "bid": 0,
+          "tax": 0,
+          "deferred": false,
+          "confidence": "MAX",
+          "gotSet": false,
+          "score": 0,
+          "participating": true,
+          "absentReason": ""
+        }
+      ],
+      "scored": false
+    }
+  ],
+  "currentRound": 5,
+  "startingHandSize": 11,
+  "turnAroundRound": 4,
+  "gameId": "1788456812855",
+  "createdAt": "2026-09-03T17:33:32.855Z",
+  "savedAt": "2026-09-03T18:49:53.782Z"
+}
